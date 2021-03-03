@@ -11,6 +11,7 @@ ResultsFolder="Results/FindOrthologs"
 ################################################
 ### Create and activate conda environment
 #conda create -n env-broccoli python=3.6 ete3
+#conda init bash
 #conda activate env-broccoli
 
 ################################################
