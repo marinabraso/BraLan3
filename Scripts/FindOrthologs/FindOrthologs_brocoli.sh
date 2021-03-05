@@ -17,6 +17,7 @@ ResultsFolder="Results/FindOrthologs"
 ################################################
 ### Run BROCCOLI
 gunzip ${ResultsFolder}/Proteomes/*.fa.gz
+mkdir -p ${ResultsFolder}/broccoli
 cd ${ResultsFolder}/broccoli
 python ../../../${broccoli} -dir ../Proteomes -ext fa -path_diamond ../../../${diamond} -path_fasttree ${fasttree}
 cd ../../..
