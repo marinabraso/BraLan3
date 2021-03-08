@@ -7,16 +7,20 @@ ProteomesFolder="Data/Proteomes"
 TranscriptomesFolder="Data/Transcriptomes"
 ResultsFolder="Results/FindOrthologs"
 mkdir -p ${ResultsFolder}/Proteomes
+mkdir -p ${ResultsFolder}/ProteomesGTFs
+
 
 ################################################
 ### Branchiostoma lanceolatum
 echo "Branchiostoma_lanceolatum.BraLan3"
-if [[ ! -s ${ResultsFolder}/Proteomes/Branchiostoma_lanceolatum.BraLan3_ProteinCoding_StrongEvidence.fa.gz ]]
+if [[ ! -s ${ResultsFolder}/Proteomes/Branchiostoma_lanceolatum.BraLan3_ProteinCoding_StrongEvidence.fa.gz ]] || [[ ! -s ${ResultsFolder}/ProteomesGTFs/Branchiostoma_lanceolatum.BraLan3_ProteinCoding_StrongEvidence.gtf.gz ]]
 then
 	# List of protein coding genes with "strong" evidence in any of the testedevidencies
 	zcat ${TranscriptomesFolder}/Branchiostoma_lanceolatum.BraLan3.gtf.gz | awk '{if($3 ~ /CDS/){print $0}}' | grep 'protein_coding' | cut -f9 | sed 's/gene_id \"\([A-Z0-9]\+\)\"; transcript_id.*bgee_evidence \"\([a-z]\+\)\"; uniprot_evidence \"\([a-z]\+\)\"; bflo_evidence \"\([a-z]\+\)\"; bbel_evidence \"\([a-z]\+\)\";/\1\t\2\t\3\t\4\t\5/g' |  sort | uniq | grep 'strong' | cut -f1 > ${ResultsFolder}/BraLan3_ProteinCodingGenes_StrongEvidence.txt
 	# Select the fasta sequences of those in the list & substitute . by * in fasta sequences (?)
 	awk '{if(NR==FNR){a[">"$1]=1;next;} if(a[$1]==1){valid=1;}else{if($1 ~ />/){valid=0;}} if(valid==1){print $0}}' ${ResultsFolder}/BraLan3_ProteinCodingGenes_StrongEvidence.txt <(zcat ${ProteomesFolder}/Branchiostoma_lanceolatum.BraLan3.fa.gz) | sed 's/\./*/g' > ${ResultsFolder}/Proteomes/Branchiostoma_lanceolatum.BraLan3_ProteinCoding_StrongEvidence.fa
+	# Extract GTF info of the selected genes
+	awk '{if(NR==FNR){a[$1]=1;next;} if(a[$9]==1){print $0}}' <(cat ${ResultsFolder}/Proteomes/Branchiostoma_lanceolatum.BraLan3_ProteinCoding_StrongEvidence.fa | grep '>' | sed 's/>//g') <(zcat ${TranscriptomesFolder}/Branchiostoma_lanceolatum.BraLan3.gtf.gz | awk '{if($3 == "CDS"){print $0}}' | sed 's/gene_id "\([A-Z0-9]\+\)".*/\1/g') > ${ResultsFolder}/ProteomesGTFs/Branchiostoma_lanceolatum.BraLan3_ProteinCoding_StrongEvidence.gtf
 fi
 
 ################################################
@@ -28,7 +32,7 @@ fi
 for Species in Homo_sapiens.GRCh38 Mus_musculus.GRCm39 Danio_rerio.GRCz11 Gallus_gallus.GRCg6a
 do
 	echo ${Species}
-	if [[ ! -s ${ResultsFolder}/Proteomes/${Species}_ProteinCoding_LongestTx_inGTF.fa.gz ]]
+	if [[ ! -s ${ResultsFolder}/Proteomes/${Species}_ProteinCoding_LongestTx_inGTF.fa.gz ]] || [[ ! -s ${ResultsFolder}/ProteomesGTFs/${Species}_ProteinCoding_LongestTx_inGTF.gtf.gz ]]
 	then
 		# List all the protein coding genes with CDS annotation in the GTF
 		zcat ${TranscriptomesFolder}/${Species}.103.gtf.gz | grep 'protein_coding' | awk '{if($3 == "CDS"){print $0}}' | cut -f9 | sed 's/gene_id "\([A-Z0-9]\+\)".*transcript_id "\([A-Z0-9]\+\)".*/\1\t\2/g' | sort -u > ${ResultsFolder}/Proteomes/${Species}_ProteinCoding_AllTx_inGTF.txt
@@ -40,6 +44,8 @@ do
 		awk '{if(NR==FNR){a[">"$1]=$2;next;} if($1 ~ />/){if(a[$1]==$2){valid=1}else{valid=0}} if(valid==1){print $0}}' ${ResultsFolder}/${Species}_ProteinCoding_LongestTx_inGTF.txt <(sed 's/|/\t/g' ${ResultsFolder}/Proteomes/${Species}_ProteinCoding_AllTx.fa) | sed 's/\t/|/g' > ${ResultsFolder}/Proteomes/${Species}_ProteinCoding_LongestTx_inGTF.fa
 		# Remove intermediate files
 		rm ${ResultsFolder}/Proteomes/${Species}_ProteinCoding_AllTx.fa ${ResultsFolder}/Proteomes/${Species}_ProteinCoding_AllTx_inGTF.txt
+		# Extract GTF info of the selected genes
+		awk '{if(NR==FNR){a[$1]=1;next;} if(a[$9]==1){print $0}}' <(cat ${ResultsFolder}/Proteomes/${Species}_ProteinCoding_LongestTx_inGTF.fa | grep '>' | sed 's/>//g') <(zcat Data/Transcriptomes/${Species}.103.gtf.gz | awk '{if($3 == "CDS"){print $0}}' | sed 's/gene_id "\([A-Z0-9]\+\)".*transcript_id "\([A-Z0-9]\+\)".*/\1|\2\t\1\t\2/g') > ${ResultsFolder}/ProteomesGTFs/${Species}_ProteinCoding_LongestTx_inGTF.gtf
 	fi
 done
 
@@ -54,7 +60,7 @@ done
 for Species in Branchiostoma_belcheri.Haploidv18h27 Branchiostoma_floridae.Bfl_VNyyK Strongylocentrotus_purpuratus.Spur5.0 Asterias_rubens.eAstRub1.3 Saccoglossus_kowalevskii.Skow1.1
 do
 	echo ${Species}
-	if [[ ! -s ${ResultsFolder}/Proteomes/${Species}_ProteinCoding_inGTF_CleanFormat.fa.gz ]]
+	if [[ ! -s ${ResultsFolder}/Proteomes/${Species}_ProteinCoding_inGTF_CleanFormat.fa.gz ]] || [[ ! -s ${ResultsFolder}/ProteomesGTFs/${Species}_ProteinCoding_inGTF_CleanFormat_LongestProt.gtf.gz ]]
 	then
 		SpeciesShortName=$(echo ${Species^^} | awk -F '_' '{print substr($1, 1, 1)substr($2, 1, 3)}')
 		# Extract info from GFF (filter for CDS & clean format of gene ID and protein ID)
@@ -67,10 +73,12 @@ do
 		awk '{if(NR==FNR){a[">"$2"|"$1]=1;next;} if($1 ~ /^>/){if(a[$1]==1){valid=1}else{valid=0}}if(valid==1){print $0}}' ${ResultsFolder}/${Species}_ProteinCoding_inGTF_CleanFormat_LongestProt.txt ${ResultsFolder}/Proteomes/${Species}_ProteinCoding_inGTF_CleanFormat.fa > ${ResultsFolder}/Proteomes/${Species}_ProteinCoding_inGTF_CleanFormat_LongestProt.fa
 		# Remove unnecessary intermediate files
 		rm ${ResultsFolder}/Proteomes/${Species}_ProteinCoding_inGTF_CleanFormat.fa
+		# Extract GTF info of the selected genes
+		awk '{if(NR==FNR){a[$1]=1;next;} if(a[$9]==1){print $0}}' <(cat ${ResultsFolder}/Proteomes/${Species}_ProteinCoding_inGTF_CleanFormat_LongestProt.fa | grep '>' | sed 's/>//g') <(cat ${ResultsFolder}/${Species}_ProteinCoding_inGTF_CleanFormat.txt | awk '{if($3 == "CDS"){print $0}}' | awk '{print $1"\t"$2"\t"$3"\t"$4"\t"$5"\t"$6"\t"$7"\t"$8"\t"$10"|"$9"\t"$9"\t"$10}') > ${ResultsFolder}/ProteomesGTFs/${Species}_ProteinCoding_inGTF_CleanFormat_LongestProt.gtf
 	fi
 done
 
-gzip ${ResultsFolder}/Proteomes/*.fa
+gzip ${ResultsFolder}/Proteomes/*.fa ${ResultsFolder}/ProteomesGTFs/*.gtf
 
 
 
