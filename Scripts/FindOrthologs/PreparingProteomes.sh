@@ -16,9 +16,9 @@ echo "Branchiostoma_lanceolatum.BraLan3"
 if [[ ! -s ${ResultsFolder}/Proteomes/Branchiostoma_lanceolatum.BraLan3_ProteinCoding_StrongEvidence.fa.gz ]] || [[ ! -s ${ResultsFolder}/ProteomesGTFs/Branchiostoma_lanceolatum.BraLan3_ProteinCoding_StrongEvidence.gtf.gz ]]
 then
 	# List of protein coding genes with "strong" evidence in any of the testedevidencies
-	zcat ${TranscriptomesFolder}/Branchiostoma_lanceolatum.BraLan3.gtf.gz | awk '{if($3 ~ /CDS/){print $0}}' | grep 'protein_coding' | cut -f9 | sed 's/gene_id \"\([A-Z0-9]\+\)\"; transcript_id.*bgee_evidence \"\([a-z]\+\)\"; uniprot_evidence \"\([a-z]\+\)\"; bflo_evidence \"\([a-z]\+\)\"; bbel_evidence \"\([a-z]\+\)\";/\1\t\2\t\3\t\4\t\5/g' |  sort | uniq | grep 'strong' | cut -f1 > ${ResultsFolder}/BraLan3_ProteinCodingGenes_StrongEvidence.txt
+	zcat ${TranscriptomesFolder}/Branchiostoma_lanceolatum.BraLan3.gtf.gz | awk '{if($3 ~ /CDS/){print $0}}' | grep 'protein_coding' | cut -f9 | sed 's/gene_id \"\([A-Z0-9]\+\)\"; transcript_id.*bgee_evidence \"\([a-z]\+\)\"; uniprot_evidence \"\([a-z]\+\)\"; bflo_evidence \"\([a-z]\+\)\"; bbel_evidence \"\([a-z]\+\)\";/\1\t\2\t\3\t\4\t\5/g' |  sort | uniq | grep 'strong' | cut -f1 > ${ResultsFolder}/BraLan3_ProteinCoding_StrongEvidence.txt
 	# Select the fasta sequences of those in the list & substitute . by * in fasta sequences (?)
-	awk '{if(NR==FNR){a[">"$1]=1;next;} if(a[$1]==1){valid=1;}else{if($1 ~ />/){valid=0;}} if(valid==1){print $0}}' ${ResultsFolder}/BraLan3_ProteinCodingGenes_StrongEvidence.txt <(zcat ${ProteomesFolder}/Branchiostoma_lanceolatum.BraLan3.fa.gz) | sed 's/\./*/g' > ${ResultsFolder}/Proteomes/Branchiostoma_lanceolatum.BraLan3_ProteinCoding_StrongEvidence.fa
+	awk '{if(NR==FNR){a[">"$1]=1;next;} if(a[$1]==1){valid=1;}else{if($1 ~ />/){valid=0;}} if(valid==1){print $0}}' ${ResultsFolder}/BraLan3_ProteinCoding_StrongEvidence.txt <(zcat ${ProteomesFolder}/Branchiostoma_lanceolatum.BraLan3.fa.gz) | sed 's/\./*/g' > ${ResultsFolder}/Proteomes/Branchiostoma_lanceolatum.BraLan3_ProteinCoding_StrongEvidence.fa
 	# Extract GTF info of the selected genes
 	awk '{if(NR==FNR){a[$1]=1;next;} if(a[$9]==1){print $0}}' <(cat ${ResultsFolder}/Proteomes/Branchiostoma_lanceolatum.BraLan3_ProteinCoding_StrongEvidence.fa | grep '>' | sed 's/>//g') <(zcat ${TranscriptomesFolder}/Branchiostoma_lanceolatum.BraLan3.gtf.gz | awk '{if($3 == "CDS"){print $0}}' | sed 's/gene_id "\([A-Z0-9]\+\)".*/\1/g') > ${ResultsFolder}/ProteomesGTFs/Branchiostoma_lanceolatum.BraLan3_ProteinCoding_StrongEvidence.gtf
 fi
@@ -34,18 +34,20 @@ do
 	echo ${Species}
 	if [[ ! -s ${ResultsFolder}/Proteomes/${Species}_ProteinCoding_LongestTx_inGTF.fa.gz ]] || [[ ! -s ${ResultsFolder}/ProteomesGTFs/${Species}_ProteinCoding_LongestTx_inGTF.gtf.gz ]]
 	then
-		# List all the protein coding genes with CDS annotation in the GTF
-		zcat ${TranscriptomesFolder}/${Species}.103.gtf.gz | grep 'protein_coding' | awk '{if($3 == "CDS"){print $0}}' | cut -f9 | sed 's/gene_id "\([A-Z0-9]\+\)".*transcript_id "\([A-Z0-9]\+\)".*/\1\t\2/g' | sort -u > ${ResultsFolder}/Proteomes/${Species}_ProteinCoding_AllTx_inGTF.txt
-		# Extract the protein sequences properly annotated as protein coding and adapt the sequence names
-		zcat ${ProteomesFolder}/${Species}.pep.all.fa.gz | awk -F ' ' '{if($1 ~ />/){if($6 == "gene_biotype:protein_coding"){print ">"$4"|"$5; valid=1;}else{valid=0}}else{if(valid==1){print $0}}}' | sed 's/gene://g' | sed 's/transcript://g' | sed 's/\.[0-9]//g' > ${ResultsFolder}/Proteomes/${Species}_ProteinCoding_AllTx.fa
-		# Extract the longest tx from the ones present in the GTF file
-		awk '{if(NR==FNR){a[$1]=$2;next;} if(a[$1]==$2){print $0}}' ${ResultsFolder}/Proteomes/${Species}_ProteinCoding_AllTx_inGTF.txt <(awk '{if($1 ~ />/){print name"\t"len; name=$1; len=0; next;} len=len+length($1);}END{print name"\t"len;}' ${ResultsFolder}/Proteomes/${Species}_ProteinCoding_AllTx.fa | tail -n +2 | sed 's/>//g' | sed 's/|/\t/g') | sort -k1,1 -k3,3V | awk '{if(g==$1){t=$2}else{print g"\t"t;g=$1;t=$2}}END{print g"\t"t;}' | tail -n +2 > ${ResultsFolder}/${Species}_ProteinCoding_LongestTx_inGTF.txt
-		# Extract sequences from the selected longest tx
-		awk '{if(NR==FNR){a[">"$1]=$2;next;} if($1 ~ />/){if(a[$1]==$2){valid=1}else{valid=0}} if(valid==1){print $0}}' ${ResultsFolder}/${Species}_ProteinCoding_LongestTx_inGTF.txt <(sed 's/|/\t/g' ${ResultsFolder}/Proteomes/${Species}_ProteinCoding_AllTx.fa) | sed 's/\t/|/g' > ${ResultsFolder}/Proteomes/${Species}_ProteinCoding_LongestTx_inGTF.fa
-		# Remove intermediate files
-		rm ${ResultsFolder}/Proteomes/${Species}_ProteinCoding_AllTx.fa ${ResultsFolder}/Proteomes/${Species}_ProteinCoding_AllTx_inGTF.txt
-		# Extract GTF info of the selected genes
-		awk '{if(NR==FNR){a[$1]=1;next;} if(a[$9]==1){print $0}}' <(cat ${ResultsFolder}/Proteomes/${Species}_ProteinCoding_LongestTx_inGTF.fa | grep '>' | sed 's/>//g') <(zcat Data/Transcriptomes/${Species}.103.gtf.gz | awk '{if($3 == "CDS"){print $0}}' | sed 's/gene_id "\([A-Z0-9]\+\)".*transcript_id "\([A-Z0-9]\+\)".*/\1|\2\t\1\t\2/g') > ${ResultsFolder}/ProteomesGTFs/${Species}_ProteinCoding_LongestTx_inGTF.gtf
+		# Extract GeneID and TrascriptID of protein coding genes with CDS entries in the GTF
+		zcat ${TranscriptomesFolder}/${Species}.103.gtf.gz | awk '{if($3 ~ /CDS/){print $0}}' | grep 'protein_coding' | sed 's/.*gene_id "\([A-Z0-9]\+\)".*transcript_id "\([A-Z0-9]\+\)".*/\1\t\2/g' | sort -u > tmp/GT_gtf.txt
+		# Extract GeneID and TrascriptID of protein coding genes in the proteome (fasta)
+		zcat ${ProteomesFolder}/${Species}.pep.all.fa.gz | grep '>' | grep 'gene_biotype:protein_coding' | sed 's/.*gene:\([A-Z0-9]\+\).*transcript:\([A-Z0-9]\+\).*/\1\t\2/g' | sort -u > tmp/GT_fa.txt 
+		# Intersection of the two above > common list
+		awk 'NR==FNR { lines[$0]=1; next } $0 in lines' tmp/GT_gtf.txt tmp/GT_fa.txt > tmp/GT_comm.txt
+		# Calculate the length of each protein entry
+		zcat ${ProteomesFolder}/${Species}.pep.all.fa.gz | sed 's/.*gene:\([A-Z0-9]\+\).*transcript:\([A-Z0-9]\+\).*/>\1\t\2/g' | awk -F' ' '{if($1 ~ />/){print id"\t"len; id=$0; len=0}else{len=len+length($0)}}END{print id"\t"len;}' | tail -n +2 | sed 's/>//g' > tmp/GTL_fa.txt
+		# Intersect common list with the length file and extract the lognest transcript per gene > Selected gene-transcript pairs
+		awk 'NR==FNR { lines[$0]=1; next } $1"\t"$2 in lines' tmp/GT_comm.txt tmp/GTL_fa.txt | sort -k1,1 -k3,3V | awk          '{if(g!=$1){print line} line=$0;g=$1;}END{print $line}' | tail -n +2 > tmp/GTL_comm_longest.txt
+		# Extract the fasta sequence of the selected gene-transcripts
+		awk '{if(NR==FNR){l[">"$1"\t"$2]=1; next} if($1 ~ />/){if($1"\t"$2 in l){valid=1}else{valid=0}} if(valid==1){print $0}}' tmp/GTL_comm_longest.txt <(zcat ${ProteomesFolder}/${Species}.pep.all.fa.gz | sed 's/.*gene:\([A-Z0-9]\+\).*transcript:\([A-Z0-9]\+\).*/>\1\t\2/g') | sed 's/\t/|/g' > ${ResultsFolder}/Proteomes/${Species}_ProteinCoding_LongestTx.fa
+		# Extract the GTF CDS entries for the selected gene-transcripts 
+		awk '{if(NR==FNR){l[$1"\t"$2]=1; next} if($9"\t"$10 in l){print $0}}' tmp/GTL_comm_longest.txt <(zcat ${TranscriptomesFolder}/${Species}.103.gtf.gz | awk '{if($3 ~ /CDS/){print $0}}' | grep 'protein_coding' | sed 's/\tgene_id "\([A-Z0-9]\+\)".*transcript_id "\([A-Z0-9]\+\)".*/\t\1\t\2/g') > ${ResultsFolder}/ProteomesGTFs/${Species}_ProteinCoding_LongestTx.gtf
 	fi
 done
 

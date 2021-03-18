@@ -18,7 +18,6 @@ CountsFile <- "Results/FindOrthologs/broccoli/dir_step3/table_OGs_protein_counts
 ######################################################################
 # General parameters
 
-Species <- c("Spur", "Bflo", "Blan", "Bbel", "Drer", "Skow", "Arub", "Ggal", "Mmus", "Hsap")
 Verteb <- c("Drer", "Ggal", "Mmus", "Hsap")
 Amphi <- c("Blan", "Bflo", "Bbel")
 OutDeut <- c("Spur", "Arub", "Skow")
@@ -30,7 +29,9 @@ SortedSpecies <- c(Amphi, Verteb, OutDeut)
 
 # Orthologous groups counts
 Counts <- read.table(CountsFile, h=F, sep = "\t", row.names=1)
-colnames(Counts) <- c("Spur", "Bflo", "Blan", "Bbel", "Drer", "Skow", "Arub", "Ggal", "Mmus", "Hsap")
+system_out <- system(paste("head -1 ", CountsFile, " | cut -f2,3,4,5,6,7,8,9,10,11,12 | sed 's/\\([A-Z]\\)[a-z]\\+_\\([a-z][a-z][a-z]\\)[A-Za-z0-9\\._]\\+/\\1\\2/g'"), intern=T)
+Header <- read.table(text=system_out, h=F, sep = "\t")
+colnames(Counts) <- as.character(unlist(lapply(Header[1,], as.character)))
 Counts$Sum <- rowSums(Counts)
 Counts$SumVerteb <- rowSums(Counts[,Verteb])
 Counts$SumAmphi <- rowSums(Counts[,Amphi])
