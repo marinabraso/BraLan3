@@ -4,10 +4,8 @@
 bedtools="../Software/bedtools.static.binary"
 
 # Files & parameters
-OrthologsFolder="Results/FindOrthologs"
-ResultsFolder="Results/dNdSBetweenParalogs"
+ResultsFolder="Results/FindOrthologs"
 mkdir -p ${ResultsFolder}/DNASequences
-mkdir -p ${ResultsFolder}/OrthologousGroupsSequences
 mkdir -p ${ResultsFolder}/Checking_DNA_AA_sequences
 GenomesFolder="Data/Genomes"
 
@@ -18,12 +16,12 @@ for Species in Branchiostoma_lanceolatum.BraLan3 Homo_sapiens.GRCh38 Mus_musculu
 do
 	echo ${Species}
 	Genome=$(ls ${GenomesFolder}/${Species}* | grep -v '.fai')
-	GTF=$(ls ${OrthologsFolder}/ProteomesGTFs/${Species}*)
+	GTF=$(ls ${ResultsFolder}/ProteomesGTFs/${Species}*)
 	if [[ $(echo ${GTF} | sed 's/.*\.//g') =~ "gz" ]];	then gunzip ${GTF}; fi
-	GTF=$(ls ${OrthologsFolder}/ProteomesGTFs/${Species}*.gtf)
-	ProteomeBroccoli=$(ls ${OrthologsFolder}/Proteomes/${Species}*)
+	GTF=$(ls ${ResultsFolder}/ProteomesGTFs/${Species}*.gtf)
+	ProteomeBroccoli=$(ls ${ResultsFolder}/Proteomes/${Species}*)
 	if [[ $(echo ${ProteomeBroccoli} | sed 's/.*\.//g') =~ "gz" ]];	then gunzip ${ProteomeBroccoli}; fi
-	ProteomeBroccoli=$(ls ${OrthologsFolder}/Proteomes/${Species}*.fa)
+	ProteomeBroccoli=$(ls ${ResultsFolder}/Proteomes/${Species}*.fa)
 
 	# Extract DNA sequences of proteins from the genome reading GTF
 	if [[ ! -s ${ResultsFolder}/DNASequences/${Species}.fa ]] && [[ ! -s ${ResultsFolder}/DNASequences/${Species}.fa.gz ]] 
@@ -89,7 +87,7 @@ done
 
 
 
-gzip ${OrthologsFolder}/Proteomes/*.fa ${OrthologsFolder}/ProteomesGTFs/*.gtf
+gzip ${ResultsFolder}/Proteomes/*.fa ${ResultsFolder}/ProteomesGTFs/*.gtf
 
 
 

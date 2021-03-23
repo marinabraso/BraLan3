@@ -16,12 +16,12 @@ ResultsFolder="Results/FindOrthologs"
 
 ################################################
 ### Run BROCCOLI
-gunzip ${ResultsFolder}/Proteomes/*.fa.gz
+gunzip ${ResultsFolder}/CheckedProteomes/*.fa.gz
 mkdir -p ${ResultsFolder}/broccoli
 cd ${ResultsFolder}/broccoli
-python ../../../${broccoli} -dir ../Proteomes -ext fa -path_diamond ../../../${diamond} -path_fasttree ${fasttree}
+python ../../../${broccoli} -dir ../CheckedProteomes -ext fa -path_diamond ../../../${diamond} -path_fasttree ${fasttree}
 cd ../../..
-gzip ${ResultsFolder}/Proteomes/*.fa
+gzip ${ResultsFolder}/CheckedProteomes/*.fa
 
 
 
