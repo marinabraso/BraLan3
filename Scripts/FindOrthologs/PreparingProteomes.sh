@@ -37,7 +37,7 @@ echo "Branchiostoma_lanceolatum.BraLan3"
 if [[ $(ls ${ResultsFolder}/FilteredProteomes/Branchiostoma_lanceolatum.BraLan3_ProteinCoding_StrongEvidence.fa* 2> ~/null | wc -l) -lt 1 ]] || [[ $(ls ${ResultsFolder}/FilteredGTFs/Branchiostoma_lanceolatum.BraLan3_ProteinCoding_StrongEvidence.gtf* 2> ~/null | wc -l) -lt 1 ]]
 then
 	echo "Filtering proteome"
-	# List of protein coding genes with "strong" evidence in any of the testedevidencies
+	## List of protein coding genes with "strong" evidence in any of the testedevidencies
 	#zcat ${TranscriptomesFolder}/Branchiostoma_lanceolatum.BraLan3.gtf.gz | awk '{if($3 ~ /CDS/){print $0}}' | grep 'protein_coding' | cut -f9 | sed 's/gene_id \"\([A-Z0-9]\+\)\"; transcript_id.*bgee_evidence \"\([a-z]\+\)\"; uniprot_evidence \"\([a-z]\+\)\"; bflo_evidence \"\([a-z]\+\)\"; bbel_evidence \"\([a-z]\+\)\";/\1\t\2\t\3\t\4\t\5/g' |  sort | uniq | grep 'strong' | cut -f1 > ${ResultsFolder}/BraLan3_ProteinCoding_StrongEvidence.txt
 	## Select the fasta sequences of those in the list & substitute . by * in fasta sequences (?)
 	#awk '{if(NR==FNR){a[">"$1]=1;next;} if(a[$1]==1){valid=1;}else{if($1 ~ />/){valid=0;}} if(valid==1){print $0}}' ${ResultsFolder}/BraLan3_ProteinCoding_StrongEvidence.txt <(zcat ${ProteomesFolder}/Branchiostoma_lanceolatum.BraLan3.fa.gz) | sed 's/\./*/g' > ${ResultsFolder}/FilteredProteomes/Branchiostoma_lanceolatum.BraLan3_ProteinCoding_StrongEvidence.fa
@@ -51,8 +51,7 @@ fi
 # 		- Mus musculus
 # 		- Gallus gallus
 # 		- Danio rerio
-#for Species in Homo_sapiens.GRCh38 Mus_musculus.GRCm39 Danio_rerio.GRCz11 Gallus_gallus.GRCg6a
-for Species in Homo_sapiens.GRCh38
+for Species in Homo_sapiens.GRCh38 Mus_musculus.GRCm39 Danio_rerio.GRCz11 Gallus_gallus.GRCg6a
 do
 	echo ${Species}
 	if [[ $(ls ${ResultsFolder}/FilteredProteomes/${Species}_ProteinCoding_LongestTx.fa* 2> ~/null | wc -l) -lt 1 ]] ##|| [[ $(ls ${ResultsFolder}/FilteredGTFs/${Species}_ProteinCoding_LongestTx_inGTF.gtf* 2> ~/null | wc -l) -lt 1 ]]
@@ -91,7 +90,7 @@ do
 	then
 		echo "Filtering proteome"
 		SpeciesShortName=$(echo ${Species^^} | awk -F '_' '{print substr($1, 1, 1)substr($2, 1, 3)}')
-		# Extract info from GFF (filter for CDS & clean format of gene ID and protein ID)
+		##Extract info from GFF (filter for CDS & clean format of gene ID and protein ID)
 		#zcat ${TranscriptomesFolder}/${Species}.gff.gz | grep -v '^#' | awk '{if($3=="CDS"){print $0}}' | sed 's/ID.*;gene=\([A-Za-z0-9\.\/\-]\+\);.*;protein_id=\([A-Za-z0-9_\.]\+\)$/\1\t\2/g' | sed 's/ID.*;gene=\([A-Za-z0-9\.\/\-]\+\);.*;protein_id=\([A-Za-z0-9_\.]\+\);.*/\1\t\2/g' | awk -v sn=${SpeciesShortName} '{print $1"\t"$2"\t"$3"\t"$4"\t"$5"\t"$6"\t"$7"\t"$8"\t"sn"_"$9"\t"sn"_"$10}' > ${ResultsFolder}/${Species}_ProteinCoding_inGTF_CleanFormat.txt
 		## Extract protein sequences present in filtered gff and add geneID to protID
 		#awk '{if(NR==FNR){a[">"$10]=1;b[">"$10]=$9;next} if($1 ~ /^>/){if(a[$1]==1){valid=1; print $1"|"b[$1]}else{valid=0}}else{if(valid==1){print $0}}}' ${ResultsFolder}/${Species}_ProteinCoding_inGTF_CleanFormat.txt <(zcat ${ProteomesFolder}/${Species}.faa.gz | awk -v sn=${SpeciesShortName} '{if($1 ~ /^>/){print ">"sn"_"substr($1, 2, length($1))}else{print $0}}') > ${ResultsFolder}/FilteredProteomes/${Species}_ProteinCoding_inGTF_CleanFormat.fa
@@ -113,8 +112,7 @@ done
 ################################################
 echo "### EXTRACTING DNA SEQUENCES"
 #for Species in Branchiostoma_lanceolatum.BraLan3 Homo_sapiens.GRCh38 Mus_musculus.GRCm39 Danio_rerio.GRCz11 Gallus_gallus.GRCg6a Branchiostoma_belcheri.Haploidv18h27 Branchiostoma_floridae.Bfl_VNyyK Strongylocentrotus_purpuratus.Spur5.0 Asterias_rubens.eAstRub1.3 Saccoglossus_kowalevskii.Skow1.1
-#for Species in Homo_sapiens.GRCh38 Mus_musculus.GRCm39 Danio_rerio.GRCz11 Gallus_gallus.GRCg6a
-for Species in Homo_sapiens.GRCh38
+for Species in Homo_sapiens.GRCh38 Mus_musculus.GRCm39 Danio_rerio.GRCz11 Gallus_gallus.GRCg6a
 do
 	echo ${Species}
 	Genome=$(ls ${GenomesFolder}/${Species}* | grep -v '.fai')
@@ -156,9 +154,7 @@ done
 ###
 ################################################
 echo "### CHECKING DNA - AA SEQUENCES CORRESPONDENCE"
-#for Species in Branchiostoma_lanceolatum.BraLan3 Homo_sapiens.GRCh38 Mus_musculus.GRCm39 Danio_rerio.GRCz11 Gallus_gallus.GRCg6a Branchiostoma_belcheri.Haploidv18h27 Branchiostoma_floridae.Bfl_VNyyK Strongylocentrotus_purpuratus.Spur5.0 Asterias_rubens.eAstRub1.3 Saccoglossus_kowalevskii.Skow1.1
-#for Species in Homo_sapiens.GRCh38 Mus_musculus.GRCm39 Danio_rerio.GRCz11 Gallus_gallus.GRCg6a
-for Species in Homo_sapiens.GRCh38
+for Species in Branchiostoma_lanceolatum.BraLan3 Homo_sapiens.GRCh38 Mus_musculus.GRCm39 Danio_rerio.GRCz11 Gallus_gallus.GRCg6a Branchiostoma_belcheri.Haploidv18h27 Branchiostoma_floridae.Bfl_VNyyK Strongylocentrotus_purpuratus.Spur5.0 Asterias_rubens.eAstRub1.3 Saccoglossus_kowalevskii.Skow1.1
 do
 	echo ${Species}
 	GTF=$(ls ${ResultsFolder}/FilteredGTFs/${Species}*)
@@ -216,9 +212,7 @@ done
 ###
 ################################################
 echo "### Creating final proteome & CDS sequences files & GTF file"
-#for Species in Branchiostoma_lanceolatum.BraLan3 Homo_sapiens.GRCh38 Mus_musculus.GRCm39 Danio_rerio.GRCz11 Gallus_gallus.GRCg6a Branchiostoma_belcheri.Haploidv18h27 Branchiostoma_floridae.Bfl_VNyyK Strongylocentrotus_purpuratus.Spur5.0 Asterias_rubens.eAstRub1.3 Saccoglossus_kowalevskii.Skow1.1
-#for Species in Homo_sapiens.GRCh38 Mus_musculus.GRCm39 Danio_rerio.GRCz11 Gallus_gallus.GRCg6a
-for Species in Homo_sapiens.GRCh38
+for Species in Branchiostoma_lanceolatum.BraLan3 Homo_sapiens.GRCh38 Mus_musculus.GRCm39 Danio_rerio.GRCz11 Gallus_gallus.GRCg6a Branchiostoma_belcheri.Haploidv18h27 Branchiostoma_floridae.Bfl_VNyyK Strongylocentrotus_purpuratus.Spur5.0 Asterias_rubens.eAstRub1.3 Saccoglossus_kowalevskii.Skow1.1
 do
 	echo ${Species}
 	GTFTMP=$(ls ${ResultsFolder}/FilteredGTFs/${Species}*)
@@ -247,7 +241,7 @@ done
 
 
 #rm -r ${ResultsFolder}/Filtered*
-#gzip ${ResultsFolder}/CheckedProteomes/*.fa ${ResultsFolder}/CheckedDNASequences/*.fa ${ResultsFolder}/CheckedGTFs/*.gtf
+#gzip ${ResultsFolder}/*/*.fa ${ResultsFolder}/*/*.gtf
 
 
  

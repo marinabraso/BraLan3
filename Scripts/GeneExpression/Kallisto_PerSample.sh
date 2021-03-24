@@ -1,5 +1,7 @@
 #!/bin/bash
 
+module add UHTS/Analysis/kallisto/0.44.0;
+
 sample=$1
 GenomeIndexFile=$2
 ResultsFolder=$3
@@ -42,7 +44,7 @@ fi
 if [[ ${err} -eq 0  ]]
 then
 	echo "Kallisto done, removing fastq files"
-	#rm ${FASTQFolder}/${sample}*.fastq.gz
+	rm ${FASTQFolder}/${sample}*fastq.gz
 else
 	echo "Error in kallisto"
 fi
