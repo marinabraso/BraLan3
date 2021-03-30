@@ -37,12 +37,12 @@ echo "Branchiostoma_lanceolatum.BraLan3"
 if [[ $(ls ${ResultsFolder}/FilteredProteomes/Branchiostoma_lanceolatum.BraLan3_ProteinCoding_StrongEvidence.fa* 2> ~/null | wc -l) -lt 1 ]] || [[ $(ls ${ResultsFolder}/FilteredGTFs/Branchiostoma_lanceolatum.BraLan3_ProteinCoding_StrongEvidence.gtf* 2> ~/null | wc -l) -lt 1 ]]
 then
 	echo "Filtering proteome"
-	## List of protein coding genes with "strong" evidence in any of the testedevidencies
-	#zcat ${TranscriptomesFolder}/Branchiostoma_lanceolatum.BraLan3.gtf.gz | awk '{if($3 ~ /CDS/){print $0}}' | grep 'protein_coding' | cut -f9 | sed 's/gene_id \"\([A-Z0-9]\+\)\"; transcript_id.*bgee_evidence \"\([a-z]\+\)\"; uniprot_evidence \"\([a-z]\+\)\"; bflo_evidence \"\([a-z]\+\)\"; bbel_evidence \"\([a-z]\+\)\";/\1\t\2\t\3\t\4\t\5/g' |  sort | uniq | grep 'strong' | cut -f1 > ${ResultsFolder}/BraLan3_ProteinCoding_StrongEvidence.txt
-	## Select the fasta sequences of those in the list & substitute . by * in fasta sequences (?)
-	#awk '{if(NR==FNR){a[">"$1]=1;next;} if(a[$1]==1){valid=1;}else{if($1 ~ />/){valid=0;}} if(valid==1){print $0}}' ${ResultsFolder}/BraLan3_ProteinCoding_StrongEvidence.txt <(zcat ${ProteomesFolder}/Branchiostoma_lanceolatum.BraLan3.fa.gz) | sed 's/\./*/g' > ${ResultsFolder}/FilteredProteomes/Branchiostoma_lanceolatum.BraLan3_ProteinCoding_StrongEvidence.fa
-	## Extract GTF info of the selected genes
-	#awk '{if(NR==FNR){a[$1]=1;next;} if(a[$9]==1){print $0}}' <(cat ${ResultsFolder}/FilteredProteomes/Branchiostoma_lanceolatum.BraLan3_ProteinCoding_StrongEvidence.fa | grep '>' | sed 's/>//g') <(zcat ${TranscriptomesFolder}/Branchiostoma_lanceolatum.BraLan3.gtf.gz | awk '{if($3 == "CDS"){print $0}}' | sed 's/gene_id "\([A-Z0-9]\+\)".*/\1/g') > ${ResultsFolder}/FilteredGTFs/Branchiostoma_lanceolatum.BraLan3_ProteinCoding_StrongEvidence.gtf
+	# List of protein coding genes with "strong" evidence in any of the testedevidencies
+	zcat ${TranscriptomesFolder}/Branchiostoma_lanceolatum.BraLan3.gtf.gz | awk '{if($3 ~ /CDS/){print $0}}' | grep 'protein_coding' | cut -f9 | sed 's/gene_id \"\([A-Z0-9]\+\)\"; transcript_id.*bgee_evidence \"\([a-z]\+\)\"; uniprot_evidence \"\([a-z]\+\)\"; bflo_evidence \"\([a-z]\+\)\"; bbel_evidence \"\([a-z]\+\)\";/\1\t\2\t\3\t\4\t\5/g' |  sort | uniq | grep 'strong' | cut -f1 > ${ResultsFolder}/BraLan3_ProteinCoding_StrongEvidence.txt
+	# Select the fasta sequences of those in the list & substitute . by * in fasta sequences (?)
+	awk '{if(NR==FNR){a[">"$1]=1;next;} if(a[$1]==1){valid=1;}else{if($1 ~ />/){valid=0;}} if(valid==1){print $0}}' ${ResultsFolder}/BraLan3_ProteinCoding_StrongEvidence.txt <(zcat ${ProteomesFolder}/Branchiostoma_lanceolatum.BraLan3.fa.gz) | sed 's/\./*/g' > ${ResultsFolder}/FilteredProteomes/Branchiostoma_lanceolatum.BraLan3_ProteinCoding_StrongEvidence.fa
+	# Extract GTF info of the selected genes
+	awk '{if(NR==FNR){a[$1]=1;next;} if(a[$9]==1){print $0}}' <(cat ${ResultsFolder}/FilteredProteomes/Branchiostoma_lanceolatum.BraLan3_ProteinCoding_StrongEvidence.fa | grep '>' | sed 's/>//g') <(zcat ${TranscriptomesFolder}/Branchiostoma_lanceolatum.BraLan3.gtf.gz | awk '{if($3 == "CDS"){print $0}}' | sed 's/gene_id "\([A-Z0-9]\+\)".*/\1/g') > ${ResultsFolder}/FilteredGTFs/Branchiostoma_lanceolatum.BraLan3_ProteinCoding_StrongEvidence.gtf
 fi
 
 ################################################
@@ -83,25 +83,26 @@ done
 #		- Asterias rubens
 #		- Saccoglossus kowalevskii
 
-for Species in Branchiostoma_belcheri.Haploidv18h27 Branchiostoma_floridae.Bfl_VNyyK Strongylocentrotus_purpuratus.Spur5.0 Asterias_rubens.eAstRub1.3 Saccoglossus_kowalevskii.Skow1.1
+#for Species in Branchiostoma_belcheri.Haploidv18h27 Branchiostoma_floridae.Bfl_VNyyK Strongylocentrotus_purpuratus.Spur5.0 Asterias_rubens.eAstRub1.3 Saccoglossus_kowalevskii.Skow1.1
+for Species in Branchiostoma_floridae.Bfl_VNyyK
 do
 	echo ${Species}
 	if [[ $(ls ${ResultsFolder}/FilteredProteomes/${Species}_ProteinCoding_inGTF_CleanFormat_LongestProt.fa* 2> ~/null | wc -l) -lt 1 ]] || [[ $(ls ${ResultsFolder}/FilteredGTFs/${Species}_ProteinCoding_inGTF_CleanFormat_LongestProt.gtf* 2> ~/null | wc -l) -lt 1 ]]
 	then
 		echo "Filtering proteome"
 		SpeciesShortName=$(echo ${Species^^} | awk -F '_' '{print substr($1, 1, 1)substr($2, 1, 3)}')
-		##Extract info from GFF (filter for CDS & clean format of gene ID and protein ID)
-		#zcat ${TranscriptomesFolder}/${Species}.gff.gz | grep -v '^#' | awk '{if($3=="CDS"){print $0}}' | sed 's/ID.*;gene=\([A-Za-z0-9\.\/\-]\+\);.*;protein_id=\([A-Za-z0-9_\.]\+\)$/\1\t\2/g' | sed 's/ID.*;gene=\([A-Za-z0-9\.\/\-]\+\);.*;protein_id=\([A-Za-z0-9_\.]\+\);.*/\1\t\2/g' | awk -v sn=${SpeciesShortName} '{print $1"\t"$2"\t"$3"\t"$4"\t"$5"\t"$6"\t"$7"\t"$8"\t"sn"_"$9"\t"sn"_"$10}' > ${ResultsFolder}/${Species}_ProteinCoding_inGTF_CleanFormat.txt
-		## Extract protein sequences present in filtered gff and add geneID to protID
-		#awk '{if(NR==FNR){a[">"$10]=1;b[">"$10]=$9;next} if($1 ~ /^>/){if(a[$1]==1){valid=1; print $1"|"b[$1]}else{valid=0}}else{if(valid==1){print $0}}}' ${ResultsFolder}/${Species}_ProteinCoding_inGTF_CleanFormat.txt <(zcat ${ProteomesFolder}/${Species}.faa.gz | awk -v sn=${SpeciesShortName} '{if($1 ~ /^>/){print ">"sn"_"substr($1, 2, length($1))}else{print $0}}') > ${ResultsFolder}/FilteredProteomes/${Species}_ProteinCoding_inGTF_CleanFormat.fa
-		## Extract longest protein for each gene
-		#awk '{if($1 ~ />/){print name"\t"len; name=$1; len=0; next;} len=len+length($1);}END{print name"\t"len;}' ${ResultsFolder}/FilteredProteomes/${Species}_ProteinCoding_inGTF_CleanFormat.fa | tail -n +2 | sed 's/>//g' | sed 's/|/\t/g' | sort -k2,2 -k3,3V | awk '{if(g==$2){p=$1}else{print g"\t"p;g=$2;p=$1}}END{print g"\t"p;}' | tail -n +2 > ${ResultsFolder}/${Species}_ProteinCoding_inGTF_CleanFormat_LongestProt.txt
-		## Extract sequences of the longest protein per gene
-		#awk '{if(NR==FNR){a[">"$2"|"$1]=1;next;} if($1 ~ /^>/){if(a[$1]==1){valid=1}else{valid=0}}if(valid==1){print $0}}' ${ResultsFolder}/${Species}_ProteinCoding_inGTF_CleanFormat_LongestProt.txt ${ResultsFolder}/FilteredProteomes/${Species}_ProteinCoding_inGTF_CleanFormat.fa > ${ResultsFolder}/FilteredProteomes/${Species}_ProteinCoding_inGTF_CleanFormat_LongestProt.fa
-		## Remove unnecessary intermediate files
-		#rm ${ResultsFolder}/FilteredProteomes/${Species}_ProteinCoding_inGTF_CleanFormat.fa
-		## Extract GTF info of the selected genes
-		#awk '{if(NR==FNR){a[$1]=1;next;} if(a[$9]==1){print $0}}' <(cat ${ResultsFolder}/FilteredProteomes/${Species}_ProteinCoding_inGTF_CleanFormat_LongestProt.fa | grep '>' | sed 's/>//g') <(cat ${ResultsFolder}/${Species}_ProteinCoding_inGTF_CleanFormat.txt | awk '{if($3 == "CDS"){print $0}}' | awk '{print $1"\t"$2"\t"$3"\t"$4"\t"$5"\t"$6"\t"$7"\t"$8"\t"$10"|"$9"\t"$9"\t"$10}') > ${ResultsFolder}/FilteredGTFs/${Species}_ProteinCoding_inGTF_CleanFormat_LongestProt.gtf
+		#Extract info from GFF (filter for CDS & clean format of gene ID and protein ID)
+		zcat ${TranscriptomesFolder}/${Species}.gff.gz | grep -v '^#' | awk '{if($3=="CDS"){print $0}}' | sed 's/ID.*;gene=\([A-Za-z0-9\.\/\-]\+\);.*;protein_id=\([A-Za-z0-9_\.]\+\)$/\1\t\2/g' | sed 's/ID.*;gene=\([A-Za-z0-9\.\/\-]\+\);.*;protein_id=\([A-Za-z0-9_\.]\+\);.*/\1\t\2/g' | awk -v sn=${SpeciesShortName} '{print $1"\t"$2"\t"$3"\t"$4"\t"$5"\t"$6"\t"$7"\t"$8"\t"sn"_"$9"\t"sn"_"$10}' > ${ResultsFolder}/${Species}_ProteinCoding_inGTF_CleanFormat.txt
+		# Extract protein sequences present in filtered gff and add geneID to protID
+		awk '{if(NR==FNR){a[">"$10]=1;b[">"$10]=$9;next} if($1 ~ /^>/){if(a[$1]==1){valid=1; print $1"|"b[$1]}else{valid=0}}else{if(valid==1){print $0}}}' ${ResultsFolder}/${Species}_ProteinCoding_inGTF_CleanFormat.txt <(zcat ${ProteomesFolder}/${Species}.faa.gz | awk -v sn=${SpeciesShortName} '{if($1 ~ /^>/){print ">"sn"_"substr($1, 2, length($1))}else{print $0}}') > ${ResultsFolder}/FilteredProteomes/${Species}_ProteinCoding_inGTF_CleanFormat.fa
+		# Extract longest protein for each gene
+		awk '{if($1 ~ />/){print name"\t"len; name=$1; len=0; next;} len=len+length($1);}END{print name"\t"len;}' ${ResultsFolder}/FilteredProteomes/${Species}_ProteinCoding_inGTF_CleanFormat.fa | tail -n +2 | sed 's/>//g' | sed 's/|/\t/g' | sort -k2,2 -k3,3V | awk '{if(g==$2){p=$1}else{print g"\t"p;g=$2;p=$1}}END{print g"\t"p;}' | tail -n +2 > ${ResultsFolder}/${Species}_ProteinCoding_inGTF_CleanFormat_LongestProt.txt
+		# Extract sequences of the longest protein per gene
+		awk '{if(NR==FNR){a[">"$2"|"$1]=1;next;} if($1 ~ /^>/){if(a[$1]==1){valid=1}else{valid=0}}if(valid==1){print $0}}' ${ResultsFolder}/${Species}_ProteinCoding_inGTF_CleanFormat_LongestProt.txt ${ResultsFolder}/FilteredProteomes/${Species}_ProteinCoding_inGTF_CleanFormat.fa > ${ResultsFolder}/FilteredProteomes/${Species}_ProteinCoding_inGTF_CleanFormat_LongestProt.fa
+		# Remove unnecessary intermediate files
+		rm ${ResultsFolder}/FilteredProteomes/${Species}_ProteinCoding_inGTF_CleanFormat.fa
+		# Extract GTF info of the selected genes
+		awk '{if(NR==FNR){a[$1]=1;next;} if(a[$9]==1){print $0}}' <(cat ${ResultsFolder}/FilteredProteomes/${Species}_ProteinCoding_inGTF_CleanFormat_LongestProt.fa | grep '>' | sed 's/>//g') <(cat ${ResultsFolder}/${Species}_ProteinCoding_inGTF_CleanFormat.txt | awk '{if($3 == "CDS"){print $0}}' | awk '{print $1"\t"$2"\t"$3"\t"$4"\t"$5"\t"$6"\t"$7"\t"$8"\t"$10"|"$9"\t"$9"\t"$10}') > ${ResultsFolder}/FilteredGTFs/${Species}_ProteinCoding_inGTF_CleanFormat_LongestProt.gtf
 	fi
 done
 
@@ -112,7 +113,7 @@ done
 ################################################
 echo "### EXTRACTING DNA SEQUENCES"
 #for Species in Branchiostoma_lanceolatum.BraLan3 Homo_sapiens.GRCh38 Mus_musculus.GRCm39 Danio_rerio.GRCz11 Gallus_gallus.GRCg6a Branchiostoma_belcheri.Haploidv18h27 Branchiostoma_floridae.Bfl_VNyyK Strongylocentrotus_purpuratus.Spur5.0 Asterias_rubens.eAstRub1.3 Saccoglossus_kowalevskii.Skow1.1
-for Species in Homo_sapiens.GRCh38 Mus_musculus.GRCm39 Danio_rerio.GRCz11 Gallus_gallus.GRCg6a
+for Species in Branchiostoma_floridae.Bfl_VNyyK
 do
 	echo ${Species}
 	Genome=$(ls ${GenomesFolder}/${Species}* | grep -v '.fai')
@@ -154,7 +155,8 @@ done
 ###
 ################################################
 echo "### CHECKING DNA - AA SEQUENCES CORRESPONDENCE"
-for Species in Branchiostoma_lanceolatum.BraLan3 Homo_sapiens.GRCh38 Mus_musculus.GRCm39 Danio_rerio.GRCz11 Gallus_gallus.GRCg6a Branchiostoma_belcheri.Haploidv18h27 Branchiostoma_floridae.Bfl_VNyyK Strongylocentrotus_purpuratus.Spur5.0 Asterias_rubens.eAstRub1.3 Saccoglossus_kowalevskii.Skow1.1
+#for Species in Branchiostoma_lanceolatum.BraLan3 Homo_sapiens.GRCh38 Mus_musculus.GRCm39 Danio_rerio.GRCz11 Gallus_gallus.GRCg6a Branchiostoma_belcheri.Haploidv18h27 Branchiostoma_floridae.Bfl_VNyyK Strongylocentrotus_purpuratus.Spur5.0 Asterias_rubens.eAstRub1.3 Saccoglossus_kowalevskii.Skow1.1
+for Species in Branchiostoma_lanceolatum.BraLan3
 do
 	echo ${Species}
 	GTF=$(ls ${ResultsFolder}/FilteredGTFs/${Species}*)
@@ -164,14 +166,15 @@ do
 	if [[ $(echo ${ProteomeTMP} | sed 's/.*\.//g') =~ "gz" ]];	then gunzip ${ProteomeTMP}; fi
 	ProteomeTMP=$(ls ${ResultsFolder}/FilteredProteomes/${Species}*.fa)
 
-	if [[ ! -s ${ResultsFolder}/Checking_DNA_AA_sequences/${Species}_DNA_AA_seq_check.txt ]]
-	then
+	rm ${ResultsFolder}/Checking_DNA_AA_sequences/${Species}_DNA_AA_seq_check.txt
+	#if [[ ! -s ${ResultsFolder}/Checking_DNA_AA_sequences/${Species}_DNA_AA_seq_check.txt ]]
+	#then
 		# Check that extracted DNA sequences correspond to protein sequences
 		echo "Comparing DNA and AA sequences"
-		for id in $(cat ${ProteomeTMP} | grep '>' | sed 's/>//g')
+		for id in $(cat ${ProteomeTMP} | grep '>' | sed 's/>//g' | head -100)
 		do
 			#echo ${id}
-			ProtSeq=$(awk -v id=${id} '{if($1 ~ />/){if($1 == ">"id){valid=1;next;}else{valid=0}} if(valid == 1){print $0}}' ${ProteomeTMP} | awk '{seq=seq""$1}END{print seq}')
+			ProtSeq=$(awk -v id=${id} '{if($1 ~ />/){if($1 == ">"id){valid=1;next;}else{valid=0}} if(valid == 1){print $0}}' ${ProteomeTMP} | awk '{seq=seq""$1}END{print seq}' | sed 's/*//g')
 			cDNASeq=$(awk -v id=${id} '{if($1 ~ />/){if($1 == ">"id){valid=1;next;}else{valid=0}} if(valid == 1){print $0}}' ${ResultsFolder}/FilteredDNASequences/${Species}.fa | awk '{seq=seq""$1}END{print seq}')
 			chr=$(cat ${GTF} | grep -w ${id} | head -1 | cut -f1)
 			perl -le '
@@ -184,27 +187,40 @@ do
 				for(my$c=0;$c<=scalar(@AAs);$c++){
 					$GeneticCode{$Base1[$c].$Base2[$c].$Base3[$c]}=$AAs[$c];
 				}
-				if($ARGV[2]=="MT"){
-					$GeneticCode{"AGA"}="1";
-					$GeneticCode{"AGG"}="1";
-					$GeneticCode{"ATA"}="M";
-					$GeneticCode{"TGA"}="W";
-				}
+				my %GeneticCodeMito=%GeneticCode;
+				$GeneticCodeMito{"AGA"}="1";
+				$GeneticCodeMito{"AGG"}="1";
+				$GeneticCodeMito{"ATA"}="M";
+				$GeneticCodeMito{"TGA"}="W";
 				my $BTseq=""; # back-translated sequence
+				my $BTseqMito=""; # back-translated sequence with mitochondrial genetic code
 				for(my$c=0;$c<=length($ARGV[1]);$c+=3){
 					$BTseq.=$GeneticCode{substr($ARGV[1], $c, 3)};
+					$BTseqMito.=$GeneticCodeMito{substr($ARGV[1], $c, 3)};
 				}
-				if($ARGV[0]==$BTseq){
-					print $ARGV[3]."\tIdentical";
+				if(substr($BTseq, -1) eq "1"){chop($BTseq);}
+				if(substr($BTseqMito, -1) eq "1"){chop($BTseqMito);}
+				if($ARGV[0] eq $BTseq){
+					print $ARGV[3]."\t".$ARGV[2]."\tIdentical\tNuclear";
+				}elsif($ARGV[0] eq $BTseqMito){
+					print $ARGV[3]."\t".$ARGV[2]."\tIdentical\tMitochondrial";
 				}else{
-					print $ARGV[3]."\tError\t".$ARGV[0]."\t".$BTseq."\t".$ARGV[1];
+					my $mismatch = ( $ARGV[0] ^ $BTseq ) =~ tr/\0//c;
+					print $ARGV[3]."\t".$ARGV[2]."\tError\t".$ARGV[0]."\t".$BTseq."\t".$mismatch."\t".length($ARGV[0])."\t".length($BTseq);
+					if(length($ARGV[0]) == length($BTseq)){
+						for(0 .. length($ARGV[0])) {
+						    if(substr($BTseq, $_, 1) ne substr($ARGV[0], $_, 1)) {
+						        print "ALTGC\t".$ARGV[2]."\t".substr($ARGV[0], $_, 1)."\t".substr($BTseq, $_, 1);
+						    }
+						}
+					}
 				}
 			' -- "$ProtSeq" "$cDNASeq" "$chr" "$id" >> ${ResultsFolder}/Checking_DNA_AA_sequences/${Species}_DNA_AA_seq_check.txt
 		done
-	fi
+	#fi
 done
 
-
+exit 0
 
 ################################################
 ###
