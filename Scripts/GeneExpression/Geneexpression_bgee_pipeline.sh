@@ -4,10 +4,13 @@
 
 module add UHTS/Quality_control/fastqc/0.11.7;
 module add UHTS/Analysis/kallisto/0.44.0;
+module add R/3.5.1;
 
 # Scripts
 FASTQC_PerSample=Scripts/GeneExpression/FASTQC_PreSample.sh
 KALLISTO_PerSample=Scripts/GeneExpression/Kallisto_PerSample.sh
+bgee_RNA_Seq="../bgee_pipeline/pipeline/RNA_Seq"
+rna_seq_analysis=${bgee_RNA_Seq}"/1Run/rna_seq_analysis.R"
 
 # Files & parameters
 Basename="Branchiostoma_lanceolatum.BraLan3"
@@ -64,4 +67,33 @@ do
 		rm ${FASTQFolder}/${Sample}*fastq.gz 2> ~/null
 	fi
 done
+
+
+mkdir -p ${ResultsFolder}/sum
+for folder in ${ResultsFolder}/kallisto/*
+do
+
+	R CMD BATCH --no-save --no-restore "--args  kallisto_count_folder=\"$folder\" \
+	gene2transcript_file=\"$gene2transcript_file\" gene2biotype_file=\"$gene2biotype_file\" \
+	library_id=\"$folder\"" $rna_seq_analysis $folder/library_id.Rout
+
+done
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

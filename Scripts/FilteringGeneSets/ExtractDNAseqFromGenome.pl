@@ -32,7 +32,7 @@ sub readFasta{
 
 	    my @s=split(" ",$id);
 	    $id=$s[0];
-
+        $id =~ s/\.[0-9]+//g;
 	    # print "saw chromosome ".$id."\n";
 	    
 	    $reffasta->{$id}="";
