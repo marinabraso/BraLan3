@@ -10,15 +10,16 @@ diamond="Scripts/FindOrthologs/diamond"
 
 # Files & parameters
 ResultsFolder="Results/FindOrthologs"
+ProteomesFolder="Results/FilteringGeneSets/Proteomes"
 
 ################################################
 ### Run BROCCOLI
-gunzip ${ResultsFolder}/CheckedProteomes/*.fa.gz
+gunzip ${ProteomesFolder}/*.fa.gz
 mkdir -p ${ResultsFolder}/broccoli
 cd ${ResultsFolder}/broccoli
-python ../../../${broccoli} -dir ../CheckedProteomes -ext fa -path_diamond ../../../${diamond} -path_fasttree ${fasttree}
+python ../../../${broccoli} -dir ../../../${ProteomesFolder} -ext fa -path_diamond ../../../${diamond} -path_fasttree ${fasttree}
 cd ../../..
-gzip ${ResultsFolder}/CheckedProteomes/*.fa
+gzip ${ProteomesFolder}/*.fa
 
 
 
