@@ -379,15 +379,15 @@ do
 	cat ${ResultsFolder}/Checking_DNA_AA_sequences/${Species}_checking_btDNA_AA.txt | grep 'Identical' | cut -f1 | sed 's/>//g' >> ${ResultsFolder}/${Species}_FinalSet.list
 
 	if [[ ! -s ${ResultsFolder}/Proteomes/${Species}.fa ]]; then
-		#	Extract protein sequences of selected genes
+		echo Extract protein sequences of selected genes
 		awk '{if(NR==FNR){a[">"$1]=1;next} if($1 ~ />/){if(a[$1]){print $1;valid=1}else{valid=0}}else{if(valid==1){print $0}}}' ${ResultsFolder}/${Species}_FinalSet.list ${ResultsFolder}/FilteredProteomes/${Species}.fa >  ${ResultsFolder}/Proteomes/${Species}.fa
 	fi
 	if [[ ! -s ${ResultsFolder}/DNASequences/${Species}_DNA.fa ]]; then
-		#	Extract DNA sequences of selected genes
+		echo Extract DNA sequences of selected genes
 		awk '{if(NR==FNR){a[">"$1]=1;next} if($1 ~ />/){if(a[$1]){print $1;valid=1}else{valid=0}}else{if(valid==1){print $0}}}' ${ResultsFolder}/${Species}_FinalSet.list ${ResultsFolder}/FilteredDNASequences/${Species}_DNA.fa >  ${ResultsFolder}/DNASequences/${Species}_DNA.fa
 	fi
 	if [[ ! -s ${ResultsFolder}/GTFs/${Species}.fa ]]; then
-		#	Extract GTF of selected genes
+		echo Extract GTF of selected genes
 		grep -w -f ${ResultsFolder}/${Species}_FinalSet.list ${ResultsFolder}/FilteredGTFs/${Species}.gtf > ${ResultsFolder}/GTFs/${Species}.gtf
 	fi
 done

@@ -14,12 +14,12 @@ ProteomesFolder="Results/FilteringGeneSets/Proteomes"
 
 ################################################
 ### Run BROCCOLI
-gunzip ${ProteomesFolder}/*.fa.gz
+gunzip ${ProteomesFolder}/*.fa.gz 2> ~/null
 mkdir -p ${ResultsFolder}/broccoli
 cd ${ResultsFolder}/broccoli
 python ../../../${broccoli} -dir ../../../${ProteomesFolder} -ext fa -path_diamond ../../../${diamond} -path_fasttree ${fasttree}
 cd ../../..
-gzip ${ProteomesFolder}/*.fa
+gzip ${ProteomesFolder}/*.fa 2> ~/null
 
 
 

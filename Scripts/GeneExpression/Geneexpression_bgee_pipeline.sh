@@ -1,93 +1,26 @@
 #!/bin/bash
 
-### This script run the control quality (FASTQC) + Kallisto (QUANT) per library
-
-module add UHTS/Quality_control/fastqc/0.11.7;
-module add UHTS/Analysis/kallisto/0.44.0;
 module add R/3.5.1;
 
 # Scripts
-FASTQC_PerSample=Scripts/GeneExpression/FASTQC_PreSample.sh
-KALLISTO_PerSample=Scripts/GeneExpression/Kallisto_PerSample.sh
 bgee_RNA_Seq="../bgee_pipeline/pipeline/RNA_Seq"
 rna_seq_analysis=${bgee_RNA_Seq}"/1Run/rna_seq_analysis.R"
+rna_seq_sum=${bgee_RNA_Seq}"/1Run/rna_seq_sum_by_species.R"
 
 # Files & parameters
 Basename="Branchiostoma_lanceolatum.BraLan3"
 ResultsFolder=Results/GeneExpression
-mkdir -p ${ResultsFolder}/fastqc
-mkdir -p ${ResultsFolder}/kallisto
-FASTQFolder=Data/RNA-seq/Marletaz2018 # Folder fort the fastq files while computing
-NASFASTQFolder=/nas/FAC/FBM/DEE/mrobinso/default/D2c/mbrasovi/Marletaz2018 # Folder for the long term storage of the fastq files (to be copied to $FASTQFolder before using them)
-Metadata=Metadata/Marletaz2018_RNAseq_SRA.txt 
-index_file=$ResultsFolder/${Basename}_transcripts.idx # Transcriptome index file to run Kallisto
+sample_info="Metadata/Marletaz2018_RNAseq_bgee_sample_info.txt"
+sample_excluded="Metadata/Marletaz2018_RNAseq_bgee_sample_excluded.txt"
 
-
-for Sample in $(grep 'Branchiostoma lanceolatum' ${Metadata} | cut -f1 | tail -n +2)
+for folder in $(ls ${ResultsFolder}/kallisto)
 do
-	echo "#### $Sample"
-	# Prevent quota problems (waii until there is les than 100G in the fastq folder)
-	until [ $(du -s Data/RNA-seq/Marletaz2018 | cut -f1) -lt 100000000 ]
-	do
-		echo Waiting... $(du -s Data/RNA-seq/Marletaz2018 | cut -f1)
-		sleep 1m
-	done
-
-	# Get fastq file(s) form long term storage
-	if [[ $(ls ${FASTQFolder}/${Sample}* 2> ~/null | wc -l) -eq 0 ]]
+	if [[ ! -s ${ResultsFolder}/kallisto/$folder/abundance+gene_id+fpkm+intergenic.tsv ]]
 	then
-		echo "Getting fastq file(s) from nas..."
-		cp ${NASFASTQFolder}/${Sample}* ${FASTQFolder}
-	fi
-	# FASTQC
-	for file in $(ls ${FASTQFolder}/${Sample}*)
-	do
-		if [[ ! -s ${ResultsFolder}/fastqc/$(basename $file | sed 's/\..*/_fastqc.zip/g') ]]
-		then
-			echo Running fastqc $file .....
-			sbatch -t 2:00:00 --mem=5000 -J QC$Sample -o tmp/QC$Sample.out -e tmp/QC$Sample.err ${FASTQC_PerSample} ${file} ${ResultsFolder}/fastqc
-		else
-			echo Fastqc $file done.
-		fi
-	done
-	# KALLISTO
-	if [[ ! -s ${ResultsFolder}/kallisto/${Sample}/abundance.h5 ]]
-	then
-		if [[ $(ls ${FASTQFolder}/${Sample}* 2> ~/null | wc -l) -eq 1 ]]
-		then
-			echo "Running Kallisto $Sample (single-end) ....."
-			sbatch -t 5:00:00 --mem=10000 -J K$Sample -o tmp/K$Sample.out -e tmp/K$Sample.err ${KALLISTO_PerSample} $Sample $index_file ${ResultsFolder}/kallisto $FASTQFolder "Single" "R"
-		elif [[ $(ls ${FASTQFolder}/${Sample}* 2> ~/null | wc -l) -eq 2 ]]
-		then
-			echo "Running Kallisto $Sample (paired-end) ....."
-			sbatch -t 5:00:00 --mem=10000 -J K$Sample -o tmp/K$Sample.out -e tmp/K$Sample.err ${KALLISTO_PerSample} $Sample $index_file ${ResultsFolder}/kallisto $FASTQFolder "Paired" "RF"
-		fi
-	else
-		echo Kallisto $Sample done, removing fastq files
-		rm ${FASTQFolder}/${Sample}*fastq.gz 2> ~/null
+		echo "Analysis $folder"
+		R CMD BATCH --no-save --no-restore "--args  kallisto_count_folder=\"${ResultsFolder}/kallisto/$folder\" gene2transcript_file=\"${ResultsFolder}/${Basename}.gene2transcript\" gene2biotype_file=\"${ResultsFolder}/${Basename}.gene2biotype\" library_id=\"${ResultsFolder}/kallisto/$folder\"" $rna_seq_analysis ${ResultsFolder}/kallisto/$folder/library_id.Rout
 	fi
 done
-
-
-mkdir -p ${ResultsFolder}/sum
-for folder in ${ResultsFolder}/kallisto/*
-do
-
-	R CMD BATCH --no-save --no-restore "--args  kallisto_count_folder=\"$folder\" \
-	gene2transcript_file=\"$gene2transcript_file\" gene2biotype_file=\"$gene2biotype_file\" \
-	library_id=\"$folder\"" $rna_seq_analysis $folder/library_id.Rout
-
-done
-
-
-
-
-
-
-
-
-
-
 
 
 
