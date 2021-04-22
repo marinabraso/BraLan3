@@ -10,11 +10,10 @@ MSAFolder=${ResultsFolder}/MSA_mafft
 SeqFolder=${ResultsFolder}/GroupSequences_Chordates
 mkdir -p ${MSAFolder}
 
-for group in $(cut -f1 ${OrthologsFolder}/broccoli/dir_step3/table_OGs_protein_counts.txt | tail -n +2)
+for group in $(cat ${ResultsFolder}/Groups_wChodates.txt)
 do
 	echo ${group}
 	#rm ${MSAFolder}/${group}_*.fa 2> ~/null
-
 	## Alignment of AA sequences with MAFFT
 	if [[ ! -s ${MSAFolder}/${group}_AA.fa ]]
 	then

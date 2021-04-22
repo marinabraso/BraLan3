@@ -1,6 +1,6 @@
 #!/bin/bash
 
-### This script run the control quality (FASTQC) + Kallisto (QUANT) per library
+### This script runs the control quality (FASTQC) + Kallisto (QUANT) per library
 
 module add UHTS/Quality_control/fastqc/0.11.7;
 module add UHTS/Analysis/kallisto/0.44.0;
@@ -9,8 +9,6 @@ module add R/3.5.1;
 # Scripts
 FASTQC_PerSample=Scripts/GeneExpression/FASTQC_PreSample.sh
 KALLISTO_PerSample=Scripts/GeneExpression/Kallisto_PerSample.sh
-bgee_RNA_Seq="../bgee_pipeline/pipeline/RNA_Seq"
-rna_seq_analysis=${bgee_RNA_Seq}"/1Run/rna_seq_analysis.R"
 
 # Files & parameters
 Basename="Branchiostoma_lanceolatum.BraLan3"
@@ -23,9 +21,10 @@ Metadata=Metadata/Marletaz2018_RNAseq_SRA.txt
 index_file=$ResultsFolder/${Basename}_transcripts.idx # Transcriptome index file to run Kallisto
 
 
-for Sample in $(grep 'Branchiostoma lanceolatum' ${Metadata} | cut -f1 | tail -n +2)
+for Sample in $(grep 'Branchiostoma lanceolatum' ${Metadata} | cut -f1)
 do
 	echo "#### $Sample"
+	mkdir -p ${ResultsFolder}/kallisto/${Sample}
 	if [[ ! -s ${ResultsFolder}/kallisto/${Sample}/abundance.h5 ]]
 	then
 		# Prevent quota problems (waii until there is les than 100G in the fastq folder)
@@ -57,11 +56,11 @@ do
 			if [[ $(ls ${FASTQFolder}/${Sample}* 2> ~/null | wc -l) -eq 1 ]]
 			then
 				echo "Running Kallisto $Sample (single-end) ....."
-				sbatch -t 5:00:00 --mem=10000 -J K$Sample -o tmp/K$Sample.out -e tmp/K$Sample.err ${KALLISTO_PerSample} $Sample $index_file ${ResultsFolder}/kallisto $FASTQFolder "Single" "R"
+				sbatch -t 10:00:00 --mem=10000 -J K$Sample -o tmp/K$Sample.out -e tmp/K$Sample.err ${KALLISTO_PerSample} $Sample $index_file ${ResultsFolder}/kallisto $FASTQFolder "Single" "R"
 			elif [[ $(ls ${FASTQFolder}/${Sample}* 2> ~/null | wc -l) -eq 2 ]]
 			then
 				echo "Running Kallisto $Sample (paired-end) ....."
-				sbatch -t 5:00:00 --mem=10000 -J K$Sample -o tmp/K$Sample.out -e tmp/K$Sample.err ${KALLISTO_PerSample} $Sample $index_file ${ResultsFolder}/kallisto $FASTQFolder "Paired" "RF"
+				sbatch -t 10:00:00 --mem=10000 -J K$Sample -o tmp/K$Sample.out -e tmp/K$Sample.err ${KALLISTO_PerSample} $Sample $index_file ${ResultsFolder}/kallisto $FASTQFolder "Paired" "RF"
 			fi
 		else
 			echo Kallisto $Sample done, removing fastq files

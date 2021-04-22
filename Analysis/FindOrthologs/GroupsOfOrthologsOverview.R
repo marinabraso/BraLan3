@@ -145,6 +145,23 @@ layout(matrix(c(1,2),nrow=1,ncol=2,byrow=T), widths=c(1,1), heights=c(1), TRUE)
 HistogramGroupSize(Counts$Sum[which(Counts$Blan>0)], seq(0,10000,1), c(0, 100), c(0,10), "Histogram group size of groups with at least 1 Blan gene member")
 
 
+CountBlanPresent <- Counts[which(Counts[,"Blan"]>0),]
+BlanDup <- CountBlanPresent[,"Blan"]>1
+VertebDup <- apply(CountBlanPresent[,Verteb], 1, max)>1
+AllVertebDup <- apply(CountBlanPresent[,Verteb], 1, min)>1
+
+
+chisq.test(BlanDup, VertebDup)
+ 
+chisq.test(BlanDup, AllVertebDup)
+
+
+
+
+
+
+
+
 
 
 

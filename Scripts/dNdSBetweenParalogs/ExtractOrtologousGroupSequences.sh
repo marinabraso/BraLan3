@@ -6,7 +6,8 @@ bedtools="/scratch/wally/FAC/FBM/DEE/mrobinso/default/mbrasovi/Software/bedtools
 # Files & parameters
 SequencesFolder="Results/FilteringGeneSets"
 OrthologsFolder="Results/FindOrthologs"
-ResultsFolder="Results/dNdSBetweenParalogs/GroupSequences_Chordates"
+BaseResultsFolder="Results/dNdSBetweenParalogs"
+ResultsFolder="${BaseResultsFolder}/GroupSequences_Chordates"
 mkdir -p ${ResultsFolder}
 
 ################################################
@@ -23,6 +24,7 @@ do
 	if [[ ! -s ${ResultsFolder}/${group}_AA.fa ]] || [[ ! -s ${ResultsFolder}/${group}_DNA.fa ]]
 	then
 		rm ${ResultsFolder}/${group}_*.fa 2> ~/null
+		withchordates=0
 		for species in "${!SpeciesOrder[@]}"
 		do
 			if [[ " ${Chordates[@]} " =~ " ${SpeciesOrder[$species]} " ]]
@@ -34,11 +36,16 @@ do
 				for gene in $(grep -w ${group} ${OrthologsFolder}/broccoli/dir_step3/table_OGs_protein_names.txt | cut -f ${colnum} | awk -F ' ' '{for (i=1;i<=NF;i++) print $i}')
 				do
 					#echo ${gene}
+					$withchordates=1
 					grep -A 1 ${gene} $fileDNA >> ${ResultsFolder}/${group}_DNA.fa
 					grep -A 1 ${gene} $fileAA >> ${ResultsFolder}/${group}_AA.fa
 				done
 			fi
 		done
+		if [[ $withchordates -eq 1 ]]
+		then
+			echo ${group} >> ${BaseResultsFolder}/Groups_wChodates.txt
+		fi
 	fi
 done
 
