@@ -1,0 +1,31 @@
+#!/bin/sh
+
+#SBATCH --account mrobinso_default
+#SBATCH --mail-user amina.echchiki@unil.ch
+#SBATCH --mail-type ALL
+#SBATCH --partition axiom
+#SBATCH --nodes 1
+#SBATCH --ntasks 1
+#SBATCH --cpus-per-task 10
+#SBATCH --mem 20GB
+#SBATCH --job-name gtf_to_fasta
+#SBATCH --export NONE
+#SBATCH --time=2-00:00:00
+
+# modules
+
+## modules
+module load Bioinformatics/Software/vital-it
+module add UHTS/Analysis/kallisto/0.46.0
+
+# idx
+#kallisto index -i amphio --make-unique final_pc_genic_intergenic.fasta
+
+# quant
+# kallisto quant -i amphio -o SRR6246043 -t 10 --bias ../full_transcriptome/SRR6246043_1.fastq.gz ../full_transcriptome/SRR6246043_2.fastq.gz
+
+kallisto quant -i amphio -o SRR6246041 -t 10 --bias ../full_transcriptome/SRR6246041_1.fastq.gz ../full_transcriptome/SRR6246041_2.fastq.gz
+kallisto quant -i amphio -o SRR6246045 -t 10 --bias ../full_transcriptome/SRR6246045_1.fastq.gz ../full_transcriptome/SRR6246045_2.fastq.gz
+kallisto quant -i amphio -o SRR6246047 -t 10 --bias ../full_transcriptome/SRR6246047_1.fastq.gz ../full_transcriptome/SRR6246047_2.fastq.gz
+kallisto quant -i amphio -o SRR6246048 -t 10 --bias ../full_transcriptome/SRR6246048_1.fastq.gz ../full_transcriptome/SRR6246048_2.fastq.gz
+

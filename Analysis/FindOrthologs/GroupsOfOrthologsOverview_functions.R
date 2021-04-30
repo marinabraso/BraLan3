@@ -2,6 +2,43 @@
 
 
 
+PlotColumnVertebrateType <- function(df, pos, col){
+	len <- length(df[,1])
+	base <- 0
+	w <- .5
+	print("buu")
+	print(length(df[which(df$VertebType=="SingleCopy" | df$VertebType=="Ohnolog" | df$VertebType=="Duplicated"),1]))
+	value <- length(df[which(df$VertebType=="SingleCopy"),1])/len*100
+	print(value)
+	polygon(c(pos-w/2,pos+w/2,pos+w/2,pos-w/2), c(base,base,base+value,base+value), col=col[1], border=NA)
+	base <- base+value
+	value <- length(df[which(df$VertebType=="Ohnolog"),1])/len*100
+	print(value)
+	polygon(c(pos-w/2,pos+w/2,pos+w/2,pos-w/2), c(base,base,base+value,base+value), col=col[2], border=NA)
+	base <- base+value
+	value <- length(df[which(df$VertebType=="Duplicated"),1])/len*100
+	print(value)
+	polygon(c(pos-w/2,pos+w/2,pos+w/2,pos-w/2), c(base,base,base+value,base+value), col=col[3], border=NA)
+	base <- base+value
+	print(base)
+}
+
+
+
+PlotColumnBlanCN <- function(df, vec, pos, col){
+		BlanCN <- table(df[which(rownames(df) %in% vec),"Blan"])/length(vec)*100
+		print(BlanCN)
+		print(names(BlanCN))
+		plus5 <- sum(BlanCN[names(BlanCN)>=5])
+		print(plus5)
+		base <- 0
+		w <- .5
+		for(i in c(1:4)){
+			polygon(c(pos-w/2,pos+w/2,pos+w/2,pos-w/2), c(base,base,base+BlanCN[i],base+BlanCN[i]), col=col[i], border=NA)
+			base <- base+BlanCN[i]
+		}
+		polygon(c(pos-w/2,pos+w/2,pos+w/2,pos-w/2), c(base,base,base+plus5,base+plus5), col=col[5], border=NA)
+}
 
 HistogramGroupSize <- function(values, breaks, xlim, ylim, main){
 	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=ylim, xlim=xlim, col=NA)
