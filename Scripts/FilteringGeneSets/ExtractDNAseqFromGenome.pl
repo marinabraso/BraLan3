@@ -234,7 +234,7 @@ foreach my $geneid (keys %Coordinates){
 	if($strand eq "-"){
 	    $sequence=reverseComplement($sequence);
 	}elsif($strand ne "+"){
-        print "Weird strand or wrong annotation of strand for gene ".$geneid.".\n";
+        print "Error: strand or wrong annotation of strand for gene ".$geneid.".\n";
         exit;
     }
 	
@@ -242,7 +242,7 @@ foreach my $geneid (keys %Coordinates){
     print $output $sequence."\n";
 
     } else{
-	print "weird! cannot find ".$chr." in genome.\n";
+	print "Error: cannot find ".$chr." in genome.\n";
     }
 }
 

@@ -1,16 +1,17 @@
 #!/bin/bash
 
 # Scripts
-module add SequenceAnalysis/MultipleSequenceAlignment/mafft/7.471
+module add mafft/7.475
 
 # Files & parameters
-OrthologsFolder="Results/FindOrthologs"
+RunName=$1
+OrthologsFolder="Results/FindOrthologs/${RunName}_broccoli"
 ResultsFolder="Results/dNdSBetweenParalogs"
 MSAFolder=${ResultsFolder}/MSA_mafft
-SeqFolder=${ResultsFolder}/GroupSequences_Chordates
+SeqFolder=${ResultsFolder}/OGSequences_${RunName}
 mkdir -p ${MSAFolder}
 
-for group in $(cat ${ResultsFolder}/Groups_wChodates.txt)
+for group in $(cut -f1 ${OrthologsFolder}/dir_step3/table_OGs_protein_counts.txt | tail -n +2 | head -500)
 do
 	echo ${group}
 	#rm ${MSAFolder}/${group}_*.fa 2> ~/null

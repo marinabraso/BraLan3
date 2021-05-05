@@ -15,9 +15,7 @@ source(paste(substr(script,1, nchar(script)-2), "_functions.R", sep=""))
 ResultsFolder <- "Plots/FindOrthologs"
 CountsFile <- "Results/FindOrthologs/broccoli/dir_step3/table_OGs_protein_counts.txt"
 NamesFile <- "Results/FindOrthologs/broccoli/dir_step3/table_OGs_protein_names.txt"
-HsaOnhSFile <- "Results/FindOrthologs/GroupsWHumanOhnologs/hsapiens.Families.Strict.OrtologousGroups.list"
-HsaOnhIFile <- "Results/FindOrthologs/GroupsWHumanOhnologs/hsapiens.Families.Intermediate.OrtologousGroups.list"
-HsaOnhRFile <- "Results/FindOrthologs/GroupsWHumanOhnologs/hsapiens.Families.Relaxed.OrtologousGroups.list"
+OnhSFile <- "Results/FindOrthologs/OGOnhologs/OG_w_Onhologs.Strict.DR_GG_MM_HS.txt"
 
 ######################################################################
 # General parameters
@@ -28,7 +26,7 @@ OutDeut <- c("Spur", "Arub", "Skow")
 SortedSpecies <- c(Amphi, Verteb, OutDeut)
 colfunc <- colorRampPalette(c("darkred", "firebrick1"))
 CNcolors <- c("grey80", "gold", colfunc(3))
-VertebTypeColors <- c("gold", "firebrick", "darkslateblue")
+VertebTypeColors <- modif_alpha(c("deepskyblue2", "gold", "firebrick2", "firebrick4"), .7)
 
 ###########################################################################
 # Read data
@@ -39,18 +37,20 @@ system_out <- system(paste("head -1 ", CountsFile, " | cut -f2,3,4,5,6,7,8,9,10,
 Header <- read.table(text=system_out, h=F, sep = "\t")
 colnames(Counts) <- as.character(unlist(lapply(Header[1,], as.character)))
 
-HsaOnhOG.S <- read.table(HsaOnhSFile, h=F)[,1]
-HsaOnhOG.I <- read.table(HsaOnhIFile, h=F)[,1]
-HsaOnhOG.R <- read.table(HsaOnhRFile, h=F)[,1]
+OnhOG.S <- read.table(OnhSFile, h=F)[,1]
 
 Counts$Sum <- rowSums(Counts)
 Counts$SumVerteb <- rowSums(Counts[,Verteb])
 Counts$SumAmphi <- rowSums(Counts[,Amphi])
 Counts$SumOutDeut <- rowSums(Counts[,OutDeut])
-Counts$VertebType <- rep("SingleCopy", length(Counts[,1]))
+Counts$VertebType <- rep("Missing", length(Counts[,1]))
+Counts$VertebType[which(Counts$SumVerteb>0)] <- rep("SingleCopy", length(Counts$VertebType[which(Counts$SumVerteb>0)]))
 Counts$VertebType[which(apply(Counts[,Verteb], 1, max)>1)] <- rep("Duplicated", length(Counts$VertebType[which(apply(Counts[,Verteb], 1, max)>1)]))
-Counts$VertebType[which(rownames(Counts) %in% HsaOnhOG.I)] <- rep("Ohnolog", length(Counts$VertebType[which(rownames(Counts) %in% HsaOnhOG.I)]))
+Counts$VertebType[which(rownames(Counts) %in% OnhOG.S)] <- rep("Ohnolog", length(Counts$VertebType[which(rownames(Counts) %in% OnhOG.S)]))
 print(head(Counts))
+Counts$BlanType <- rep("Missing", length(Counts[,1]))
+Counts$BlanType[which(Counts$Blan>0)] <- rep("SingleCopy", length(Counts$BlanType[which(Counts$Blan>0)]))
+Counts$BlanType[which(Counts$Blan>1)] <- rep("Duplicated", length(Counts$BlanType[which(Counts$Blan>1)]))
 
 
 ###########################################################################
@@ -84,99 +84,90 @@ axis(1, at = c(1:length(Values)), labels=PhyGroups, tick=FALSE, line=1, las=1, c
 axis(2, at = seq(0,10000,2000), lwd.ticks=1, las=1, cex.axis=1)
 box()
 
-layout(matrix(c(1),nrow=1,ncol=1,byrow=T), widths=c(2), heights=c(1), TRUE)
-###########################################################################
-# Number of orthologous groups per phylogenetic groups
-#plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=c(0,1000), xlim=c(0, 13), col=NA)
-#mtext("Number of orthologous groups", side = 2, line = 3, cex=1.5)
-#mtext("Orthologous groups specific of each pair of species", side = 3, line = 1, cex=1.5)
-#Values <- c()
-#PairsNames <- c()
-#for(s1 in c(1:(length(Verteb)-1))){
-#	for(s2 in c((s1+1):length(Verteb))){
-#		PairsNames <- c(PairsNames, paste(Verteb[s1],"\n", Verteb[s2]))
-#		Values <- c(Values, length(Counts[which(rowSums(Counts[,c(Verteb[s1],Verteb[s2])])==Counts$Sum),1]))
-#	}
-#}
-#for(s1 in c(1:(length(Amphi)-1))){
-#	for(s2 in c((s1+1):length(Amphi))){
-#		PairsNames <- c(PairsNames, paste(Amphi[s1],"\n", Amphi[s2]))
-#		Values <- c(Values, length(Counts[which(rowSums(Counts[,c(Amphi[s1],Amphi[s2])])==Counts$Sum),1]))
-#	}
-#}
-#for(s1 in c(1:(length(OutDeut)-1))){
-#	for(s2 in c((s1+1):length(OutDeut))){
-#		PairsNames <- c(PairsNames, paste(OutDeut[s1],"\n", OutDeut[s2]))
-#		Values <- c(Values, length(Counts[which(rowSums(Counts[,c(OutDeut[s1],OutDeut[s2])])==Counts$Sum),1]))
-#	}
-#}
-#width <- .5
-#for(v in c(1:length(Values))){
-#	polygon(c(v-width/2, v-width/2, v+width/2, v+width/2), c(0,Values[v],Values[v],0), col="gold")
-#	text(v, Values[v], labels=Values[v], pos=3)
-#}
-#axis(1, at = c(1:length(Values)), labels=NA, lwd.ticks=1, las=1, cex.axis=1)
-#axis(1, at = c(1:length(Values)), labels=PairsNames, tick=FALSE, line=1, las=1, cex.axis=1)
-#axis(2, at = seq(0,10000,2000), lwd.ticks=1, las=1, cex.axis=1)
-#box()
+CountBlanPresent <- Counts[which(Counts$BlanType!="Missing"),]
+chisq.test(CountBlanPresent$BlanType == "SingleCopy", CountBlanPresent$VertebType == "SingleCopy")
+sum(CountBlanPresent$BlanType == "SingleCopy")*sum(CountBlanPresent$VertebType == "SingleCopy")/length(CountBlanPresent[,1])
+sum(CountBlanPresent$BlanType == "SingleCopy" & CountBlanPresent$VertebType == "SingleCopy")
 
-#layout(matrix(c(1,2),nrow=1,ncol=2,byrow=T), widths=c(1,1), heights=c(1), TRUE)
-############################################################################
-## Histogram group size
-#HistogramGroupSize(Counts$Sum, seq(0,10000,2), c(0, 200), c(0,10), "Histogram group size")
-############################################################################
-## Histogram group size vertebrate specific groups
-#HistogramGroupSize(Counts$Sum[which(Counts$SumVerteb>0 & Counts$SumAmphi==0 & Counts$SumOutDeut==0)], seq(0,10000,1), c(0, 50), c(0,10), "Histogram group size vertebrate specific groups")
-############################################################################
-## Histogram group size amphioxus specific groups
-#HistogramGroupSize(Counts$Sum[which(Counts$SumVerteb==0 & Counts$SumAmphi>0 & Counts$SumOutDeut==0)], seq(0,10000,1), c(0, 50), c(0,10), "Histogram group size amphioxus specific groups")
-############################################################################
-## Histogram group size chordata shared groups
-#HistogramGroupSize(Counts$Sum[which(Counts$SumVerteb>0 & Counts$SumAmphi>0 & Counts$SumOutDeut==0)], seq(0,10000,1), c(0, 50), c(0,10), "Histogram group size chordata shared groups")
+chisq.test(CountBlanPresent$BlanType == "Duplicated", CountBlanPresent$VertebType == "Ohnolog")
+sum(CountBlanPresent$BlanType == "Duplicated")*sum(CountBlanPresent$VertebType == "Ohnolog")/length(CountBlanPresent[,1])
+sum(CountBlanPresent$BlanType == "Duplicated" & CountBlanPresent$VertebType == "Ohnolog")
 
+chisq.test(CountBlanPresent$BlanType == "Duplicated", CountBlanPresent$VertebType == "Duplicated")
+sum(CountBlanPresent$BlanType == "Duplicated")*sum(CountBlanPresent$VertebType == "Duplicated")/length(CountBlanPresent[,1])
+sum(CountBlanPresent$BlanType == "Duplicated" & CountBlanPresent$VertebType == "Duplicated")
+
+
+CountBlanPVertebD <- CountBlanPresent[which(CountBlanPresent$VertebType!="Missing" & CountBlanPresent$VertebType!="SingleCopy"),]
+chisq.test(CountBlanPVertebD$BlanType == "Duplicated", CountBlanPVertebD$VertebType == "Ohnolog")
+sum(CountBlanPVertebD$BlanType == "Duplicated")*sum(CountBlanPVertebD$VertebType == "Ohnolog")/length(CountBlanPVertebD[,1])
+sum(CountBlanPVertebD$BlanType == "Duplicated" & CountBlanPVertebD$VertebType == "Ohnolog")
 
 
 layout(matrix(c(1),nrow=1,ncol=1,byrow=T), widths=c(2), heights=c(1), TRUE)
-###########################################################################
-# Number of orthologous groups with at least 1 Blan gene member
-#BlanSharedGenes(Counts[which(Counts[,"Blan"]>0),], "Orthologous groups with at least 1 Blan gene member")
-
-###########################################################################
-# Number of orthologous groups with at least 2 Blan gene members
-#BlanSharedGenes(Counts[which(Counts[,"Blan"]>1),], "Orthologous groups with at least 2 Blan gene members")
-
-layout(matrix(c(1,2),nrow=1,ncol=2,byrow=T), widths=c(1,1), heights=c(1), TRUE)
-###########################################################################
-# Histogram group size
-#HistogramGroupSize(Counts$Sum[which(Counts$Blan>0)], seq(0,10000,1), c(0, 100), c(0,10), "Histogram group size of groups with at least 1 Blan gene member")
-
-
-CountBlanPresent <- Counts[which(Counts[,"Blan"]>0),]
-chisq.test(CountBlanPresent[,"Blan"]>1, CountBlanPresent$VertebType == "SingleCopy")
-chisq.test(CountBlanPresent[,"Blan"]>1, CountBlanPresent$VertebType == "Ohnolog")
-chisq.test(CountBlanPresent[,"Blan"]>1, CountBlanPresent$VertebType == "Duplicated")
-
-
-layout(matrix(c(1),nrow=1,ncol=1,byrow=T), widths=c(2), heights=c(1), TRUE)
-plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=c(0,100), xlim=c(0, 6), col=NA)
+plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=c(0,100), xlim=c(0.5, 3.5), col=NA)
 mtext("", side = 2, line = 3, cex=1.5)
 
-PlotColumnVertebrateType(Counts[which(Counts$Blan==0),], 1, VertebTypeColors)
-PlotColumnVertebrateType(Counts[which(Counts$Blan==1),], 2, VertebTypeColors)
-PlotColumnVertebrateType(Counts[which(Counts$Blan>2),], 3, VertebTypeColors)
+PlotColumnVertebrateType(Counts[which(Counts$Blan==1),], 1, VertebTypeColors)
+PlotColumnVertebrateType(Counts[which(Counts$Blan>=2),], 2, VertebTypeColors)
 
-abline(h=100)
-#axis(1, at = c(1:length(Values)), labels=NA, lwd.ticks=1, las=1, cex.axis=1)
-#axis(1, at = c(1:length(Values)), labels=PhyGroups, tick=FALSE, line=1, las=1, cex.axis=1)
-#axis(2, at = seq(0,10000,2000), lwd.ticks=1, las=1, cex.axis=1)
-box()
+axis(1, at = c(1:2), labels=c("Single copy\nin Bralan3", "Duplicated\nin Bralan3"), tick=FALSE, line=2.5, las=1, cex.axis=2)
+axis(2, at = seq(0,100,20), lwd.ticks=1, las=1, cex.axis=1.5)
+legend("bottomright", c("In vertebrates", "Missing", "Single copy", "Ohnolog", "Duplicated"), pch=c(NA,19,19,19,19), text.col="black", col=c(NA, VertebTypeColors), bty = "n", cex=2, xjust = 0, yjust = 0)
+
+plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=c(0,100), xlim=c(0.5, 3.5), col=NA)
+mtext("", side = 2, line = 3, cex=1.5)
+
+PlotColumnVertebrateType(CountBlanPVertebD[which(CountBlanPVertebD$Blan==1),], 1, VertebTypeColors)
+PlotColumnVertebrateType(CountBlanPVertebD[which(CountBlanPVertebD$Blan>=2),], 2, VertebTypeColors)
+
+axis(1, at = c(1:2), labels=c("Single copy\nin Bralan3", "Duplicated\nin Bralan3"), tick=FALSE, line=2.5, las=1, cex.axis=2)
+axis(2, at = seq(0,100,20), lwd.ticks=1, las=1, cex.axis=1.5)
+legend("bottomright", c("In vertebrates", "Missing", "Single copy", "Ohnolog", "Duplicated"), pch=c(NA,19,19,19,19), text.col="black", col=c(NA, VertebTypeColors), bty = "n", cex=2, xjust = 0, yjust = 0)
 
 
+Counts <- Counts[which(Counts$SumOutDeut==0),]
+CountBlanPresent <- Counts[which(Counts$BlanType!="Missing"),]
+chisq.test(CountBlanPresent$BlanType == "SingleCopy", CountBlanPresent$VertebType == "SingleCopy")
+sum(CountBlanPresent$BlanType == "SingleCopy")*sum(CountBlanPresent$VertebType == "SingleCopy")/length(CountBlanPresent[,1])
+sum(CountBlanPresent$BlanType == "SingleCopy" & CountBlanPresent$VertebType == "SingleCopy")
 
-print(CountBlanPresent$VertebType == "SingleCopy")
+chisq.test(CountBlanPresent$BlanType == "Duplicated", CountBlanPresent$VertebType == "Ohnolog")
+sum(CountBlanPresent$BlanType == "Duplicated")*sum(CountBlanPresent$VertebType == "Ohnolog")/length(CountBlanPresent[,1])
+sum(CountBlanPresent$BlanType == "Duplicated" & CountBlanPresent$VertebType == "Ohnolog")
+
+chisq.test(CountBlanPresent$BlanType == "Duplicated", CountBlanPresent$VertebType == "Duplicated")
+sum(CountBlanPresent$BlanType == "Duplicated")*sum(CountBlanPresent$VertebType == "Duplicated")/length(CountBlanPresent[,1])
+sum(CountBlanPresent$BlanType == "Duplicated" & CountBlanPresent$VertebType == "Duplicated")
 
 
+CountBlanPVertebD <- CountBlanPresent[which(CountBlanPresent$VertebType!="Missing" & CountBlanPresent$VertebType!="SingleCopy"),]
+chisq.test(CountBlanPVertebD$BlanType == "Duplicated", CountBlanPVertebD$VertebType == "Ohnolog")
+sum(CountBlanPVertebD$BlanType == "Duplicated")*sum(CountBlanPVertebD$VertebType == "Ohnolog")/length(CountBlanPVertebD[,1])
+sum(CountBlanPVertebD$BlanType == "Duplicated" & CountBlanPVertebD$VertebType == "Ohnolog")
 
 
+layout(matrix(c(1),nrow=1,ncol=1,byrow=T), widths=c(2), heights=c(1), TRUE)
+plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=c(0,100), xlim=c(0.5, 3.5), col=NA)
+mtext("", side = 2, line = 3, cex=1.5)
+
+PlotColumnVertebrateType(Counts[which(Counts$Blan==1),], 1, VertebTypeColors)
+PlotColumnVertebrateType(Counts[which(Counts$Blan>=2),], 2, VertebTypeColors)
+
+axis(1, at = c(1:2), labels=c("Single copy\nin Bralan3", "Duplicated\nin Bralan3"), tick=FALSE, line=2.5, las=1, cex.axis=2)
+axis(2, at = seq(0,100,20), lwd.ticks=1, las=1, cex.axis=1.5)
+legend("bottomright", c("In vertebrates", "Missing", "Single copy", "Ohnolog", "Duplicated"), pch=c(NA,19,19,19,19), text.col="black", col=c(NA, VertebTypeColors), bty = "n", cex=2, xjust = 0, yjust = 0)
+
+plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=c(0,100), xlim=c(0.5, 3.5), col=NA)
+mtext("", side = 2, line = 3, cex=1.5)
+
+PlotColumnVertebrateType(CountBlanPVertebD[which(CountBlanPVertebD$Blan==1),], 1, VertebTypeColors)
+PlotColumnVertebrateType(CountBlanPVertebD[which(CountBlanPVertebD$Blan>=2),], 2, VertebTypeColors)
+
+axis(1, at = c(1:2), labels=c("Single copy\nin Bralan3", "Duplicated\nin Bralan3"), tick=FALSE, line=2.5, las=1, cex.axis=2)
+axis(2, at = seq(0,100,20), lwd.ticks=1, las=1, cex.axis=1.5)
+legend("bottomright", c("In vertebrates", "Missing", "Single copy", "Ohnolog", "Duplicated"), pch=c(NA,19,19,19,19), text.col="black", col=c(NA, VertebTypeColors), bty = "n", cex=2, xjust = 0, yjust = 0)
+
+	
 
 

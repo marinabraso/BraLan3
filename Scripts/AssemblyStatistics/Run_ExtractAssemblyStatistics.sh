@@ -3,17 +3,17 @@
 
 
 
-#./Scripts/AssemblyStatistics/ExtractAssemblyStatistics.sh Branchiostoma_lanceolatum.BraLan3
-#./Scripts/AssemblyStatistics/ExtractAssemblyStatistics.sh Asterias_rubens.eAstRub1.3
-#./Scripts/AssemblyStatistics/ExtractAssemblyStatistics.sh Branchiostoma_belcheri.Haploidv18h27
-#./Scripts/AssemblyStatistics/ExtractAssemblyStatistics.sh Branchiostoma_floridae.Bfl_VNyyK
-#./Scripts/AssemblyStatistics/ExtractAssemblyStatistics.sh Danio_rerio.GRCz11
-#./Scripts/AssemblyStatistics/ExtractAssemblyStatistics.sh Gallus_gallus.GRCg6a
-#./Scripts/AssemblyStatistics/ExtractAssemblyStatistics.sh Homo_sapiens.GRCh38
-#./Scripts/AssemblyStatistics/ExtractAssemblyStatistics.sh Mus_musculus.GRCm39
-#./Scripts/AssemblyStatistics/ExtractAssemblyStatistics.sh Saccoglossus_kowalevskii.Skow1.1
-#./Scripts/AssemblyStatistics/ExtractAssemblyStatistics.sh Strongylocentrotus_purpuratus.Spur5.0
-#./Scripts/AssemblyStatistics/ExtractAssemblyStatistics.sh Bl71nemr_Bralan2_fromAmphiencode
+./Scripts/AssemblyStatistics/ExtractAssemblyStatistics.sh Branchiostoma_lanceolatum.BraLan3
+./Scripts/AssemblyStatistics/ExtractAssemblyStatistics.sh Asterias_rubens.eAstRub1.3
+./Scripts/AssemblyStatistics/ExtractAssemblyStatistics.sh Branchiostoma_belcheri.Haploidv18h27
+./Scripts/AssemblyStatistics/ExtractAssemblyStatistics.sh Branchiostoma_floridae.Bfl_VNyyK
+./Scripts/AssemblyStatistics/ExtractAssemblyStatistics.sh Danio_rerio.GRCz11
+./Scripts/AssemblyStatistics/ExtractAssemblyStatistics.sh Gallus_gallus.GRCg6a
+./Scripts/AssemblyStatistics/ExtractAssemblyStatistics.sh Homo_sapiens.GRCh38
+./Scripts/AssemblyStatistics/ExtractAssemblyStatistics.sh Mus_musculus.GRCm39
+./Scripts/AssemblyStatistics/ExtractAssemblyStatistics.sh Saccoglossus_kowalevskii.Skow1.1
+./Scripts/AssemblyStatistics/ExtractAssemblyStatistics.sh Strongylocentrotus_purpuratus.Spur5.0
+./Scripts/AssemblyStatistics/ExtractAssemblyStatistics.sh Bl71nemr_Bralan2_fromAmphiencode
 
 
 # Merge results

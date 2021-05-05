@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # Scripts
-bedtools="../Software/bedtools.static.binary"
 ExtractcDNAPerlScript="Scripts/FilteringGeneSets/ExtractDNAseqFromGenome.pl"
 
 # Files & parameters
@@ -299,7 +298,7 @@ do
 			btseq=""
 		}else{
 			for(i=1;i<=length($0);i=i+3){
-				btseq=btseq""a[substr($0, i, 3)]
+				btseq=btseq""b[substr($0, i, 3)]
 			}
 			if(substr(btseq, length(btseq), 1)== "1"){
 				btseq=substr(btseq, 1, length(btseq)-1)
@@ -311,7 +310,7 @@ do
 	if [[ ! -s ${ResultsFolder}/Checking_DNA_AA_sequences/${Species}_checking_btDNA_AA.txt ]]; then
 		echo "		Comparison"
 		awk 'BEGIN{file=0}{if(FNR==1){file++} 
-			# Reading File with nuclear backtranslations
+			# Reading file with nuclear backtranslations
 			if(file==1){
 				if($1 ~ />/){
 					g=$1;next;
@@ -356,11 +355,6 @@ do
 			}}' ${ResultsFolder}/BacktranslatedSequences/${Species}_bt.fa ${ResultsFolder}/BacktranslatedSequences/${Species}_mbt.fa ${ResultsFolder}/FilteredProteomes/${Species}.fa > ${ResultsFolder}/Checking_DNA_AA_sequences/${Species}_checking_btDNA_AA.txt
 	fi
 done
-
-
-
-
-
 
 
 

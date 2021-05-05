@@ -53,6 +53,10 @@ fi
 	echo "TotalLengthUngapped	${TotalLengthUngapped}" >> ${ResultsFolder}/${Basename}/${Basename}_statistics.txt
 	NumSeq=$(cat ${ResultsFolder}/${Basename}/${Basename}_lengths.txt | wc -l)
 	echo "NumSeq	${NumSeq}" >> ${ResultsFolder}/${Basename}/${Basename}_statistics.txt
+	NumGaps=$(cat ${GenomeFile} | awk '{if($1 ~ />/){print seq; print $0; seq=""}else{seq=seq""$0}}END{print seq}' | grep -v '>' | sed 's/N\+/N/g' | sed 's/[ACGTacgt]\+//g' | awk '{seq=seq""$1}END{print length(seq)}')
+	echo "NumGaps	${NumGaps}" >> ${ResultsFolder}/${Basename}/${Basename}_statistics.txt
+	NumGaps1M=$(awk '{if(NR==FNR){a[$1]=1;next} if($1 ~ />/){if(a[$1]){valid=1}else{valid=0}}if(valid==1){print $0}}' <(cat ${ResultsFolder}/${Basename}/${Basename}_lengths.txt | awk '{if($2 >= 1000000){print $0}}' | cut -f1) ${GenomeFile} | awk '{if($1 ~ />/){print seq; print $0; seq=""}else{seq=seq""$0}}END{print seq}' | grep -v '>' | sed 's/N\+/N/g' | sed 's/[ACGTacgt]\+//g' | awk '{seq=seq""$1}END{print length(seq)}')
+	echo "NumGaps1M	${NumGaps1M}" >> ${ResultsFolder}/${Basename}/${Basename}_statistics.txt
 
 	# Scaffold N50, L50, N90, L90
 	echo "Scaffold N50, L50, N90, L90"
@@ -72,16 +76,16 @@ fi
 	prop1M=$(awk '{if(NR==FNR){max=$1;next} if($2 > 1000000){accum=$4;next}else{print $4/max; exit}}' <(tail -1 ${ResultsFolder}/${Basename}/${Basename}_lengths.txt | cut -f4) ${ResultsFolder}/${Basename}/${Basename}_lengths.txt)
 	echo "prop1M	${prop1M}" >> ${ResultsFolder}/${Basename}/${Basename}_statistics.txt
 
-	# GC content and skew
-	echo "GC content and skew"
-	numG=$(cat ${GenomeFile} | grep -v '>' | tr -d -c 'Gg' | awk '{ print length}')
-	numC=$(cat ${GenomeFile} | grep -v '>' | tr -d -c 'Cc' | awk '{ print length}')
-	sumGC=$(( numG + numC ))
-	difGC=$(( numG - numC ))
-	GCcontent=$(echo "scale=4 ; ${sumGC} / ${TotalLengthUngapped}" | bc)
-	echo "GCcontent	${GCcontent}" >> ${ResultsFolder}/${Basename}/${Basename}_statistics.txt
-	GCskew=$(echo "scale=2 ; $difGC / $sumGC" | bc)
-	echo "GCskew	${GCskew}" >> ${ResultsFolder}/${Basename}/${Basename}_statistics.txt
+	## GC content and skew
+	#echo "GC content and skew"
+	#numG=$(cat ${GenomeFile} | grep -v '>' | tr -d -c 'Gg' | awk '{ print length}')
+	#numC=$(cat ${GenomeFile} | grep -v '>' | tr -d -c 'Cc' | awk '{ print length}')
+	#sumGC=$(( numG + numC ))
+	#difGC=$(( numG - numC ))
+	#GCcontent=$(echo "scale=4 ; ${sumGC} / ${TotalLengthUngapped}" | bc)
+	#echo "GCcontent	${GCcontent}" >> ${ResultsFolder}/${Basename}/${Basename}_statistics.txt
+	#GCskew=$(echo "scale=2 ; $difGC / $sumGC" | bc)
+	#echo "GCskew	${GCskew}" >> ${ResultsFolder}/${Basename}/${Basename}_statistics.txt
 
 	#############################################################
 	## BUSCO score at the protein level with the metazoa database

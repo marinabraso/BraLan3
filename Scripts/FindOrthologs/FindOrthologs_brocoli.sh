@@ -1,26 +1,23 @@
 #!/bin/bash
 
-module add Phylogeny/ete3/3.1.1
-module add intel/intelpython3
+pwd=$(pwd)
+conda activate broccoli
 
 # Scripts
-broccoli="Scripts/FindOrthologs/Broccoli-master/broccoli.py"
-fasttree="/software/Phylogeny/FastTree/2.1.10/bin/FastTree"
-diamond="Scripts/FindOrthologs/diamond"
+broccoli="../Software/Broccoli-master/broccoli.py"
+diamond="../Software/diamond"
+FastTree="../Software/FastTree"
 
 # Files & parameters
+RunName=$1
 ResultsFolder="Results/FindOrthologs"
-ProteomesFolder="Results/FilteringGeneSets/Proteomes"
+ProteomesFolder="Results/FilteringGeneSets/Proteomes${RunName}"
 
 ################################################
-### Run BROCCOLI
-gunzip ${ProteomesFolder}/*.fa.gz 2> ~/null
-mkdir -p ${ResultsFolder}/broccoli
-cd ${ResultsFolder}/broccoli
-python ../../../${broccoli} -dir ../../../${ProteomesFolder} -ext fa -path_diamond ../../../${diamond} -path_fasttree ${fasttree}
-cd ../../..
-gzip ${ProteomesFolder}/*.fa 2> ~/null
-
+mkdir -p ${ResultsFolder}/${RunName}_broccoli
+cd ${ResultsFolder}/${RunName}_broccoli
+python ${pwd}/${broccoli} -dir ${pwd}/${ProteomesFolder} -ext fa -path_diamond ${pwd}/${diamond} -path_fasttree ${pwd}/${FastTree}
+cd ${pwd}
 
 
 

@@ -5,22 +5,19 @@
 PlotColumnVertebrateType <- function(df, pos, col){
 	len <- length(df[,1])
 	base <- 0
-	w <- .5
-	print("buu")
-	print(length(df[which(df$VertebType=="SingleCopy" | df$VertebType=="Ohnolog" | df$VertebType=="Duplicated"),1]))
-	value <- length(df[which(df$VertebType=="SingleCopy"),1])/len*100
-	print(value)
+	w <- .8
+	value <- length(df[which(df$VertebType=="Missing"),1])/len*100
 	polygon(c(pos-w/2,pos+w/2,pos+w/2,pos-w/2), c(base,base,base+value,base+value), col=col[1], border=NA)
 	base <- base+value
-	value <- length(df[which(df$VertebType=="Ohnolog"),1])/len*100
-	print(value)
+	value <- length(df[which(df$VertebType=="SingleCopy"),1])/len*100
 	polygon(c(pos-w/2,pos+w/2,pos+w/2,pos-w/2), c(base,base,base+value,base+value), col=col[2], border=NA)
 	base <- base+value
-	value <- length(df[which(df$VertebType=="Duplicated"),1])/len*100
-	print(value)
+	value <- length(df[which(df$VertebType=="Ohnolog"),1])/len*100
 	polygon(c(pos-w/2,pos+w/2,pos+w/2,pos-w/2), c(base,base,base+value,base+value), col=col[3], border=NA)
 	base <- base+value
-	print(base)
+	value <- length(df[which(df$VertebType=="Duplicated"),1])/len*100
+	polygon(c(pos-w/2,pos+w/2,pos+w/2,pos-w/2), c(base,base,base+value,base+value), col=col[4], border=NA)
+	base <- base+value
 }
 
 
@@ -101,6 +98,15 @@ BlanSharedGenes <- function(Data, main){
 	axis(1, at = c(1:length(Values)), labels=ComparingNames, lwd.ticks=1, padj=1, las=1, cex.axis=.8)
 	axis(2, at = log(c(0,1,10,100,1000,10000)), labels=c(0,1,10,100,1000,10000), lwd.ticks=1, las=1, cex.axis=1)
 	box()
+}
+
+
+
+
+modif_alpha <- function(col, alpha=.5){
+  if(missing(col))
+  stop("Please provide a vector of colours.")
+  apply(sapply(col, col2rgb)/255, 2, function(x) rgb(x[1], x[2], x[3], alpha=alpha))  
 }
 
 
