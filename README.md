@@ -6,8 +6,9 @@
 # #
 # #
 
-##### Folder structure:
-- Data # Raw data
+### Folder structure:
+- Data > Raw data
+- Metadata > Metadata files
 - Scripts # Scripts to process data (detailed below)
 - Results # Results of the processement of the Data by Scripts
 - Analysis # Scripts generating plots/tables 
@@ -15,7 +16,7 @@
 - tmp # err and out files & temporary files
 
 
-
+# #
 ###### ##################
 ## Assembly statistics
 ###### ##################
@@ -32,32 +33,39 @@ Extract basic assembly quality statistics from assemblies:
 - Saccoglossus_kowalevskii.Skow1.1
 - Strongylocentrotus_purpuratus.Spur5.0
 
-###### Scripts:
+##### Scripts:
 > Extracts basic statistics per assembly
 - Scripts/AssemblyStatistics/ExtractAssemblyStatistics.sh
 > Runs te above script for all assemblies and joins the results 
 - Scripts/AssemblyStatistics/Run_ExtractAssemblyStatistics.sh
 
-###### Usage:
+##### Usage:
 ```
 sbatch -t 01:00:00 --mem=8000 -J AssemblyStatistics -o tmp/AssemblyStatistics.out -e tmp/AssemblyStatistics.err Scripts/AssemblyStatistics/Run_ExtractAssemblyStatistics.sh
 ```
+
+
+# #
 ###### ##################
 ## Gene expression
 ###### ##################
 Gene expression analysis of Marletaz et al. 2018 RNA seq data 
 
 ### Download SRA data
-###### Scripts:
+
+##### Scripts:
 - Scripts/DownloadSRAData/DownloadSRAData.sh
 - Scripts/DownloadSRAData/DownloadSRAData_perSample.sh
 - Scripts/DownloadSRAData/SRA_to_fastq_perSample.sh
 
-###### Usage:
-
+##### Usage:
+```
+./Scripts/DownloadSRAData/DownloadSRAData.sh Data/RNA-seq/Marletaz2018 <(cat Metadata/Marletaz2018_RNAseq_SRA.list)
+```
 
 ### Gene expression
-###### Scripts:
+
+##### Scripts:
 > Prepare GTF and kallisto index
 - Scripts/GeneExpression/PrepareFiles.sh
 > Run FASTQC and kallisto per sample
@@ -68,7 +76,7 @@ Gene expression analysis of Marletaz et al. 2018 RNA seq data
 - Scripts/GeneExpression/JoinResultsByGene_Tximport.sh
 - Scripts/GeneExpression/JoinResultsByGene_Tximport.R
 
-###### Usage:
+##### Usage:
 ```
 sbatch -t 01:00:00 --mem=8000 -J PrepareKallisto -o tmp/PrepareKallisto.out -e tmp/PrepareKallisto.err Scripts/GeneExpression/PrepareFiles.sh
 
@@ -78,26 +86,29 @@ sbatch -t 01:00:00 --mem=8000 -J PrepareKallisto -o tmp/PrepareKallisto.out -e t
 ```
 
 
+# #
 ###### ##################
-## Orthologs & paralogs analysis
+## Orthologs and paralogs analysis
 ###### ##################
 
 ### Filtering gene sets
 Prepare gene sets for each species. 
-###### Scripts:
+
+##### Scripts:
 - Scripts/FilteringGeneSets/FilteringSetGenesPerSpecies.sh
 - Scripts/FilteringGeneSets/ExtractDNAseqFromGenome.pl # To extract cDNA sequences 
 
-###### Usage:
+##### Usage:
 ```
 sbatch -t 10:00:00 --mem=8000 -J FiltGenes -o tmp/FilteringGeneSets.out -e tmp/FilteringGeneSets.err Scripts/FilteringGeneSets/FilteringSetGenesPerSpecies.sh
 ```
 
 ### Find orthologs
-###### Scripts:
+
+##### Scripts:
 - Scripts/FindOrthologs/FindOrthologs_brocoli.sh
 
-###### Usage:
+##### Usage:
 ```
 sbatch -t 10:00:00 --mem=8000 -J BAmpVertOut -o tmp/Broccoli_AmphVertebOutDeut.out -e tmp/Broccoli_AmphVertebOutDeut.err conda run -n broccoli Scripts/FindOrthologs/FindOrthologs_brocoli.sh AmphVertebOutDeut
 sbatch -t 03:00:00 --mem=8000 -J BAmpVert -o tmp/Broccoli_AmphVerteb.out -e tmp/Broccoli_AmphVerteb.err conda run -n broccoli Scripts/FindOrthologs/FindOrthologs_brocoli.sh AmphVerteb
@@ -105,7 +116,7 @@ sbatch -t 03:00:00 --mem=8000 -J BAmpVert -o tmp/Broccoli_AmphVerteb.out -e tmp/
 
 ### dNdS between paralogs
 
-###### Scripts:
+##### Scripts:
 > Extract orthologous group sequences (AA and DNA) for Amphioxus and vertebrae species
 - Scripts/dNdSBetweenParalogs/ExtractOrthologousGroupSequences.sh
 > MSA of the AA sequences with mafft + backtranslation to DNA (from the DNA sequences)
@@ -115,8 +126,7 @@ sbatch -t 03:00:00 --mem=8000 -J BAmpVert -o tmp/Broccoli_AmphVerteb.out -e tmp/
 > Tree from alignment with RAxML and dNdS analysis with Godon (model M8)
 - Scripts/dNdSBetweenParalogs/Calculate_dDdSBetweenParalogs_Godon.sh
 
-
-###### Usage:
+##### Usage:
 ```
 sbatch -t 05:00:00 --mem=8000 -J ExtrAmpVert -o tmp/ExtractSeq_AmphVerteb.out -e tmp/ExtractSeq_AmphVerteb.err Scripts/dNdSBetweenParalogs/ExtractOrthologousGroupSequences.sh AmphVerteb
 
