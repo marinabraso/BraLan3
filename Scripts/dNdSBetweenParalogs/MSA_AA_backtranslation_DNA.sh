@@ -5,13 +5,15 @@ module add mafft/7.475
 
 # Files & parameters
 RunName=$1
+Start=$2
+Step=$3
 OrthologsFolder="Results/FindOrthologs/${RunName}_broccoli"
 ResultsFolder="Results/dNdSBetweenParalogs"
 MSAFolder=${ResultsFolder}/MSA_mafft
 SeqFolder=${ResultsFolder}/OGSequences_${RunName}
 mkdir -p ${MSAFolder}
 
-for group in $(cut -f1 ${OrthologsFolder}/dir_step3/table_OGs_protein_counts.txt | tail -n +2 | head -500)
+for group in $(cut -f1 ${OrthologsFolder}/dir_step3/table_OGs_protein_counts.txt | tail -n +2 | tail -n +${Start} | head -${Step})
 do
 	echo ${group}
 	#rm ${MSAFolder}/${group}_*.fa 2> ~/null

@@ -121,20 +121,26 @@ sbatch -t 03:00:00 --mem=8000 -J BAmpVert -o tmp/Broccoli_AmphVerteb.out -e tmp/
 - Scripts/dNdSBetweenParalogs/ExtractOrthologousGroupSequences.sh
 > MSA of the AA sequences with mafft + backtranslation to DNA (from the DNA sequences)
 - Scripts/dNdSBetweenParalogs/MSA_AA_backtranslation_DNA.sh
+- Scripts/dNdSBetweenParalogs/Run_MSA_AA_backtranslation_DNA.sh
 > evaluate the AA MSA done with mafft t_coffe, extract score and filter mafft alignments with t_coffee score
 - Scripts/dNdSBetweenParalogs/MSA_cleaning_tcoffe.sh
+- Scripts/dNdSBetweenParalogs/Run_MSA_cleaning_tcoffe_PerOG.sh
 > Tree from alignment with RAxML and dNdS analysis with Godon (model M8)
 - Scripts/dNdSBetweenParalogs/Calculate_dDdSBetweenParalogs_Godon.sh
+- Scripts/dNdSBetweenParalogs/Run_Calculate_dDdSBetweenParalogs_Godon.sh
 
 ##### Usage:
 ```
 sbatch -t 05:00:00 --mem=8000 -J ExtrAmpVert -o tmp/ExtractSeq_AmphVerteb.out -e tmp/ExtractSeq_AmphVerteb.err Scripts/dNdSBetweenParalogs/ExtractOrthologousGroupSequences.sh AmphVerteb
 
-sbatch -t 10:00:00 --mem=8000 -J MSAMaff -o tmp/MSAMaff.out -e tmp/MSAMaff.err Scripts/dNdSBetweenParalogs/MSA_AA_backtranslation_DNA.sh AmphVerteb
+./Scripts/dNdSBetweenParalogs/Run_MSA_AA_backtranslation_DNA.sh AmphVerteb
 
-sbatch -t 10:00:00 --mem=8000 -J Tcoff -o tmp/Tcoff.out -e tmp/Tcoff.err Scripts/dNdSBetweenParalogs/MSA_cleaning_tcoffe.sh AmphVerteb
+./Scripts/dNdSBetweenParalogs/Run_MSA_cleaning_tcoffe.sh AmphVerteb
 
-sbatch -t 10:00:00 --mem=8000 -J RAxGod -o tmp/RAxGod.out -e tmp/RAxGod.err Scripts/dNdSBetweenParalogs/Calculate_dDdSBetweenParalogs_Godon.sh AmphVerteb
+./Scripts/dNdSBetweenParalogs/Run_Calculate_dDdSBetweenParalogs_Godon.sh AmphVerteb
 ```
+
+
+
 
 
