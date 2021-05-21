@@ -22,8 +22,8 @@ max.col <- function(exp){
 	return(maxcollist)
 }
 
-p.value.fromD <- function(d){
-	pchisq(d, df=1, lower.tail=F)/2
+p.value.fromM8D <- function(d){
+	pchisq(d, df=1, lower.tail=F)
 }
 
 

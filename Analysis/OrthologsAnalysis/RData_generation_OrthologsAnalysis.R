@@ -8,6 +8,7 @@
 `%out%` <- Negate(`%in%`)
 script <- sub(".*=", "", commandArgs()[4])
 source(paste(substr(script,1, nchar(script)-2), "_functions.R", sep=""))
+library(qvalue)
 
 ######################################################################
 # Files & folders
@@ -60,19 +61,27 @@ CountsAV$BlanType[which(CountsAV$Blan>0)] <- rep("SingleCopy", length(CountsAV$B
 CountsAV$BlanType[which(CountsAV$Blan>1)] <- rep("Duplicated", length(CountsAV$BlanType[which(CountsAV$Blan>1)]))
 
 
-
 # dNdS data
 system_out <- system(paste("grep '^Final' ", dNdSFolder, "/OG_*_M8_likelihood_ratio.txt | sed 's/Results\\/dNdSBetweenParalogs\\/Godon_M8\\///g' | sed 's/_M8_likelihood_ratio.txt:Final D=/\t/g'", sep=""), intern=T)
 GodonM8.D <- read.table(text=system_out, h=F, sep = "\t", row.names=1)
 colnames(GodonM8.D) <- c("D")
-GodonM8.D$Pval <- unlist(lapply(GodonM8.D$D, p.value.fromD))
-GodonM8.D$Padj <- p.adjust(GodonM8.D$Pval, method = "bonferroni")
+GodonM8.D$Pval <- unlist(lapply(GodonM8.D$D, p.value.fromM8D))
+print(length(GodonM8.D$Pval))
+#GodonM8.D$Qval <- qvalue(GodonM8.D$Pval, pi0 = 1)$qvalue
+GodonM8.D$Qval <- qvalue(GodonM8.D$Pval, pi0.method="bootstrap")$qvalue
+pdf(paste(ResultsFolder, "/M8_PvalQvalFDR_dist.pdf", sep=""), width=20, height=10)
+par(mar=c(10,10,5,5),oma=c(1,1,1,1), yaxs='i', xaxs='i')
+layout(matrix(c(1,2),nrow=1,ncol=2,byrow=T), widths=c(1), heights=c(1), TRUE)
+hist(GodonM8.D$Pval)
+hist(GodonM8.D$Qval)
+dev.off()
+
 CountsAV$M8.D <- rep(NA, length(CountsAV[,1]))
 CountsAV$M8.Pval <- rep(NA, length(CountsAV[,1]))
-CountsAV$M8.Padj <- rep(NA, length(CountsAV[,1]))
+CountsAV$M8.Qval <- rep(NA, length(CountsAV[,1]))
 CountsAV$M8.D[match(rownames(GodonM8.D), rownames(CountsAV))] <- GodonM8.D$D
 CountsAV$M8.Pval[match(rownames(GodonM8.D), rownames(CountsAV))] <- GodonM8.D$Pval
-CountsAV$M8.Padj[match(rownames(GodonM8.D), rownames(CountsAV))] <- GodonM8.D$Padj
+CountsAV$M8.Qval[match(rownames(GodonM8.D), rownames(CountsAV))] <- GodonM8.D$Qval
 
 
 
@@ -81,6 +90,9 @@ CountsAV$M8.Padj[match(rownames(GodonM8.D), rownames(CountsAV))] <- GodonM8.D$Pa
 system_out <- system(paste("cat ", RNASeqMetadataFile," | cut -f1,13,24", sep=""), intern=T)
 MetaRNA <- read.table(text=system_out, h=F, sep = "\t")
 colnames(MetaRNA) <- c("Sample","Age","Tissue")
+MetaRNA$Tissue <- sub(" ", ".", MetaRNA$Tissue)
+MetaRNA$Age <- sub(" ", ".", MetaRNA$Age)
+MetaRNA$Age <- sub("-", ".", MetaRNA$Age)
 
 # RNA-seq gene expression TPM data
 TPM <- read.table(TPMFile, h=T)
@@ -88,11 +100,11 @@ TPM <- TPM[,MetaRNA$Sample[which(MetaRNA$Tissue!="egg" & MetaRNA$Sample%in%colna
 MetaRNA <- MetaRNA[which(MetaRNA$Sample %in% colnames(TPM)),]
 
 Tissues <- unique(MetaRNA$Tissue[which(MetaRNA$Age=="adult")])
-Tissues <- c("cirri", "gills", "epidermis", "gut", "hepatic diverticulum", "muscle", "neural tube", "female gonads", "male gonads")
+Tissues <- c("cirri", "gills", "epidermis", "gut", "hepatic.diverticulum", "muscle", "neural.tube", "female.gonads", "male.gonads")
 colfunc <- colorRampPalette(c("forestgreen", "gold", "darkorange", "firebrick", "darkslateblue", "deepskyblue3"))
 TissueColors <- colfunc(length(Tissues))
 EmbAges <- unique(MetaRNA$Age[which(MetaRNA$Age!="adult")])
-EmbAges <- c("egg", "32cells", "Blastula", "7h", "8h", "10h", "11h", "15h", "18h", "21h", "24h", "27h", "36h", "50h", "60h", "Pre-metamorphic larvae")
+EmbAges <- c("egg", "32cells", "Blastula", "7h", "8h", "10h", "11h", "15h", "18h", "21h", "24h", "27h", "36h", "50h", "60h", "Pre.metamorphic.larvae")
 colfunc <- colorRampPalette(c("forestgreen", "gold", "darkorange", "firebrick", "darkslateblue", "deepskyblue3"))
 EmbAgesColors <- colfunc(length(EmbAges))
 
@@ -147,9 +159,8 @@ ExpData$VertebType <- rep(NA, length(ExpData[,1]))
 ExpData$VertebType <- unlist(lapply(c(1:length(ExpData[,1])), function(x){CountsAV[which(rownames(CountsAV)==ExpData$OG[x]),"VertebType"]}))
 ExpData$M8.D <- rep(NA, length(ExpData[,1]))
 ExpData$M8.D <- unlist(lapply(c(1:length(ExpData[,1])), function(x){CountsAV[which(rownames(CountsAV)==ExpData$OG[x]),"M8.D"]}))
-ExpData$M8.Padj <- rep(NA, length(ExpData[,1]))
-ExpData$M8.Padj <- unlist(lapply(c(1:length(ExpData[,1])), function(x){CountsAV[which(rownames(CountsAV)==ExpData$OG[x]),"M8.Padj"]}))
-print(head(ExpData))
+ExpData$M8.Qval <- rep(NA, length(ExpData[,1]))
+ExpData$M8.Qval <- unlist(lapply(c(1:length(ExpData[,1])), function(x){CountsAV[which(rownames(CountsAV)==ExpData$OG[x]),"M8.Qval"]}))
 
 
 
