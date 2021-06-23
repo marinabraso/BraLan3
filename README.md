@@ -88,7 +88,7 @@ sbatch -t 01:00:00 --mem=8000 -J PrepareKallisto -o tmp/PrepareKallisto.out -e t
 
 # #
 ###### ##################
-## Orthologs and paralogs analysis
+## Orthologs and paralogs analysis
 ###### ##################
 
 ### Filtering gene sets
@@ -118,27 +118,48 @@ sbatch -t 03:00:00 --mem=8000 -J BAmpVert -o tmp/Broccoli_AmphVerteb.out -e tmp/
 
 ##### Scripts:
 > Extract orthologous group sequences (AA and DNA) for Amphioxus and vertebrae species
-- Scripts/dNdSBetweenParalogs/ExtractOrthologousGroupSequences.sh
+- Scripts/dNdS/ExtractOrthologousGroupSequences.sh
 > MSA of the AA sequences with mafft + backtranslation to DNA (from the DNA sequences)
-- Scripts/dNdSBetweenParalogs/MSA_AA_backtranslation_DNA.sh
-- Scripts/dNdSBetweenParalogs/Run_MSA_AA_backtranslation_DNA.sh
+- Scripts/dNdS/MSA_AA_backtranslation_DNA.sh
+- Scripts/dNdS/Run_MSA_AA_backtranslation_DNA.sh
 > evaluate the AA MSA done with mafft t_coffe, extract score and filter mafft alignments with t_coffee score
-- Scripts/dNdSBetweenParalogs/MSA_cleaning_tcoffe.sh
-- Scripts/dNdSBetweenParalogs/Run_MSA_cleaning_tcoffe_PerOG.sh
+- Scripts/dNdS/MSA_cleaning_tcoffe.sh
+- Scripts/dNdS/Run_MSA_cleaning_tcoffe_PerOG.sh
 > Tree from alignment with RAxML and dNdS analysis with Godon (model M8)
-- Scripts/dNdSBetweenParalogs/Calculate_dDdSBetweenParalogs_Godon.sh
-- Scripts/dNdSBetweenParalogs/Run_Calculate_dDdSBetweenParalogs_Godon.sh
+- Scripts/dNdS/Calculate_dDdSBetweenParalogs_Godon.sh
+- Scripts/dNdS/Run_Calculate_dDdSBetweenParalogs_Godon.sh
 
 ##### Usage:
 ```
-sbatch -t 05:00:00 --mem=8000 -J ExtrAmpVert -o tmp/ExtractSeq_AmphVerteb.out -e tmp/ExtractSeq_AmphVerteb.err Scripts/dNdSBetweenParalogs/ExtractOrthologousGroupSequences.sh AmphVerteb
+sbatch -t 05:00:00 --mem=8000 -J ExtrAmpVert -o tmp/ExtractSeq_AmphVerteb.out -e tmp/ExtractSeq_AmphVerteb.err Scripts/dNdS/ExtractOrthologousGroupSequences.sh AmphVerteb
 
-./Scripts/dNdSBetweenParalogs/Run_MSA_AA_backtranslation_DNA.sh AmphVerteb
+./Scripts/dNdS/Run_MSA_AA_backtranslation_DNA.sh AmphVerteb
 
-./Scripts/dNdSBetweenParalogs/Run_MSA_cleaning_tcoffe.sh AmphVerteb
+./Scripts/dNdS/Run_MSA_cleaning_tcoffe.sh AmphVerteb
 
-./Scripts/dNdSBetweenParalogs/Run_Calculate_dDdSBetweenParalogs_Godon.sh AmphVerteb
+./Scripts/dNdS/Run_Calculate_dDdSBetweenParalogs_Godon.sh AmphVerteb
 ```
+
+
+```
+for f in $(ls GO*); do awk -v f=$f 'BEGIN{split(f,a,"_")}{print a[1]"\t"a[2]"\t"$0}' $f;done| sed 's/.txt//g' | sed 's/^GO/GO:/g' > Human_GenesMainGOtermsMF.txt
+
+awk '{if(NR==FNR){a[$2]=$1;next} if(a[$4]){print a[$4]"\t"$0} }' Ensembl2Uniprot_Human_GRCh38.txt Human_GenesMainGOtermsMF.txt | cut -f1,2 | sort -u > Human_GenesMainGOtermsMF_ENS.txt
+
+tail -n +2 Results/FindOrthologs/AmphVerteb_broccoli/dir_step3/table_OGs_protein_names.txt | awk -F '\t' '{split($2, l, " ");split($5, h, " "); for(i in l){for(j in h){ print l[i]"\t"h[j]}}}' | sort -u > Results/FindOrthologs/AmphVerteb_broccoli/Blan2Hsap_genes.txt
+
+```
+
+
+
+
+
+
+
+
+
+
+
 
 
 

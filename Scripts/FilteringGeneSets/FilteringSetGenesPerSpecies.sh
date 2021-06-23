@@ -139,9 +139,9 @@ for Species in Branchiostoma_lanceolatum.BraLan3 Homo_sapiens.GRCh38 Mus_musculu
 #for Species in Branchiostoma_lanceolatum.BraLan3
 do
 	echo "	"${Species}
-	# Nuclear Genetic Code Backtranslation
-	if [[ ! -s ${ResultsFolder}/BacktranslatedSequences/${Species}_bt.fa ]]; then
-		echo "		Nuclear backtranslation"
+	# Nuclear Genetic Code translation
+	if [[ ! -s ${ResultsFolder}/TranslatedSequences/${Species}_bt.fa ]]; then
+		echo "		Nuclear translation"
 		cat ${ResultsFolder}/FilteredDNASequences/${Species}_DNA.fa | tr '[:lower:]' '[:upper:]' | awk 'BEGIN{
 			a["TTT"]="F"; 
 			a["TTC"]="F"; 
@@ -218,11 +218,11 @@ do
 				btseq=substr(btseq, 1, length(btseq)-1)
 			}
 			print btseq
-		}}' > ${ResultsFolder}/BacktranslatedSequences/${Species}_bt.fa
+		}}' > ${ResultsFolder}/TranslatedSequences/${Species}_bt.fa
 	fi
-	# Mitochondrial Genetic Code Backtranslation
-	if [[ ! -s ${ResultsFolder}/BacktranslatedSequences/${Species}_mbt.fa ]]; then
-		echo "		Mitochondrial backtranslation"
+	# Mitochondrial Genetic Code translation
+	if [[ ! -s ${ResultsFolder}/TranslatedSequences/${Species}_mbt.fa ]]; then
+		echo "		Mitochondrial translation"
 		cat ${ResultsFolder}/FilteredDNASequences/${Species}_DNA.fa | tr '[:lower:]' '[:upper:]' | awk 'BEGIN{
 			a["TTT"]="F"; 
 			a["TTC"]="F"; 
@@ -304,13 +304,13 @@ do
 				btseq=substr(btseq, 1, length(btseq)-1)
 			}
 			print btseq
-		}}' > ${ResultsFolder}/BacktranslatedSequences/${Species}_mbt.fa
+		}}' > ${ResultsFolder}/TranslatedSequences/${Species}_mbt.fa
 	fi
-	# Comparing the bt sequences with the actual AA sequence
+	# Comparing the translated sequences with the actual AA sequence
 	if [[ ! -s ${ResultsFolder}/Checking_DNA_AA_sequences/${Species}_checking_btDNA_AA.txt ]]; then
 		echo "		Comparison"
 		awk 'BEGIN{file=0}{if(FNR==1){file++} 
-			# Reading file with nuclear backtranslations
+			# Reading file with nuclear translations
 			if(file==1){
 				if($1 ~ />/){
 					g=$1;next;
@@ -318,7 +318,7 @@ do
 				a[g]=$1;
 				next;
 			} 
-			# Reading file with mitochondrial backtranslations
+			# Reading file with mitochondrial translations
 			if(file==2){
 				if($1 ~ />/){
 					g=$1;
@@ -352,7 +352,7 @@ do
 						print g"\tError\tDifferent length\t"length(b[g])"\t"length($1)"\t"$1"\t"a[g]"\t"b[g]						
 					}
 				}
-			}}' ${ResultsFolder}/BacktranslatedSequences/${Species}_bt.fa ${ResultsFolder}/BacktranslatedSequences/${Species}_mbt.fa ${ResultsFolder}/FilteredProteomes/${Species}.fa > ${ResultsFolder}/Checking_DNA_AA_sequences/${Species}_checking_btDNA_AA.txt
+			}}' ${ResultsFolder}/TranslatedSequences/${Species}_bt.fa ${ResultsFolder}/TranslatedSequences/${Species}_mbt.fa ${ResultsFolder}/FilteredProteomes/${Species}.fa > ${ResultsFolder}/Checking_DNA_AA_sequences/${Species}_checking_btDNA_AA.txt
 	fi
 done
 
@@ -368,7 +368,7 @@ for Species in Branchiostoma_lanceolatum.BraLan3 Homo_sapiens.GRCh38 Mus_musculu
 #for Species in Branchiostoma_lanceolatum.BraLan3
 do
 	echo "	"${Species}
-	# List of selected genes
+	# List of selected genes (Identical genes and genes with the same length with a maximum of 10% of mistmaches)
 	cat ${ResultsFolder}/Checking_DNA_AA_sequences/${Species}_checking_btDNA_AA.txt | grep 'Same' | awk -F'\t' '{if($5/$4 <= 0.1){print $1}}' | sed 's/>//g' >  ${ResultsFolder}/${Species}_FinalSet.list
 	cat ${ResultsFolder}/Checking_DNA_AA_sequences/${Species}_checking_btDNA_AA.txt | grep 'Identical' | cut -f1 | sed 's/>//g' >> ${ResultsFolder}/${Species}_FinalSet.list
 

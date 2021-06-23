@@ -12,14 +12,13 @@ RunName=$1
 Start=$2
 Step=$3
 OrthologsFolder="Results/FindOrthologs/${RunName}_broccoli"
-ResultsFolder="Results/dNdSBetweenParalogs"
+ResultsFolder="Results/dNdS"
 mkdir -p ${ResultsFolder}/MSA_cleaning_TCoffee
 minCleanMSAlength=250
 
 cd ${ResultsFolder}/MSA_cleaning_TCoffee
 for group in $(cut -f1 ${pwd}/${OrthologsFolder}/dir_step3/table_OGs_protein_counts.txt | tail -n +2 | tail -n +${Start} | head -${Step})
 do
-	echo ${group}
 	missingOG_MSA=$(grep -w ${group} ${pwd}/${ResultsFolder}/MissingOG_TooShortCleanMSA.txt | wc -l)
 	if [[ ! -s ${group}_DNA_clean.fa ]] && [[ ${missingOG_MSA} -eq 0 ]]
 	then

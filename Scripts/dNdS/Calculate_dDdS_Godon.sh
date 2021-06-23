@@ -10,18 +10,15 @@ RunName=$1
 Start=$2
 Step=$3
 OrthologsFolder="Results/FindOrthologs/${RunName}_broccoli"
-ResultsFolder="Results/dNdSBetweenParalogs"
+ResultsFolder="Results/dNdS"
 mkdir -p ${ResultsFolder}/Godon_M8 ${ResultsFolder}/TreeReconstruction
 
 ################################################
 ### RAxML & godon M8
 for group in $(cut -f1 ${OrthologsFolder}/dir_step3/table_OGs_protein_counts.txt | tail -n +2 | tail -n +${Start} | head -${Step})
 do
-	echo ${group}
-	echo "buuu"
 	missingOG_tree=$(grep -w ${group} ${ResultsFolder}/MissingOG_TooFewGenes.txt | wc -l)
 	missingOG_MSA=$(grep -w ${group} ${ResultsFolder}/MissingOG_TooShortCleanMSA.txt | wc -l)
-	echo "$missingOG_tree $missingOG_MSA"
 	if [[ -s ${ResultsFolder}/MSA_cleaning_TCoffee/${group}_DNA_clean.fa ]] && [[ ! -s ${ResultsFolder}/Godon_M8/${group}_M8_likelihood_ratio.txt ]] && [[ ${missingOG_tree} -eq 0 ]] && [[ ${missingOG_MSA} -eq 0 ]]
 	then
 		echo "RAxML for ${group}"

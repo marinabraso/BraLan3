@@ -8,7 +8,7 @@ VerticalDensity <- function(values, pos, col){
 	#points(jitter(rep(pos, length(values)), amount=w/2), values, pch=21, bg=col, col=col)
 }
 
-PlotaJitterPoints <- function(values, pos, col){
+PlotJitterPoints <- function(values, pos, col){
 	w <- .8
 	points(jitter(rep(pos, length(values)), amount=w/2), values, pch=21, bg=col, col=col)
 }
@@ -21,6 +21,7 @@ BoxPlot <- function(values, pos, col, cextext=1, w=.8, den=NULL, text=FALSE){
 	}
 	polygon(c(pos-w/2, pos+w/2, pos+w/2, pos-w/2), c(s$stats[2],s$stats[2],s$stats[4],s$stats[4]), col=col, border=col, lwd=4, density=den)
 	lines(c(pos-w/2, pos+w/2),c(s$stats[3], s$stats[3]), lwd=2)
+	polygon(c(pos-w/2, pos+w/2, pos+w/2, pos-w/2), c(s$stats[2],s$stats[2],s$stats[4],s$stats[4]), col=NA, border=col, lwd=4)		
 	#points(pos, m, pch=21, bg=col, col=col, cex=4)
 	if(text){
 		par(xpd=TRUE) 
@@ -133,7 +134,7 @@ RandomizationTest <- function(Overlap, group1, group2, Total, lab1, lab2, thresh
 	return(list(lab1, lab2, dp, ep, mean(expDist), sd(expDist)))
 }
 
-RandomizationTestProportion <- function(Overlap, group1, group2, Total, lab1, lab2, iterations=100){
+RandomizationTestProportion <- function(Overlap, group1, group2, Total, lab1, lab2, iterations=1000){
 	expDist <- c()
 	for(i in c(1:iterations)){
 		r1 <- sample(1:Total, group1)
@@ -152,13 +153,13 @@ RandomizationTestProportion <- function(Overlap, group1, group2, Total, lab1, la
 
 
 
-RandomizeDifferenceDupSC <- function(df, thersh, iterations=10000){
+RandomizeDifferenceDupSC <- function(df, thersh, colblan, iterations=1000){
 	total <- length(df[,1])
-	numD <- length(df[which(df$BlanType=="Duplicated"),1])
-	numSC <- length(df[which(df$BlanType=="SingleCopy"),1])
+	numD <- length(df[which(df[,colblan]=="Duplicated"),1])
+	numSC <- length(df[which(df[,colblan]=="SingleCopy"),1])
 	numAE <- length(df[which(df$M8.Qval<=QvalT),1])
-	propD <- length(df[which(df$BlanType=="Duplicated" & df$M8.Qval<=QvalT),1])/numD
-	propSC <- length(df[which(df$BlanType=="SingleCopy" & df$M8.Qval<=QvalT),1])/numSC
+	propD <- length(df[which(df[,colblan]=="Duplicated" & df$M8.Qval<=QvalT),1])/numD
+	propSC <- length(df[which(df[,colblan]=="SingleCopy" & df$M8.Qval<=QvalT),1])/numSC
 	diff <- propD-propSC
 	exp.diff <- c()
 	for(i in c(1:iterations)){
@@ -173,16 +174,13 @@ RandomizeDifferenceDupSC <- function(df, thersh, iterations=10000){
 }
 
 
-PlotRandomizeDifferenceDupSC <- function(df, ypos, col, cex){
-	rdata <- unlist(RandomizeDifferenceDupSC(df, 0.05))
+PlotRandomizeDifferenceDupSC <- function(df, ypos, col, cex, colblan){
+	rdata <- unlist(RandomizeDifferenceDupSC(df, 0.05, colblan))
 	points(rdata[1], ypos, col=col, bg=col, pch=16, cex=cex-1)
 	arrows(x0=rdata[3], y0=ypos, x1=rdata[4], y1=ypos, code=3, angle=90, length=0.05, col="black")
 	points(rdata[2], ypos, col="black", bg="white", pch=16, cex=max(.5,cex-3))
 
 }
-
-
-
 
 
 

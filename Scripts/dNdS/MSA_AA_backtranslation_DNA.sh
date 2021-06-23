@@ -8,7 +8,7 @@ RunName=$1
 Start=$2
 Step=$3
 OrthologsFolder="Results/FindOrthologs/${RunName}_broccoli"
-ResultsFolder="Results/dNdSBetweenParalogs"
+ResultsFolder="Results/dNdS"
 MSAFolder=${ResultsFolder}/MSA_mafft
 SeqFolder=${ResultsFolder}/OGSequences_${RunName}
 mkdir -p ${MSAFolder}
@@ -16,7 +16,6 @@ mkdir -p ${MSAFolder}
 for group in $(cut -f1 ${OrthologsFolder}/dir_step3/table_OGs_protein_counts.txt | tail -n +2 | tail -n +${Start} | head -${Step})
 do
 	echo ${group}
-	#rm ${MSAFolder}/${group}_*.fa 2> ~/null
 	## Alignment of AA sequences with MAFFT
 	if [[ ! -s ${MSAFolder}/${group}_AA.fa ]]
 	then
@@ -29,7 +28,6 @@ do
 		for gene in $(grep '>' ${SeqFolder}/${group}_AA.fa)
 		do
 			echo ${gene} >> ${MSAFolder}/${group}_DNA.fa
-			#echo ${gene}
 			AAalnseq=$(awk -v g=${gene} '{if($1 ~ />/){if($1 == g){valid=1}else{valid=0}next;} if(valid==1){seq=seq$0}}END{print seq}' ${MSAFolder}/${group}_AA.fa)
 			DNAseq=$(awk -v g=${gene} '{if($1 ~ />/){if($1 == g){valid=1}else{valid=0}next;} if(valid==1){seq=seq$0}}END{print seq}' ${SeqFolder}/${group}_DNA.fa)
 			perl -le '
