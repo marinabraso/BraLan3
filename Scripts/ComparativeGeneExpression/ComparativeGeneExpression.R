@@ -40,7 +40,7 @@ BgeeS2 <- Bgee$new(species=SName2, dataType="rna_seq")
 aBgeeS1 <- getAnnotation(BgeeS1)
 aBgeeS2 <- getAnnotation(BgeeS2)
 dBgeeS1 <- getData(BgeeS1) # SRP123447
-dBgeeS2 <- getData(BgeeS2, experimentId= "GSE30352") # The evolution of gene expression levels in mammalian organs
+dBgeeS2 <- getData(BgeeS2, experimentId= "SRP123447") #  GSE37909: RNA-seq from ENCODE/Caltech (Mouse)
 
 
 system_out <- system(paste0("cut -f1,2,3,4 ", OrganOrthBgeeFile), intern=T)
@@ -49,11 +49,8 @@ colnames(OrganOrthBgee) <- c("Anat.IDs", "Anat.Names", "Source.Anat.IDs", "Sourc
 
 OrganOrthBgee[which(OrganOrthBgee$Anat.IDs %in% unique(dBgeeS1$Anatomical.entity.ID) & OrganOrthBgee$Source.Anat.IDs %in% unique(dBgeeS2$Anatomical.entity.ID)),]
 
-
-
-
-
-
+unique(dBgeeS1$Anatomical.entity.name)
+unique(dBgeeS2$Anatomical.entity.name)
 
 
 

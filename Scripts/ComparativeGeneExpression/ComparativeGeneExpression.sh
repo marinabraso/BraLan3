@@ -8,7 +8,7 @@ Rscript="Scripts/ComparativeGeneExpression/ComparativeGeneExpression.R"
 
 # Files & parameters
 Species1="Blan"
-Species2="Hsap"
+Species2="Drer"
 ResultsFolder="Results/ComparativeGeneExpression"
 mkdir -p ${ResultsFolder}
 
