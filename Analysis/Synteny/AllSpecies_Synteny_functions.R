@@ -80,8 +80,37 @@ AddHistlogYaxis <- function(h, col){
 	}
 }
 
+AddDenslogYaxis <- function(d, col){
+	polygon(c(0,d$x), c(0,d$y), col=modif_alpha(col,.2), border=col)
+}
 
+plotHistAllSpecies <- function(vec, type, breaks, ylim, xlim, xlab, main){
+	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=ylim, xlim=xlim, col=NA)
+	mtext(main, side = 3, line = 2, cex=1.5)
+	mtext("Frequency", side = 2, line = 3, cex=1.5)
+	mtext(xlab, side = 1, line = 3, cex=1.5)
+	for(Species in ShortSpeciesNames){
+		h <- hist(vec[which(names(vec)==paste0(type, Species))], breaks=breaks, plot=FALSE)
+		AddHistlogYaxis(h, SpeciesColors[which(ShortSpeciesNames==Species)])
+	}
+	axis(1, at = seq(0, xlim[2], xlim[2]/5), lwd.ticks=1, las=1, cex.axis=1)
+	axis(2, at = c(0,log(c(1,10,100,1000,10000))), labels=c(0,1,10,100,1000,10000), lwd.ticks=1, las=1, cex.axis=1)
+	box()
+}
 
+plotDensAllSpecies <- function(vec, type, adj, ylim, xlim, xlab, main){
+	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=ylim, xlim=xlim, col=NA)
+	mtext(main, side = 3, line = 2, cex=1.5)
+	mtext("Density", side = 2, line = 3, cex=1.5)
+	mtext(xlab, side = 1, line = 3, cex=1.5)
+	for(Species in ShortSpeciesNames){
+		d <- density(vec[which(names(vec)==paste0(type, Species))], adjust=adj)
+		AddDenslogYaxis(d, SpeciesColors[which(ShortSpeciesNames==Species)])
+	}
+	axis(1, at = seq(0, xlim[2], xlim[2]/5), lwd.ticks=1, las=1, cex.axis=1)
+	axis(2, at = seq(0, ylim[2], ylim[2]/5), lwd.ticks=1, las=1, cex.axis=1)
+	box()
+}
 
 
 

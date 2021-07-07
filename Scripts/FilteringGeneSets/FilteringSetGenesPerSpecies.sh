@@ -60,7 +60,7 @@ for Species in Homo_sapiens.GRCh38 Mus_musculus.GRCm39 Danio_rerio.GRCz11 Gallus
 do
 	echo "	"${Species}
 	if [[ ! -s ${ResultsFolder}/${Species}_gene2tx_tmp.txt ]]; then
-		#	Filter for protein coding, "strong" evidence in any of the fields & print the longest transcript per gene
+		#	Filter for protein coding & print the longest transcript per gene
 		zcat ${GTFFolder}/${Species}.103.gtf.gz | grep -v '^#' | grep 'gene_biotype "protein_coding"' | awk '{if($3 == "CDS"){print $0}}' | sed 's/"; /"\t/g' | cut -f4,5,9,11 | sed 's/\t[a-z_]\+ "/\t/g' | sed 's/"//g' | sort -k3,3 -k4,4 -k1,1V | awk '{if(n != $3"\t"$4){print n"\t"len; n=$3"\t"$4; len=0}else{len=len+$2-$1}}END{print n"\t"len;}' | tail -n +2 | awk '{if(g != $1){print g"\t"t; g=$1; t=$2;maxlen=$3}else{if($3>maxlen){t=$2;maxlen=$3}}}END{print g"\t"t;}' | tail -n +2 > ${ResultsFolder}/${Species}_gene2tx_tmp.txt
 	fi
 	if [[ ! -s ${ResultsFolder}/FilteredProteomes/${Species}.fa ]]; then
@@ -89,10 +89,12 @@ done
 
 for Species in Branchiostoma_belcheri.Haploidv18h27 Branchiostoma_floridae.Bfl_VNyyK Strongylocentrotus_purpuratus.Spur5.0 Asterias_rubens.eAstRub1.3 Saccoglossus_kowalevskii.Skow1.1
 do
+#for Species in Branchiostoma_floridae.Bfl_VNyyK
+#do
 	echo "	"${Species}
 	SpeciesShortName=$(echo ${Species^^} | awk -F '_' '{print substr($1, 1, 1)substr($2, 1, 3)}')
 	if [[ ! -s ${ResultsFolder}/${Species}_gene2tx_tmp.txt ]]; then
-		#	Filter for protein coding, "strong" evidence in any of the fields & print the longest transcript per gene
+		#	Filter for protein coding & print the longest transcript per gene
 		zcat ${GTFFolder}/${Species}.gff.gz | grep -v '^#' | awk '{if($3=="CDS"){print $0}}' | sed 's/Parent=rna-/transcript_id=/g'  | sed 's/Parent=gene-/transcript_id=/g' | sed 's/ID.*;transcript_id=\([0-9a-zA-Z_\/\.\-]\+\);.*gene=\([0-9a-zA-Z_\/\.\-]\+\);.*protein_id=\([0-9a-zA-Z_\/\.\-]\+\).*/\2\t\1\t\3/g' | sed 's/\.[0-9]\+//g' | cut -f4,5,9,10,11 | awk -v sn=${SpeciesShortName} '{print $1"\t"$2"\t"sn""$3"\t"sn""$4";"sn""$5}' | sort -k3,3 -k4,4 -k1,1V | awk '{if(n != $3"\t"$4){print n"\t"len; n=$3"\t"$4; len=0}else{len=len+$2-$1}}END{print n"\t"len;}' | tail -n +2 | awk '{if(g != $1){print g"\t"t; g=$1; t=$2;maxlen=$3}else{if($3>maxlen){t=$2;maxlen=$3}}}END{print g"\t"t;}' | tail -n +2 > ${ResultsFolder}/${Species}_gene2tx_tmp.txt
 	fi
 	if [[ ! -s ${ResultsFolder}/FilteredProteomes/${Species}.fa ]]; then
@@ -109,16 +111,16 @@ do
 	fi
 done
 
-
 ################################################
 ###
 ### EXTRACTING DNA SEQUENCES
 ###
 ################################################
 echo "### EXTRACTING DNA SEQUENCES"
-for Species in Branchiostoma_lanceolatum.BraLan3 Homo_sapiens.GRCh38 Mus_musculus.GRCm39 Danio_rerio.GRCz11 Gallus_gallus.GRCg6a Branchiostoma_belcheri.Haploidv18h27 Branchiostoma_floridae.Bfl_VNyyK Strongylocentrotus_purpuratus.Spur5.0 Asterias_rubens.eAstRub1.3 Saccoglossus_kowalevskii.Skow1.1
-#for Species in Branchiostoma_lanceolatum.BraLan3
+for Species in Branchiostoma_belcheri.Haploidv18h27 Branchiostoma_floridae.Bfl_VNyyK Strongylocentrotus_purpuratus.Spur5.0 Asterias_rubens.eAstRub1.3 Saccoglossus_kowalevskii.Skow1.1
 do
+#for Species in Branchiostoma_floridae.Bfl_VNyyK
+#do
 	echo "	"${Species}
 	GenomeFile=$(ls ${GenomesFolder}/${Species}*.fa)
 	if [[ ! -s ${ResultsFolder}/${Species}_Extract_cDNA_tmp.txt  ]]; then
@@ -135,9 +137,10 @@ done
 ###
 ################################################
 echo "### CHECKING DNA - AA SEQUENCES CORRESPONDENCE"
-for Species in Branchiostoma_lanceolatum.BraLan3 Homo_sapiens.GRCh38 Mus_musculus.GRCm39 Danio_rerio.GRCz11 Gallus_gallus.GRCg6a Branchiostoma_belcheri.Haploidv18h27 Branchiostoma_floridae.Bfl_VNyyK Strongylocentrotus_purpuratus.Spur5.0 Asterias_rubens.eAstRub1.3 Saccoglossus_kowalevskii.Skow1.1
-#for Species in Branchiostoma_lanceolatum.BraLan3
+for Species in Branchiostoma_belcheri.Haploidv18h27 Branchiostoma_floridae.Bfl_VNyyK Strongylocentrotus_purpuratus.Spur5.0 Asterias_rubens.eAstRub1.3 Saccoglossus_kowalevskii.Skow1.1
 do
+#for Species in Branchiostoma_floridae.Bfl_VNyyK
+#do
 	echo "	"${Species}
 	# Nuclear Genetic Code translation
 	if [[ ! -s ${ResultsFolder}/TranslatedSequences/${Species}_bt.fa ]]; then
@@ -364,9 +367,10 @@ done
 ###
 ################################################
 echo "### FINAL SET OF GENES"
-for Species in Branchiostoma_lanceolatum.BraLan3 Homo_sapiens.GRCh38 Mus_musculus.GRCm39 Danio_rerio.GRCz11 Gallus_gallus.GRCg6a Branchiostoma_belcheri.Haploidv18h27 Branchiostoma_floridae.Bfl_VNyyK Strongylocentrotus_purpuratus.Spur5.0 Asterias_rubens.eAstRub1.3 Saccoglossus_kowalevskii.Skow1.1
-#for Species in Branchiostoma_lanceolatum.BraLan3
+for Species in Branchiostoma_belcheri.Haploidv18h27 Branchiostoma_floridae.Bfl_VNyyK Strongylocentrotus_purpuratus.Spur5.0 Asterias_rubens.eAstRub1.3 Saccoglossus_kowalevskii.Skow1.1
 do
+#for Species in Branchiostoma_floridae.Bfl_VNyyK
+#do
 	echo "	"${Species}
 	# List of selected genes (Identical genes and genes with the same length with a maximum of 10% of mistmaches)
 	cat ${ResultsFolder}/Checking_DNA_AA_sequences/${Species}_checking_btDNA_AA.txt | grep 'Same' | awk -F'\t' '{if($5/$4 <= 0.1){print $1}}' | sed 's/>//g' >  ${ResultsFolder}/${Species}_FinalSet.list

@@ -1,15 +1,13 @@
 #!/bin/bash
 
-module load curl/7.74.0
+
 
 
 # Scripts
-Rscript="Scripts/ComparativeGeneExpression/ComparativeGeneExpression.R"
+Rscript="Analysis/ComparativeGeneExpression/ComparativeGeneExpression.R"
 
 # Files & parameters
-Species1="Blan"
-Species2="Drer"
-ResultsFolder="Results/ComparativeGeneExpression"
+ResultsFolder="Plots/ComparativeGeneExpression"
 mkdir -p ${ResultsFolder}
 
 ################################################
