@@ -4,11 +4,9 @@ Sys.setenv(LANG = "en")
 
 ######################################################################
 # Libraries & functions
-
-`%out%` <- Negate(`%in%`)
 pwd <- system("pwd", intern=TRUE)
-source(paste0(pwd,"/Analysis/ComparativeGeneExpression/ComparativeGeneExpression_functions.R"))
-library(BgeeDB)
+script <- sub(".*=", "", commandArgs()[4])
+source(paste0(dirname(script), "/", substr(basename(script),1, nchar(basename(script))-2), "_functions.r", sep=""))
 
 ######################################################################
 # Files & folders
@@ -19,18 +17,17 @@ CountsFileAV <- paste0(pwd, "/Results/FindOrthologs/AmphVerteb_broccoli/dir_step
 NamesFileAV <- paste0(pwd, "/Results/FindOrthologs/AmphVerteb_broccoli/dir_step3/table_OGs_protein_names.txt")
 BlanGeneDataFile <- paste0(pwd, "/", RDataFolder, "/GeneDataProcessed.txt")
 OhnologsSFile <- paste0(pwd, "/Results/FindOrthologs/OGOnhologs/OG_w_Onhologs.Strict.DR_GG_MM_HS.txt")
+DrerGeneDataFile <- paste0(pwd, "/", ResultsFolder, "/DrerGeneData.txt")
+DrerBgeeDataFile <- paste0(pwd, "/", ResultsFolder, "/DrerBgeeData.txt")
 
 ######################################################################
 # General parameters
 TPM.threshold <- 1
-
-setwd(paste0("./", ResultsFolder))
 Species1 <- "Blan"
 Species2 <- "Drer"
 
 ShortSpeciesNames <- c("Drer", "Ggal", "Hsap", "Mmus", "Blan")
 SpeciesNames <- c("Danio_rerio", "Gallus_gallus", "Homo_sapiens", "Mus_musculus", "Branchiostoma_lanceolatum")
-
 SName1 <- SpeciesNames[which(ShortSpeciesNames==Species1)]
 SName2 <- SpeciesNames[which(ShortSpeciesNames==Species2)]
 
@@ -46,7 +43,6 @@ TissueColors <- colfunc(length(NamesMatchingTissues))
 
 MatchingTissues <- as.data.frame(cbind(BlanMatchingTissues, DrerMatchingTissues, NamesMatchingTissues, TissueColors))
 colnames(MatchingTissues) <- c("Blan", "Drer", "Name","Color")
-print(head(MatchingTissues))
 MatchingTissues <- MatchingTissues[MatchingTissues$Name!="blastula" & MatchingTissues$Name!="ovary" & MatchingTissues$Name!="skin",]
 
 ###########################################################################
@@ -56,71 +52,57 @@ MatchingTissues <- MatchingTissues[MatchingTissues$Name!="blastula" & MatchingTi
 # List of onhologs
 Ohnologs <- read.table(OhnologsSFile, h=F)[,1]
 
-if(file.exists("DrerGeneData.txt")){
-	# Drer Gene information previously processed from Bgee
-	DrerGeneData <- read.delim("DrerGeneData.txt", h=T, stringsAsFactors=F)
-}else{
-	DrerBgee <- Bgee$new(species=SName2, dataType="rna_seq")
-	DrerBgeeData <- getData(DrerBgee)
-	write.table(DrerBgeeData, file = "DrerBgeeData.txt", quote = F, sep="\t", col.names = TRUE, row.names = TRUE)
-	DrerGeneData <- as.data.frame(cbind(unique(DrerBgeeData$Gene.ID)))
-	colnames(DrerGeneData) <- c("Gene")
-	for(i in c(1:length(MatchingTissues[,1]))){
-		print(MatchingTissues$Name[i])
-		system_out <- system(paste0("cat ", "DrerBgeeData.txt", " | sed 's/\"//g' | awk -F'\\t' -v tissue=\"", MatchingTissues$Drer[i], "\" '{if($7==tissue){print $5\"\\t\"$13\"\\t\"$16}}' | sort -k1,1 | awk '{if(g!=$1){if(NR!=1){mTPM=mTPM/num;} print g\"\\t\"mTPM\"\\t\"pres; g=$1; num=1;mTPM=$2;pres=$3}else{num=num+1;mTPM=mTPM+$2;if($3==\"present\"){pres=$3}}}END{mTPM=mTPM/num; print g\"\\t\"mTPM\"\\t\"pres;}' | tail -n +2"), intern=T)
-		tDrerGeneData <- read.table(text=system_out, h=F, sep = "\t")
-		DrerGeneData[,paste0(MatchingTissues$Name[i],"TPM")] <- tDrerGeneData[match(DrerGeneData$Gene, tDrerGeneData[,1]),2]
-		DrerGeneData[,paste0(MatchingTissues$Name[i],"Presence")] <- tDrerGeneData[match(DrerGeneData$Gene, tDrerGeneData[,1]),3]
-	}
-	head(DrerGeneData)
-	write.table(DrerGeneData, file = "DrerGeneData.txt", quote = F, sep="\t", col.names = TRUE, row.names = TRUE)
-}
+# Read Drer gene information previously processed or precess it and write itinto a file
+DrerGeneData <- prepare_DrerGeneData(DrerGeneDataFile, DrerBgeeDataFile, SName2, MatchingTissues, ResultsFolder, pwd)
+print(head(DrerGeneData))
 
+# Read Blan gene data file 
 BlanGeneData <- read.table(BlanGeneDataFile, h=T, sep = "\t", row.names=1)
 colnames(BlanGeneData) <- sub("^X", "", colnames(BlanGeneData))
 
-CountsAV <- read.table(CountsFileAV, h=F, sep = "\t", row.names=NULL)
-system_out <- system(paste("head -1 ", CountsFileAV, " | cut -f2,3,4,5,6,7,8,9,10,11,12 | sed 's/\\([A-Z]\\)[a-z]\\+_\\([a-z][a-z][a-z]\\)[A-Za-z0-9\\._]\\+/\\1\\2/g'"), intern=T)
-Header <- read.table(text=system_out, h=F, sep = "\t")
-colnames(CountsAV) <- c("OG", as.character(unlist(lapply(Header[1,], as.character))))
+# Read orthologs counts information
+CountsAV <- prepare_CountsAV(CountsFileAV, Ohnologs)
 print(head(CountsAV))
-CountsAV$Ohnologs <- rep(FALSE, length(CountsAV[,1]))
-CountsAV$Ohnologs[which(CountsAV$OG %in% Ohnologs)] <- rep(TRUE, length(CountsAV[which(CountsAV$OG %in% Ohnologs),1]))
 
-system_out <- system(paste("cat ",NamesFileAV ," | tail -n +2 | awk -F '\\t' '{split($2,bl,\" \"); split($3,dr,\" \"); for(i in bl){for(j in dr){print $1\"\\t\"bl[i]\"\\t\"dr[j]}}}'"), intern=T)
-GenePairs <- read.table(text=system_out, h=F, sep = "\t")
-colnames(GenePairs) <- c("OG", "Gene1", "Gene2")
-GenePairs <- GenePairs[which(GenePairs$Gene1 %in% BlanGeneData$Gene & GenePairs$Gene2 %in% DrerGeneData$Gene),]
-print(head(GenePairs))
+# Prepare Blan - Drer gene pairs
+prepare_GenePairs(NamesFileAV, BlanGeneData, DrerGeneData, MatchingTissues, TPM.threshold)
 
-for(i in c(1:length(MatchingTissues[,1]))){
-	GenePairs[,paste0(MatchingTissues$Name[i],1)] <- BlanGeneData[match(GenePairs$Gene1, BlanGeneData$Gene), MatchingTissues$Blan[i]]
-	GenePairs[,paste0(MatchingTissues$Name[i],2)] <- DrerGeneData[match(GenePairs$Gene2, DrerGeneData$Gene), paste0(MatchingTissues$Name[i],"TPM")]
-	GenePairs[,paste0(MatchingTissues$Name[i],"2p")] <- DrerGeneData[match(GenePairs$Gene2, DrerGeneData$Gene), paste0(MatchingTissues$Name[i],"Presence")]
+prepare_GenePairs <- function(nfile, blangd, drergd, tissues, tpmthresh){
+	system_out <- system(paste("cat ",nfile ," | tail -n +2 | awk -F '\\t' '{split($2,bl,\" \"); split($3,dr,\" \"); for(i in bl){for(j in dr){print $1\"\\t\"bl[i]\"\\t\"dr[j]}}}'"), intern=T)
+	GenePairs <- read.table(text=system_out, h=F, sep = "\t")
+	colnames(GenePairs) <- c("OG", "Gene1", "Gene2")
+	GenePairs <- GenePairs[which(GenePairs$Gene1 %in% blangd$Gene & GenePairs$Gene2 %in% drergd$Gene),]
+
+	# Getting tissue gene expression data for each pair 
+	for(i in c(1:length(tissues[,1]))){
+		GenePairs[,paste0(tissues$Name[i],1)] <- blangd[match(GenePairs$Gene1, blangd$Gene), tissues$Blan[i]]
+		GenePairs[,paste0(tissues$Name[i],2)] <- drergd[match(GenePairs$Gene2, drergd$Gene), paste0(tissues$Name[i],"TPM")]
+		GenePairs[,paste0(tissues$Name[i],"2p")] <- drergd[match(GenePairs$Gene2, drergd$Gene), paste0(tissues$Name[i],"Presence")]
+	}
+
+	# Calculate sum of expressed tissues (domains) in each species and its difference
+	GenePairs$SumDom1 <- unlist(lapply(c(1:length(GenePairs[,1])), function(x){sum(GenePairs[x,paste0(tissues$Name, 1)]>TPM.threshold)}))
+	GenePairs$SumDom2 <- unlist(lapply(c(1:length(GenePairs[,1])), function(x){sum(GenePairs[x,paste0(tissues$Name, 2)]>TPM.threshold)}))
+	GenePairs$DiffDom <- GenePairs$SumDom1-GenePairs$SumDom2
+
+	# Calculate absolute difference between species expression profiles
+	GenePairs$DiffAbs <- unlist(lapply(c(1:length(GenePairs[,1])), function(x){sum(abs((GenePairs[x,paste0(tissues$Name, 1)]>TPM.threshold)-(GenePairs[x,paste0(tissues$Name, 2)]>tpmthresh)))}))	
 }
-print(head(GenePairs))
-GenePairs$SumDom1 <- unlist(lapply(c(1:length(GenePairs[,1])), function(x){sum(GenePairs[x,paste0(MatchingTissues$Name, 1)]>TPM.threshold)}))
-GenePairs$SumDom2 <- unlist(lapply(c(1:length(GenePairs[,1])), function(x){sum(GenePairs[x,paste0(MatchingTissues$Name, 2)]>TPM.threshold)}))
-GenePairs$DiffDom <- GenePairs$SumDom1-GenePairs$SumDom2
-GenePairs$DiffAbs <- unlist(lapply(c(1:length(GenePairs[,1])), function(x){sum(abs((GenePairs[x,paste0(MatchingTissues$Name, 1)]>TPM.threshold)-(GenePairs[x,paste0(MatchingTissues$Name, 2)]>TPM.threshold)))}))
+
+# Label genepairs that are ohnologs
 GenePairs$Ohnologs <- rep(FALSE, length(GenePairs[,1]))
 GenePairs$Ohnologs[which(GenePairs$OG %in% Ohnologs)] <- rep(TRUE, length(GenePairs[which(GenePairs$OG %in% Ohnologs),1]))
+
+# Subdivisions of gene pairs (1 to 1 orthologs, 1 to many, many to 1)
 GenePairs.121 <- GenePairs[which(GenePairs$OG %in% CountsAV$OG[which(CountsAV$Blan==1 & CountsAV$Drer==1)]),]
 GenePairs.12m <- GenePairs[which(GenePairs$OG %in% CountsAV$OG[which(CountsAV$Blan==1 & CountsAV$Drer>=2)]),]
 GenePairs.m21 <- GenePairs[which(GenePairs$OG %in% CountsAV$OG[which(CountsAV$Blan>=2 & CountsAV$Drer==1)]),]
 
-SumUnionOfPatterns <- function(OG, spnum){
-	return(sum(colSums(GenePairs[which(GenePairs$OG == OG),paste0(MatchingTissues$Name,spnum)]>TPM.threshold)>0))
-}
-DiffAbsUnionOfPatterns <- function(OG){
-	pattern1 <- colSums(GenePairs[which(GenePairs$OG == OG),paste0(MatchingTissues$Name,1)]>TPM.threshold)>0
-	pattern2 <- colSums(GenePairs[which(GenePairs$OG == OG),paste0(MatchingTissues$Name,2)]>TPM.threshold)>0
-	return(sum(abs(pattern1-pattern2)))
-}
-CountsAV$SumUnionDom1 <- unlist(lapply(CountsAV$OG, SumUnionOfPatterns, 1))
-CountsAV$SumUnionDom2 <- unlist(lapply(CountsAV$OG, SumUnionOfPatterns, 2))
+# 
+CountsAV$SumUnionDom1 <- unlist(lapply(CountsAV$OG, sum_union_of_patterns, 1, GenePairs, MatchingTissues, TPM.threshold))
+CountsAV$SumUnionDom2 <- unlist(lapply(CountsAV$OG, sum_union_of_patterns, 2, GenePairs, MatchingTissues, TPM.threshold))
 CountsAV$DiffUnionDom <- CountsAV$SumUnionDom1-CountsAV$SumUnionDom2
-CountsAV$DiffAbsUnion <- unlist(lapply(CountsAV$OG, DiffAbsUnionOfPatterns))
+CountsAV$DiffAbsUnion <- unlist(lapply(CountsAV$OG, absolute_difference_union_of_patterns, GenePairs, MatchingTissues, TPM.threshold))
 print(summary(CountsAV$DiffUnionDom))
 print(summary(CountsAV$DiffAbsUnion))
 
@@ -138,23 +120,23 @@ plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=c(0,log(3000)), xlim=c(-.5
 mtext("Frequency", side = 2, line = 3, cex=1.5)
 mtext("Differences between patterns", side = 1, line = 3, cex=1.5)
 h <- hist(GenePairs.121$DiffAbs, breaks=breaks, plot=FALSE)
-AddHistlogYaxis(h, "grey60")
+add_hist_logYaxis(h, "grey60")
 h <- hist(GenePairs.12m$DiffAbs, breaks=breaks, plot=FALSE)
-AddHistlogYaxis(h, "royalblue1")
+add_hist_logYaxis(h, "royalblue1")
 h <- hist(CountsAV$DiffAbsUnion[which(CountsAV$Blan==1 & CountsAV$Drer>1)], breaks=breaks, plot=FALSE)
-AddHistlogYaxis(h, "royalblue4")
+add_hist_logYaxis(h, "royalblue4")
 h <- hist(GenePairs.m21$DiffAbs, breaks=breaks, plot=FALSE)
-AddHistlogYaxis(h, "orangered1")
+add_hist_logYaxis(h, "orangered1")
 h <- hist(CountsAV$DiffAbsUnion[which(CountsAV$Blan>1 & CountsAV$Drer==1)], breaks=breaks, plot=FALSE)
-AddHistlogYaxis(h, "orangered4")
+add_hist_logYaxis(h, "orangered4")
 h <- hist(GenePairs.12m$DiffAbs[which(GenePairs.12m$Ohnologs==TRUE)], breaks=breaks, plot=FALSE)
-AddHistlogYaxis(h, "forestgreen1")
-h <- hist(CountsAV$DiffAbsUnion[which(CountsAV$Blan==1 & CountsAV$Drer>1 & GenePairs.12m$Ohnologs==TRUE)], breaks=breaks, plot=FALSE)
-AddHistlogYaxis(h, "forestgreen4")
+add_hist_logYaxis(h, "olivedrab1")
+h <- hist(CountsAV$DiffAbsUnion[which(CountsAV$Blan==1 & CountsAV$Drer>1 & CountsAV$Ohnologs==TRUE)], breaks=breaks, plot=FALSE)
+add_hist_logYaxis(h, "olivedrab4")
 h <- hist(GenePairs.12m$DiffAbs[which(GenePairs.12m$Ohnologs==FALSE)], breaks=breaks, plot=FALSE)
-AddHistlogYaxis(h, "gold1")
-h <- hist(CountsAV$DiffAbsUnion[which(CountsAV$Blan==1 & CountsAV$Drer>1 & GenePairs.12m$Ohnologs==FALSE)], breaks=breaks, plot=FALSE)
-AddHistlogYaxis(h, "gold4")
+add_hist_logYaxis(h, "gold1")
+h <- hist(CountsAV$DiffAbsUnion[which(CountsAV$Blan==1 & CountsAV$Drer>1 & CountsAV$Ohnologs==FALSE)], breaks=breaks, plot=FALSE)
+add_hist_logYaxis(h, "gold4")
 axis(1, at = c(0:length(MatchingTissues[,1])), lwd.ticks=1, las=1, cex.axis=1)
 axis(2, at = c(0,log(c(1,10,100,1000,10000))), labels=c(0,1,10,100,1000,10000), lwd.ticks=1, las=1, cex.axis=1)
 box()
@@ -164,15 +146,23 @@ plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=c(0,log(3000)), xlim=c(-le
 mtext("Frequency", side = 2, line = 3, cex=1.5)
 mtext("Difference in number of domains", side = 1, line = 3, cex=1.5)
 h <- hist(GenePairs.121$DiffDom, breaks=breaks, plot=FALSE)
-AddHistlogYaxis(h, "grey60")
+add_hist_logYaxis(h, "grey60")
 h <- hist(GenePairs.12m$DiffDom, breaks=breaks, plot=FALSE)
-AddHistlogYaxis(h, "royalblue1")
-h <- hist(GenePairs.m21$DiffDom, breaks=breaks, plot=FALSE)
-AddHistlogYaxis(h, "orangered1")
+add_hist_logYaxis(h, "royalblue1")
 h <- hist(CountsAV$DiffUnionDom[which(CountsAV$Blan==1 & CountsAV$Drer>1)], breaks=breaks, plot=FALSE)
-AddHistlogYaxis(h, "royalblue4")
+add_hist_logYaxis(h, "royalblue4")
+h <- hist(GenePairs.m21$DiffDom, breaks=breaks, plot=FALSE)
+add_hist_logYaxis(h, "orangered1")
 h <- hist(CountsAV$DiffUnionDom[which(CountsAV$Blan>1 & CountsAV$Drer==1)], breaks=breaks, plot=FALSE)
-AddHistlogYaxis(h, "orangered4")
+add_hist_logYaxis(h, "orangered4")
+h <- hist(GenePairs.12m$DiffDom[which(GenePairs.12m$Ohnologs==TRUE)], breaks=breaks, plot=FALSE)
+add_hist_logYaxis(h, "olivedrab1")
+h <- hist(CountsAV$DiffUnionDom[which(CountsAV$Blan==1 & CountsAV$Drer>1 & CountsAV$Ohnologs==TRUE)], breaks=breaks, plot=FALSE)
+add_hist_logYaxis(h, "olivedrab4")
+h <- hist(GenePairs.12m$DiffDom[which(GenePairs.12m$Ohnologs==FALSE)], breaks=breaks, plot=FALSE)
+add_hist_logYaxis(h, "gold1")
+h <- hist(CountsAV$DiffUnionDom[which(CountsAV$Blan==1 & CountsAV$Drer>1 & CountsAV$Ohnologs==FALSE)], breaks=breaks, plot=FALSE)
+add_hist_logYaxis(h, "gold4")
 axis(1, at = c(-length(MatchingTissues[,1]):length(MatchingTissues[,1])), lwd.ticks=1, las=1, cex.axis=1)
 axis(2, at = c(0,log(c(1,10,100,1000,10000))), labels=c(0,1,10,100,1000,10000), lwd.ticks=1, las=1, cex.axis=1)
 box()
@@ -218,10 +208,10 @@ CorrSC <- c()
 Corr21 <- c()
 Corr12 <- c()
 for(i in c(1:length(MatchingTissues[,1]))){
-	Corr <- c(Corr, GetSpearmanCorr(GenePairs, MatchingTissues$Name[i]))
-	CorrSC <- c(CorrSC, GetSpearmanCorr(GenePairsSC, MatchingTissues$Name[i]))
-	Corr21 <- c(Corr21, GetSpearmanCorr(GenePairs.m21, MatchingTissues$Name[i]))
-	Corr12 <- c(Corr12, GetSpearmanCorr(GenePairs.12m, MatchingTissues$Name[i]))
+	Corr <- c(Corr, get_spearman_corr(GenePairs, MatchingTissues$Name[i]))
+	CorrSC <- c(CorrSC, get_spearman_corr(GenePairsSC, MatchingTissues$Name[i]))
+	Corr21 <- c(Corr21, get_spearman_corr(GenePairs.m21, MatchingTissues$Name[i]))
+	Corr12 <- c(Corr12, get_spearman_corr(GenePairs.12m, MatchingTissues$Name[i]))
 }
 MatchingTissues$Corr <- Corr
 MatchingTissues$CorrSC <- CorrSC
