@@ -80,7 +80,7 @@ AddHistlogYaxis <- function(h, col){
 	}
 }
 
-AddDenslogYaxis <- function(d, col){
+AddDens <- function(d, col){
 	polygon(c(0,d$x), c(0,d$y), col=modif_alpha(col,.2), border=col)
 }
 
@@ -98,20 +98,84 @@ plotHistAllSpecies <- function(vec, type, breaks, ylim, xlim, xlab, main){
 	box()
 }
 
-plotDensAllSpecies <- function(vec, type, adj, ylim, xlim, xlab, main){
+plotDensAllSpecies <- function(vec, type, adj, ylim, xlim, xlab, main, sps, colors){
 	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=ylim, xlim=xlim, col=NA)
 	mtext(main, side = 3, line = 2, cex=1.5)
 	mtext("Density", side = 2, line = 3, cex=1.5)
 	mtext(xlab, side = 1, line = 3, cex=1.5)
-	for(Species in ShortSpeciesNames){
-		d <- density(vec[which(names(vec)==paste0(type, Species))], adjust=adj)
-		AddDenslogYaxis(d, SpeciesColors[which(ShortSpeciesNames==Species)])
+	for(s in sps){
+		d <- density(vec[which(names(vec)==paste0(type, s))], adjust=adj)
+		AddDens(d, colors[which(sps==s)])
 	}
 	axis(1, at = seq(0, xlim[2], xlim[2]/5), lwd.ticks=1, las=1, cex.axis=1)
 	axis(2, at = seq(0, ylim[2], ylim[2]/5), lwd.ticks=1, las=1, cex.axis=1)
 	box()
 }
 
+plotOGTypePerSpecies <- function(ogT){
+	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=c(0,40), xlim=c(.5,length(ogT[,1])+.5), col=NA)
+	mtext("% of total orthologous groups", side = 2, line = 5, cex=1)
+	for(sp in c(1:length(ogT[,1]))){
+		points(rep(sp,4), ogT[sp,c("SingleCopy", "Inter","Intra","Tandem")]/ogT$Total*100, pch=16, col=c("royalblue4", "orangered1", "orangered2", "orangered3"), cex=2)
+	}
+	axis(1, at = c(1:length(ogT[,1])), labels=ogT$Species, tick=FALSE, line=2, las=1, cex.axis=1)
+	axis(2, at = seq(0,100,20), lwd.ticks=1, las=1, cex.axis=1)
+}
 
+BoxPlot <- function(values, pos, col, cextext=1, w=.8, den=NULL, text=FALSE){
+	s <- boxplot(values, plot=FALSE)
+	points(rep(pos,length(s$out)), s$out, cex=.3, col="grey60")
+	lines(c(pos, pos),c(s$stats[1], s$stats[5]), lwd=2)
+	if(!is.null(den)){
+		polygon(c(pos-w/2, pos+w/2, pos+w/2, pos-w/2), c(s$stats[2],s$stats[2],s$stats[4],s$stats[4]), col=modifColor(col, .3), border=col, lwd=4)		
+	}
+	polygon(c(pos-w/2, pos+w/2, pos+w/2, pos-w/2), c(s$stats[2],s$stats[2],s$stats[4],s$stats[4]), col=col, border=col, lwd=4, density=den)
+	lines(c(pos-w/2, pos+w/2),c(s$stats[3], s$stats[3]), lwd=2)
+	polygon(c(pos-w/2, pos+w/2, pos+w/2, pos-w/2), c(s$stats[2],s$stats[2],s$stats[4],s$stats[4]), col=NA, border=col, lwd=4)		
+	#points(pos, m, pch=21, bg=col, col=col, cex=4)
+	if(text){
+		par(xpd=TRUE) 
+		text(pos, 0,  labels =length(values), pos=1, cex=cextext)
+		par(xpd=FALSE) 		
+	}
+}
 
+plotVerticalDensAllSpecies<- function(vec, type, adj, ylim, ylab, main, sps, colors){
+	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=ylim, xlim=c(.5, length(sps)+.5), col=NA)
+	mtext(main, side = 3, line = 2, cex=1)
+	mtext(ylab, side = 2, line = 3, cex=1)
+	width <- .5
+	for(s in c(1:length(sps))){
+		d <- density(vec[which(names(vec)==paste0(type, sps[s]))], adjust=adj)
+		polygon(c(s+d$y/max(d$y)*width/2, rev(s-d$y/max(d$y)*width/2)), c(d$x,rev(d$x)), col=modifColor(colors[which(sps==sps[s])], .2), border=colors[which(sps==sps[s])], lwd=2)
+	}
+	axis(1, at = c(1:length(sps)), labels=sps, lwd.ticks=1, las=1, cex.axis=1)
+	axis(2, at = seq(0, ylim[2], ylim[2]/6), lwd.ticks=1, las=1, cex.axis=1)
+	box()
+}
 
+plotVerticalDensAllSpeciesSCD<- function(vec, adj, ylim, ylab, main, sps, colors){
+	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=ylim, xlim=c(.5, length(sps)+.5), col=NA)
+	mtext(main, side = 3, line = 2, cex=1)
+	mtext(ylab, side = 2, line = 3, cex=1)
+	width <- .5
+	distSCD <- .2
+	for(s in c(1:length(sps))){
+		pos <- s-distSCD/2
+		d <- density(vec[which(names(vec)==paste0("SC", sps[s]))], adjust=adj)
+		polygon(c(pos+d$y/max(d$y)*width/2, rev(pos-d$y/max(d$y)*width/2)), c(d$x,rev(d$x)), col=modifColor(colors[which(sps==sps[s])], .2), border=colors[which(sps==sps[s])], lwd=2)
+		pos <- s+distSCD/2
+		d <- density(vec[which(names(vec)==paste0("D", sps[s]))], adjust=adj)
+		polygon(c(pos+d$y/max(d$y)*width/2, rev(pos-d$y/max(d$y)*width/2)), c(d$x,rev(d$x)), col=modifColor(colors[which(sps==sps[s])], .05), border=colors[which(sps==sps[s])], lwd=2)
+		polygon(c(pos+d$y/max(d$y)*width/2, rev(pos-d$y/max(d$y)*width/2)), c(d$x,rev(d$x)), col=modifColor(colors[which(sps==sps[s])], .2), border=colors[which(sps==sps[s])], lwd=2, density=20)
+	}
+	axis(1, at = c(1:length(sps)), labels=sps, lwd.ticks=1, las=1, cex.axis=1)
+	axis(2, at = seq(0, ylim[2], ylim[2]/5), lwd.ticks=1, las=1, cex.axis=1)
+	box()
+}
+
+modifColor <- function(col, change){
+	apply(sapply(col, col2rgb)/255, 2,
+	function(x)
+	return(rgb(max(0,min(x[1]+change,1)), max(0,min(x[2]+change,1)), max(0,min(x[3]+change,1)))))
+}

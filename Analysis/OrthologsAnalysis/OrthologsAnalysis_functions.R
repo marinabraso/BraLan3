@@ -46,38 +46,21 @@ PlotPropOfAccelerated <- function(df, pos, totaldf, col, pch=16, cex=3, plus=0.0
 	#text(pos, 0, labels=length(df[which(df$M8.Qval<=QvalT),1]), pos=3, cex=1)
 }
 
-PlotColumnVertebrateType <- function(df, pos, col, cextext, den=NULL){
+PlotColumnVertebrateType <- function(df, pos, col, cextext, alpha=0, den=NULL){
 	len <- length(df[,1])
 	base <- 0
 	w <- .8
-	value <- length(df[which(df$VertebType=="Missing"),1])/len*100
-	if(!is.null(den)){
-		polygon(c(pos-w/2,pos+w/2,pos+w/2,pos-w/2), c(base,base,base+value,base+value), col=modifColor(col[1], .1), border=col[1], lwd=4)		
+	for(vt in c(1:length(unique(df$VertebType)))){
+		value <- length(df[which(df$VertebType==unique(df$VertebType)[vt]),1])/len*100
+		if(value>0){
+			if(!is.null(den)){
+				polygon(c(pos-w/2,pos+w/2,pos+w/2,pos-w/2), c(base,base,base+value,base+value), col=modifColor(col[vt], .1), border=col[vt], lwd=4)		
+			}
+			polygon(c(pos-w/2,pos+w/2,pos+w/2,pos-w/2), c(base,base,base+value,base+value), col=modifColor(col[vt], alpha), border=col[vt], lwd=4, density=den)
+			text(pos, base+value/2, labels=length(df[which(df$VertebType==unique(df$VertebType)[vt]),1]), cex=cextext)
+			base <- base+value
+		}
 	}
-	polygon(c(pos-w/2,pos+w/2,pos+w/2,pos-w/2), c(base,base,base+value,base+value), col=col[1], border=col[1], lwd=4, density=den)
-	text(pos, base+value/2, labels=length(df[which(df$VertebType=="Missing"),1]), cex=cextext)
-	base <- base+value
-	value <- length(df[which(df$VertebType=="SingleCopy"),1])/len*100
-	if(!is.null(den)){
-		polygon(c(pos-w/2,pos+w/2,pos+w/2,pos-w/2), c(base,base,base+value,base+value), col=modifColor(col[2], .1), border=col[2], lwd=4)		
-	}
-	polygon(c(pos-w/2,pos+w/2,pos+w/2,pos-w/2), c(base,base,base+value,base+value), col=col[2], border=col[2], lwd=4, density=den)
-	text(pos, base+value/2, labels=length(df[which(df$VertebType=="SingleCopy"),1]), cex=cextext)
-	base <- base+value
-	value <- length(df[which(df$VertebType=="Ohnolog"),1])/len*100
-	if(!is.null(den)){
-		polygon(c(pos-w/2,pos+w/2,pos+w/2,pos-w/2), c(base,base,base+value,base+value), col=modifColor(col[3], .1), border=col[3], lwd=4)		
-	}
-	polygon(c(pos-w/2,pos+w/2,pos+w/2,pos-w/2), c(base,base,base+value,base+value), col=col[3], border=col[3], lwd=4, density=den)
-	text(pos, base+value/2, labels=length(df[which(df$VertebType=="Ohnolog"),1]), cex=cextext)
-	base <- base+value
-	value <- length(df[which(df$VertebType=="Duplicated"),1])/len*100
-	if(!is.null(den)){
-		polygon(c(pos-w/2,pos+w/2,pos+w/2,pos-w/2), c(base,base,base+value,base+value), col=modifColor(col[4], .1), border=col[4], lwd=4)		
-	}
-	polygon(c(pos-w/2,pos+w/2,pos+w/2,pos-w/2), c(base,base,base+value,base+value), col=col[4], border=col[4], lwd=4, density=den)
-	text(pos, base+value/2, labels=length(df[which(df$VertebType=="Duplicated"),1]), cex=cextext)
-	base <- base+value
 	par(xpd=TRUE) 
 	text(pos, 100,  labels =length(df[,1]), pos=3, cex=cextext)
 	par(xpd=FALSE) 
@@ -119,7 +102,7 @@ HypergeometricTest <- function(Overlap, group1, group2, Total, lab1, lab2, thres
 		cat("Error: both enriched and depleted!! \n")
 		quit()
 	}
-	return(list(lab1, lab2, Overlap/(group1*group2/Total), Overlap, (group1*group2/Total), dp, ep))
+	return(list(lab1, lab2, log(Overlap/(group1*group2/Total)), Overlap, (group1*group2/Total), dp, ep))
 }
 
 RandomizationTest <- function(Overlap, group1, group2, Total, lab1, lab2, threshold, iterations=1000){

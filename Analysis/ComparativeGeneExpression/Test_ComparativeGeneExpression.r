@@ -32,7 +32,6 @@ test_that("test_get_spearman_corr with all NA column", {
 
 	result <- get_spearman_corr(testpairs, "brain")
 
-	#expect_equal(result, NA_real_)
 	expect_equal(is.na(result), TRUE)
 })
 

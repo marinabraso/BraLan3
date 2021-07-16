@@ -35,7 +35,8 @@ window <- 1000000
 step <- 100000
 
 Dens <- c()
-#IDist <- c()
+ini <- rep(NA_real_, length(ShortSpeciesNames))
+OGTypes <- data.frame("Inter"=ini, "Intra"=ini, "SingleCopy"=ini, "Tandem"=ini)
 
 ###########################################################################
 # Read data
@@ -147,8 +148,13 @@ for(Species in ShortSpeciesNames){
 	names(spDens.Ia) <- rep(paste0("Ia", Species), length(spDens.Ia))
 	names(spDens.T) <- rep(paste0("T", Species), length(spDens.T))
 	Dens <- c(Dens, spDens, spDens.D, spDens.SC, spDens.Ie, spDens.Ia, spDens.T)
+	OGType <- unique(GeneData[,c("OG", "DupType")])
+	OGTypes[which(ShortSpeciesNames==Species),] <- table(OGType$DupType)
 }
-
+OGTypes$Total <- rowSums(OGTypes)
+OGTypes$TotalD <- rowSums(OGTypes[,c("Inter","Intra","Tandem")])
+OGTypes$Species <- ShortSpeciesNames
+print(OGTypes)
 print(summary(Dens))
 
 
@@ -158,8 +164,15 @@ par(mar=c(10,10,3,3),oma=c(1,1,1,1), yaxs='i', xaxs='i')
 layout(matrix(c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16),nrow=4,ncol=4,byrow=T), widths=c(1), heights=c(1), TRUE)
 
 breaks <- seq(0,200,2)
-plotDensAllSpecies(Dens, "G", 3, c(0,.15), c(0,100), "Gene density", "All genes")
-plotDensAllSpecies(Dens, "D", 3, c(0,.15), c(0,100), "Gene density", "Duplicated genes")
+plotDensAllSpecies(Dens, "SC", 3, c(0,.20), c(0,60), "Gene density", "Single copy genes", ShortSpeciesNames, SpeciesColors)
+plotDensAllSpecies(Dens, "D", 3, c(0,.20), c(0,60), "Gene density", "Duplicated genes", ShortSpeciesNames, SpeciesColors)
+
+plotVerticalDensAllSpecies(Dens, "SC", 3, c(0,60), paste0("Gene density in ", window/1000, "kbp windows"), "Single copy genes", ShortSpeciesNames, SpeciesColors)
+plotVerticalDensAllSpecies(Dens, "D", 3, c(0,60), paste0("Gene density in ", window/1000, "kbp windows"), "Duplicated genes", ShortSpeciesNames, SpeciesColors)
+plotVerticalDensAllSpecies(Dens, "G", 3, c(0,120), paste0("Gene density in ", window/1000, "kbp windows"), "All genes", ShortSpeciesNames, SpeciesColors)
+plotVerticalDensAllSpeciesSCD(Dens, 3, c(0,80), paste0("Gene density in ", window/1000, "kbp windows"), "All genes", ShortSpeciesNames, SpeciesColors)
+
+plotOGTypePerSpecies(OGTypes)
 
 
 

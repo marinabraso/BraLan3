@@ -9,6 +9,7 @@ Sys.setenv(LANG = "en")
 script <- sub(".*=", "", commandArgs()[4])
 source(paste(substr(script,1, nchar(script)-2), "_functions.R", sep=""))
 #library(viridis)
+library(qvalue)
 
 ######################################################################
 # Files & folders
@@ -22,8 +23,9 @@ ChrLenFolder <- "Results/AssemblyStatistics"
 
 ######################################################################
 # General parameters
+PQvalThreshold <- 0.01 # for hypergeometric test
 Species1 <- "Blan"
-Species2 <- "Mmus"
+Species2 <- "Hsap"
 
 ShortSpeciesNames <- c("Drer", "Ggal", "Hsap", "Mmus", "Blan", "Bflo")
 SpeciesNames <- c("Danio_rerio", "Gallus_gallus", "Homo_sapiens", "Mus_musculus", "Branchiostoma_lanceolatum", "Branchiostoma_floridae")
@@ -221,14 +223,19 @@ pdf(paste0(ResultsFolder, "/", Species1, Species2, "_Synteny.pdf"), width=20, he
 par(mar=c(10,10,3,3),oma=c(1,1,1,1), yaxs='i', xaxs='i')
 layout(matrix(c(1),nrow=1,ncol=1,byrow=T), widths=c(1), heights=c(1), TRUE)
 
-SyntenyAlongChrPlot(GenePairs, "Midp", "Gene mid point coordinates")
-SyntenyAlongChrPlot(GenePairs, "Index", "Gene order")
-SyntenyAlongChrPlot(GenePairsSC, "Index", "Gene order: single copy genes")
-SyntenyAlongChrPlot(GenePairsD, "Index", "Gene order: duplicated genes")
-SyntenyAlongChrPlot(GenePairsD.Ie, "Index", "Gene order: interchromosomal duplicated genes")
-SyntenyAlongChrPlot(GenePairsD.Ia, "Index", "Gene order: intrachromosomal duplicated genes")
-SyntenyAlongChrPlot(GenePairsD.T, "Index", "Gene order: tandem duplicated genes")
+#SyntenyAlongChrPlot(GenePairs, "Midp", "Gene mid point coordinates")
+#SyntenyAlongChrPlot(GenePairs, "Index", "Gene order")
+#SyntenyAlongChrPlot(GenePairsSC, "Index", "Gene order: single copy genes")
+#SyntenyAlongChrPlot(GenePairsD, "Index", "Gene order: duplicated genes")
+#SyntenyAlongChrPlot(GenePairsD.Ie, "Index", "Gene order: interchromosomal duplicated genes")
+#SyntenyAlongChrPlot(GenePairsD.Ia, "Index", "Gene order: intrachromosomal duplicated genes")
+#SyntenyAlongChrPlot(GenePairsD.T, "Index", "Gene order: tandem duplicated genes")
 
+print(table(GenePairs$DupType1))
+print(table(GenePairs$DupType2))
+SyntenyAlongChrPlot("Midp", "Gene mid point coordinates", GenePairsSC, GenePairsD)
+SyntenyAlongChrPlot("Index", "Gene order", GenePairsSC, GenePairsD)
+quit()
 
 GeneData1 <- GeneData1[order(GeneData1$Chr, GeneData1$Midp),]
 GeneData2 <- GeneData2[order(GeneData2$Chr, GeneData2$Midp),]
@@ -342,6 +349,28 @@ lines(density(InterDDistance2, adjust=1), lwd=2, col="orangered4")
 axis(1, at = seq(0, 500000, 50000), lwd.ticks=1, las=1, cex.axis=1)
 axis(2, at = seq(0, 1, .00001), lwd.ticks=1, las=1, cex.axis=1)
 box()
+
+
+
+HyperTests <- data.frame()
+for(vtype in c("SingleCopy","Inter","Intra", "Tandem")){
+	for(atype in c("SingleCopy","Inter","Intra", "Tandem")){
+		vnum <- length(GenePairs[which(GenePairs$DupType2 == vtype),1])
+		anum <- length(GenePairs[which(GenePairs$DupType1 == atype),1])
+		onum <- length(GenePairs[which(GenePairs$DupType2 == vtype & GenePairs$DupType1 == atype),1])
+		HyperTests <- rbind(HyperTests, unlist(HypergeometricTest(onum, anum, vnum, length(GenePairs[,1]), atype, vtype, PQvalThreshold)))
+	}
+}
+colnames(HyperTests) <- c("VertebType", "BlanType", "FoldChange", "Observed", "Expected", "HpvalDepleted", "HpvalEnriched")
+HyperTests$HqvalDepleted <- qvalue(as.numeric(HyperTests$HpvalDepleted))$qvalues
+HyperTests$HqvalEnriched <- qvalue(as.numeric(HyperTests$HpvalEnriched))$qvalues
+HyperTests$HResult <- rep("NA", length(HyperTests[,1]))
+HyperTests$HResult[which(HyperTests$HqvalDepleted <= PQvalThreshold)] <- rep("D", length(HyperTests$HResult[which(HyperTests$HqvalDepleted <= PQvalThreshold)]))
+HyperTests$HResult[which(HyperTests$HqvalEnriched <= PQvalThreshold)] <- rep("E", length(HyperTests$HResult[which(HyperTests$HqvalEnriched <= PQvalThreshold)]))
+print(HyperTests)
+
+write.table(HyperTests, file = paste0(ResultsFolder, "/GenePairs_DupTypeCoocurrence_", Species1, "_", Species2, ".txt"), quote = F, sep="\t", col.names = TRUE, row.names = TRUE)
+
 
 
 

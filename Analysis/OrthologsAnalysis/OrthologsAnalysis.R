@@ -95,7 +95,12 @@ print(head(GOMFData))
 
 ###########################################################################
 ###########################################################################
-#Amphioxus_Vertebrate_categories(OGData.AV)
+#for(sp in c(Verteb, Amphi)){
+#	OGData.AV[,sp]>=1
+#}
+
+
+Amphioxus_Vertebrate_categories(OGData.AV)
 
 #GeneExpression(GeneData)
 
@@ -103,7 +108,7 @@ print(head(GOMFData))
 
 #Synteny(GeneData, OGData.AV, ChrLengths)
 
-GeneFunction(GeneData, OGData.AV, GOMFData)
+#GeneFunction(GeneData, OGData.AV, GOMFData)
 
 print("Nodal (Z linked?)")
 print(GeneData[which(GeneData$Gene=="BLAG15000766"),])

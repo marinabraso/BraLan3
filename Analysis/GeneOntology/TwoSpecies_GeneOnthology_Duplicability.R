@@ -92,7 +92,7 @@ print(table(HsapGenes$DupOrNot))
 
 pdf(paste(ResultsFolder, "/BlanHsap_GeneOntology_Duplicability.pdf", sep=""), width=20, height=10)
 par(mar=c(10,10,3,3),oma=c(1,1,1,1), yaxs='i', xaxs='i')
-layout(matrix(c(1,2,3),nrow=1,ncol=3,byrow=T), widths=c(1,1,1), heights=c(1), TRUE)
+layout(matrix(c(1,2,3,4,5,6),nrow=2,ncol=3,byrow=T), widths=c(1), heights=c(1), TRUE)
 
 HsapSize.GO <- c()
 HsapD.GO <- c()
@@ -144,17 +144,31 @@ GO$BlanT <- BlanT.GO
 GO$BlanDprop <- BlanD.GO/BlanT.GO*100
 GO$BlanOprop <- BlanO.GO/BlanT.GO*100
 GO$BlanDOprop <- BlanDO.GO/BlanT.GO*100
-print(head(GO))
+GO <- GO[which(!is.na(GO$BlanDprop) & !is.na(GO$HsapDprop) & !is.na(GO$HsapOprop)),]
+tableClass <- table(GO$Class)
+print(tableClass)
+GO$NumInClass <- tableClass[match(GO$Class, names(tableClass))]
+GO <- unique(GO[order(GO$NumInClass, decreasing = TRUE),])
+GOClass <- as.data.frame(cbind(unique(GO$Class), colfunc(length(unique(GO$Class)))))
+colnames(GOClass) <- c("Class", "Color")
+GO$ClassColors <- GOClass$Color[match(GO$Class, GOClass$Class)]
+print(GO[order(GO$HsapDprop),c("Name", "Class", "HsapDprop", "BlanDprop")])
 
-ScatterPercentagePlot(GO$HsapDprop, GO$BlanDprop, GO$ClassColors, "% of duplicated genes in H. sapiens", "% of duplicated genes in B. lanceolatum")
-ScatterPercentagePlot(GO$HsapOprop, GO$BlanDprop, GO$ClassColors, "% of ohnolog genes in H. sapiens", "% of duplicated genes in B. lanceolatum")
-ScatterPercentagePlot(GO$HsapDOprop, GO$BlanDprop, GO$ClassColors, "% of duplicated + ohnolog genes in H. sapiens", "% of duplicated genes in B. lanceolatum")
+ScatterPercentagePlot(GO$HsapDprop, GO$BlanDprop, GO$ClassColors, "% of small scale duplicated genes\nH. sapiens", "B. lanceolatum\n% of duplicated genes", c(0,100), c(0,100))
+ScatterPercentagePlot(GO$HsapOprop, GO$BlanDprop, GO$ClassColors, "% of ohnolog genes\nH. sapiens", "B. lanceolatum\n% of duplicated genes", c(0,30), c(0,100))
+ScatterPercentagePlot(GO$HsapDOprop, GO$BlanDprop, GO$ClassColors, "% of duplicated + ohnolog genes in\nsapiens", "B. lanceolatum\n% of duplicated genes", c(0,100), c(0,100))
+ScatterPercentagePlot(GO$HsapOprop, GO$HsapDprop, GO$ClassColors, "% of ohnolog genes in\nsapiens", "% of duplicated genes\nH. sapiens", c(0,30), c(0,100))
 
 plot.new()
-legend("center", unique(GO$Class), pch=15, col=unique(GO$ClassColors), bty = "n", pt.cex=2, cex=1.5, xjust = 0, yjust = 0)
+legendvec <- unique(GO[,c("Class", "ClassColors")])
+legend("center", legendvec[,1], pch=15, col=legendvec[,2], bty = "n", pt.cex=2, cex=1.5, xjust = 0, yjust = 0)
+plot.new()
 
+print(GO[which(GO$BlanDprop>95),c("GO", "Name", "Class", "HsapDprop", "BlanDprop")])
+print(GO[which(GO$BlanDprop<30),c("GO", "Name", "Class", "HsapDprop", "BlanDprop")])
+write.table(GO[order(GO$BlanDprop),], file = paste(ResultsFolder, "/GOterms_PropData.txt", sep =""), quote = F, sep="\t", col.names = TRUE, row.names = TRUE)
 
-layout(matrix(c(1,2,3),nrow=1,ncol=3,byrow=T), widths=c(1,1,1), heights=c(1), TRUE)
+quit()
 
 HsapD.GO <- c()
 HsapO.GO <- c()
@@ -181,24 +195,24 @@ mGO$BlanT <- BlanT.GO
 mGO$BlanDprop <- BlanD.GO/BlanT.GO*100
 print(mGO[,c("HsapDOprop","BlanDprop")])
 
-ScatterPercentagePlot(mGO$HsapDprop, mGO$BlanDprop, mGO$ClassColors, "% of duplicated genes in H. sapiens", "% of duplicated genes in B. lanceolatum")
-ScatterPercentagePlot(mGO$HsapOprop, mGO$BlanDprop, mGO$ClassColors, "% of ohnolog genes in H. sapiens", "% of duplicated genes in B. lanceolatum")
-ScatterPercentagePlot(mGO$HsapDOprop, mGO$BlanDprop, mGO$ClassColors, "% of duplicated + ohnolog genes in H. sapiens", "% of duplicated genes in B. lanceolatum")
-ScatterPercentagePlot(mGO$HsapOprop, mGO$HsapDprop, mGO$ClassColors, "% of ohnolog genes in H. sapiens", "% of duplicated genes in H. sapiens")
+ScatterPercentagePlot(mGO$HsapDprop, mGO$BlanDprop, mGO$ClassColors, "% of small scale duplicated genes in H. sapiens", "% of duplicated genes in B. lanceolatum", c(0,100), c(0,100))
+ScatterPercentagePlot(mGO$HsapOprop, mGO$BlanDprop, mGO$ClassColors, "% of ohnolog genes in H. sapiens", "% of duplicated genes in B. lanceolatum", c(0,30), c(0,100))
+ScatterPercentagePlot(mGO$HsapDOprop, mGO$BlanDprop, mGO$ClassColors, "% of duplicated + ohnolog genes in H. sapiens", "% of duplicated genes in B. lanceolatum", c(0,100), c(0,100))
+ScatterPercentagePlot(mGO$HsapOprop, mGO$HsapDprop, mGO$ClassColors, "% of ohnolog genes in H. sapiens", "% of duplicated genes in H. sapiens", c(0,30), c(0,100))
 
 
 plot.new()
 legend("bottomright", unique(mGO$Class), pch=15, col=unique(mGO$ClassColors), bty = "n", pt.cex=2, cex=1.5, xjust = 0, yjust = 0)
 plot.new()
-legend("bottomright", mGO$Name, pch=15, col=mGO$ClassColors, bty = "n", pt.cex=2, cex=1.5, xjust = 0, yjust = 0)
+legend("bottomright", mGO$Name, pch=15, col=mGO$ClassColors, bty = "n", pt.cex=2, cex=1, xjust = 0, yjust = 0)
 
 
 
 
+layout(matrix(c(1),nrow=1,ncol=1,byrow=T), widths=c(3), heights=c(1), TRUE)
 
-
-
-
+plot.new()
+legend("center", GO$Name, pch=15, col=GO$ClassColors, bty = "n", pt.cex=2, cex=1, xjust = 0, yjust = 0)
 
 
 
