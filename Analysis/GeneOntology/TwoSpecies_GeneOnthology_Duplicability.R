@@ -168,6 +168,61 @@ print(GO[which(GO$BlanDprop>95),c("GO", "Name", "Class", "HsapDprop", "BlanDprop
 print(GO[which(GO$BlanDprop<30),c("GO", "Name", "Class", "HsapDprop", "BlanDprop")])
 write.table(GO[order(GO$BlanDprop),], file = paste(ResultsFolder, "/GOterms_PropData.txt", sep =""), quote = F, sep="\t", col.names = TRUE, row.names = TRUE)
 
+xlim=c(0,100)
+ylim=c(0,100)
+ClassOrderDens <- unique(GO$Class)
+ClassOrderDens <- c(ClassOrderDens[length(ClassOrderDens)], ClassOrderDens[c(1:(length(ClassOrderDens)-1))])
+layout(matrix(c(4,4,7,7,1,1,3,3,6,6,5,2,3,3,6,6,5,2),nrow=3,ncol=6,byrow=T), widths=c(1), heights=c(1), TRUE)
+
+par(mar=c(7,7,1,1),oma=c(1,1,1,1), yaxs='i', xaxs='i')
+plot.new()
+plot.new()
+ScatterPercentagePlot(GO$HsapDprop, GO$BlanDprop, GO$ClassColors, "% of small scale duplicated genes\nH. sapiens", "B. lanceolatum\n% of duplicated genes", xlim, ylim)
+plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=c(0,.1), xlim=xlim, col=NA)
+mtext("Density", side = 2, line = 5, cex=1.5)
+for(go in c(1:length(ClassOrderDens))){
+	d <- density(GO$HsapDprop[which(GO$Class==ClassOrderDens[go])], adjust=2)
+	polygon(c(0,d$x), c(0,d$y), col=modif_alpha(unique(GO$ClassColors[which(GO$Class==ClassOrderDens[go])]),.5), border=unique(GO$ClassColors[which(GO$Class==ClassOrderDens[go])]))
+}
+axis(2, at = seq(0, 1, .05), lwd.ticks=1, las=1, cex.axis=1.5)
+axis(1, at = seq(xlim[1],xlim[2],(xlim[2]-xlim[1])/5), labels=NA, lwd.ticks=1, las=1, cex.axis=1.5)
+
+plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=ylim, xlim=c(0,.25), col=NA)
+mtext("Density", side = 3, line = 4, cex=1.5)
+for(go in c(1:length(ClassOrderDens))){
+	d <- density(GO$BlanDprop[which(GO$Class==ClassOrderDens[go])], adjust=2)
+	polygon(c(0,d$y), c(0,d$x), col=modif_alpha(unique(GO$ClassColors[which(GO$Class==ClassOrderDens[go])]),.5), border=unique(GO$ClassColors[which(GO$Class==ClassOrderDens[go])]))
+}
+axis(3, at = seq(0, .2, .1), lwd.ticks=1, las=1, cex.axis=1.5)
+axis(2, at = seq(xlim[1],xlim[2],(xlim[2]-xlim[1])/5), labels=NA, lwd.ticks=1, las=1, cex.axis=1.5)
+
+xlim=c(0,30)
+ylim=c(0,100)
+ScatterPercentagePlot(GO$HsapOprop, GO$BlanDprop, GO$ClassColors, "% of ohnologs\nH. sapiens", "", xlim, ylim)
+plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=c(0,.3), xlim=xlim, col=NA)
+mtext("Density", side = 2, line = 5, cex=1.5)
+for(go in c(1:length(ClassOrderDens))){
+	d <- density(GO$HsapOprop[which(GO$Class==ClassOrderDens[go])], adjust=2)
+	polygon(c(0,d$x), c(0,d$y), col=modif_alpha(unique(GO$ClassColors[which(GO$Class==ClassOrderDens[go])]),.5), border=unique(GO$ClassColors[which(GO$Class==ClassOrderDens[go])]))
+}
+axis(2, at = seq(0, 1, .1), lwd.ticks=1, las=1, cex.axis=1.5)
+axis(1, at = seq(xlim[1],xlim[2],(xlim[2]-xlim[1])/5), labels=NA, lwd.ticks=1, las=1, cex.axis=1.5)
+
+
+
+
+
+plot.new()
+box()
+plot.new()
+plot.new()
+box()
+plot.new()
+box()
+
+
+
+
 quit()
 
 HsapD.GO <- c()

@@ -95,10 +95,13 @@ print(head(GOMFData))
 
 ###########################################################################
 ###########################################################################
-#for(sp in c(Verteb, Amphi)){
-#	OGData.AV[,sp]>=1
-#}
-
+for(sp in c(Verteb, Amphi)){
+	print(sp)
+	print(sum(OGData.AV[,sp]>1))
+	print(sum(OGData.AV[,sp]>1)/sum(OGData.AV[,sp]>0))
+	print(length(which(OGData.AV[,sp]>0 & OGData.AV[,sp]==OGData.AV$Sum)))
+}
+quit()
 
 Amphioxus_Vertebrate_categories(OGData.AV)
 

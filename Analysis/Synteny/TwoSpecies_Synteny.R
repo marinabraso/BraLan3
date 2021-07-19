@@ -25,7 +25,7 @@ ChrLenFolder <- "Results/AssemblyStatistics"
 # General parameters
 PQvalThreshold <- 0.01 # for hypergeometric test
 Species1 <- "Blan"
-Species2 <- "Hsap"
+Species2 <- "Ggal"
 
 ShortSpeciesNames <- c("Drer", "Ggal", "Hsap", "Mmus", "Blan", "Bflo")
 SpeciesNames <- c("Danio_rerio", "Gallus_gallus", "Homo_sapiens", "Mus_musculus", "Branchiostoma_lanceolatum", "Branchiostoma_floridae")

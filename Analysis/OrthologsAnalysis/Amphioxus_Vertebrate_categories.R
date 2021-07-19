@@ -43,7 +43,8 @@ Amphioxus_Vertebrate_categories <- function(OG.df){
 	HyperTests$HResult <- rep("NA", length(HyperTests[,1]))
 	HyperTests$HResult[which(HyperTests$HBonfDepleted <= PQvalThreshold)] <- rep("D", length(HyperTests$HResult[which(HyperTests$HBonfDepleted <= PQvalThreshold)]))
 	HyperTests$HResult[which(HyperTests$HBonfEnriched <= PQvalThreshold)] <- rep("E", length(HyperTests$HResult[which(HyperTests$HBonfEnriched <= PQvalThreshold)]))
-	print(HyperTests[,c(1,2,8,9,10)])
+	print(HyperTests[,c(1,2,3,8,9,10)])
+	print(log(as.numeric(HyperTests[,3])))
 
 	HyperTests.woM <- data.frame()
 	for(vtype in c("SingleCopy","Ohnolog","Duplicated")){
@@ -60,7 +61,8 @@ Amphioxus_Vertebrate_categories <- function(OG.df){
 	HyperTests.woM$HResult <- rep("NA", length(HyperTests.woM[,1]))
 	HyperTests.woM$HResult[which(HyperTests.woM$HBonfDepleted <= PQvalThreshold)] <- rep("D", length(HyperTests.woM$HResult[which(HyperTests.woM$HBonfDepleted <= PQvalThreshold)]))
 	HyperTests.woM$HResult[which(HyperTests.woM$HBonfEnriched <= PQvalThreshold)] <- rep("E", length(HyperTests.woM$HResult[which(HyperTests.woM$HBonfEnriched <= PQvalThreshold)]))
-	print(HyperTests.woM[,c(1,2,8,9,10)])
+	print(HyperTests.woM[,c(1,2,3,8,9,10)])
+	print(log(as.numeric(HyperTests.woM[,3])))
 
 	# Plotting
 	pdf(paste(ResultsFolder, "/Amphioxus_Vertebrate_categories.pdf", sep=""), width=20, height=10)

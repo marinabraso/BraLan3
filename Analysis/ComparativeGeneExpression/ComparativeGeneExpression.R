@@ -149,9 +149,9 @@ add_joined_relative_hist_line(breaks, c("black", "royalblue1", "royalblue4"), "1
 plot.new()
 
 breaks <- seq(-length(MatchingTissues[,1])-.5,length(MatchingTissues[,1])+.5,1)
-add_joined_relative_hist_line(breaks, c("black", "royalblue1", "royalblue4"), "many-to-1", "Blan domains - Drer domains", GenePairs.121$DiffDom, GenePairs.m21$DiffDom, CountsAV.m21$DiffUnionDom)
-add_joined_relative_hist_line(breaks, c("black", "royalblue1", "royalblue4"), "1-to-many ohnologs", "Blan domains - Drer domains", GenePairs.121$DiffDom, GenePairs.12mo$DiffDom, CountsAV.12mo$DiffUnionDom)
-add_joined_relative_hist_line(breaks, c("black", "royalblue1", "royalblue4"), "1-to-many small scale duplicates", "Blan domains - Drer domains", GenePairs.121$DiffDom, GenePairs.12ms$DiffDom, CountsAV.12ms$DiffUnionDom)
+add_joined_relative_hist_line(breaks, c("black", "royalblue1", "royalblue4"), "many-to-1", "Blan domains - Drer domains", -GenePairs.121$DiffDom, -GenePairs.m21$DiffDom, -CountsAV.m21$DiffUnionDom)
+add_joined_relative_hist_line(breaks, c("black", "royalblue1", "royalblue4"), "1-to-many ohnologs", "Blan domains - Drer domains", -GenePairs.121$DiffDom, -GenePairs.12mo$DiffDom, -CountsAV.12mo$DiffUnionDom)
+add_joined_relative_hist_line(breaks, c("black", "royalblue1", "royalblue4"), "1-to-many small scale duplicates", "Blan domains - Drer domains", -GenePairs.121$DiffDom, -GenePairs.12ms$DiffDom, -CountsAV.12ms$DiffUnionDom)
 plot.new()
 
 
