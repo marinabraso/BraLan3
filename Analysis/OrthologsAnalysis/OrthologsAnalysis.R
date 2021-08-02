@@ -25,9 +25,11 @@ RDataFolder <- "Plots"
 ResultsFolder <- "Plots/OrthologsAnalysis"
 GeneDataFile <- paste(RDataFolder, "/GeneDataProcessed.txt", sep ="")
 OGCountsFile <- paste(RDataFolder, "/OGCountsProcessed.txt", sep ="")
+OGNamesFileAV <- "Results/FindOrthologs/AmphVerteb_broccoli/dir_step3/table_OGs_protein_names.txt"
 RNASeqMetadataFile <- paste(RDataFolder, "/RNASeqMetadataProcessed.txt", sep ="")
 GOMFFile <- paste(RDataFolder, "/GeneOntologyMainMF_FromHsap2BlanProcessed.txt", sep ="")
 ChrLengthFile <- "Results/AssemblyStatistics/Branchiostoma_lanceolatum.BraLan3/Branchiostoma_lanceolatum.BraLan3_lengths.txt"
+ProteomesFolder <- "Results/FilteringGeneSets/Proteomes"
 
 ######################################################################
 # General parameters
@@ -35,10 +37,9 @@ QvalT <- 0.1 # q-value threshold for positive selection
 PQvalThreshold <- 0.01 # for hypergeometric test
 TandemMaxDist <- 1000 
 
-Verteb <- c("Drer", "Ggal", "Mmus", "Hsap")
-Amphi <- c("Blan", "Bflo", "Bbel")
-OutDeut <- c("Spur", "Arub", "Skow")
-SortedSpecies <- c(Amphi, Verteb, OutDeut)
+Species <- c("Blan", "Bflo", "Bbel", "Drer", "Ggal", "Mmus", "Hsap")
+GenesBasenames <- c("BLA", "BFLO", "BBEL", "ENSDAR", "ENSGAL", "ENSMUS", "ENS")
+SpeciesProteomes <- c("Branchiostoma_lanceolatum.BraLan3.fa", "Branchiostoma_floridae.Bfl_VNyyK.fa", "Branchiostoma_belcheri.Haploidv18h27.fa", "Danio_rerio.GRCz11.fa", "Gallus_gallus.GRCg6a.fa", "Mus_musculus.GRCm39.fa", "Homo_sapiens.GRCh38.fa")
 
 Tissues <- c("cirri", "gills", "epidermis", "gut", "hepatic.diverticulum", "muscle", "neural.tube", "female.gonads", "male.gonads")
 colfunc <- colorRampPalette(c("forestgreen", "gold", "darkorange", "firebrick", "darkslateblue", "deepskyblue3"))
@@ -93,15 +94,59 @@ rownames(ChrLengths) <- sub("^>", "", rownames(ChrLengths))
 GOMFData <- read.table(GOMFFile, h=T, sep = "\t")
 print(head(GOMFData))
 
-###########################################################################
-###########################################################################
-for(sp in c(Verteb, Amphi)){
-	print(sp)
-	print(sum(OGData.AV[,sp]>1))
-	print(sum(OGData.AV[,sp]>1)/sum(OGData.AV[,sp]>0))
-	print(length(which(OGData.AV[,sp]>0 & OGData.AV[,sp]==OGData.AV$Sum)))
+system_out <- system(paste0("cat ", OGNamesFileAV, " | tail -n +2 | awk '{for(i=2;i<=NF;i++){print $1\"\t\"$i}}' | sort -u | awk '{if(a[$2]){a[$2]=\"NA\"}else{a[$2]=$1}}END{for(i in a){print a[i]\"\t\"i}}'"), intern=T)
+OG2gene.AV <- read.table(text=system_out, h=F, sep = "\t")
+colnames(OG2gene.AV) <- c("OG", "Gene")
+OG2gene.AV$Species <- rep(NA, length(OG2gene.AV[,1]))
+for(sp in c(length(Species):1)){
+	print(Species[sp])
+	listGenesSp <- grep(GenesBasenames[sp], OG2gene.AV$Gene)
+	OG2gene.AV$Species[listGenesSp] <- rep(Species[sp], length(listGenesSp))
 }
-quit()
+table(OG2gene.AV$Species)
+
+NumGenesSpecies <- rep(0, length(Species))
+for(sp in c(1:length(Species))){
+	system_out <- system(paste0("cat ", ProteomesFolder, "/", SpeciesProteomes[sp], " | grep '>' | sort | uniq | wc -l"), intern=T)
+	NumGenesSpecies[sp] <- read.table(text=system_out, h=F, sep = "\t")
+}
+NumGenesSpecies <- unlist(NumGenesSpecies)
+
+###########################################################################
+###########################################################################
+# Amphioxus - vertebrate shared OG numbers
+paste("Shared V-A", length(OGData.AV[which(OGData.AV$SumVerteb>0 & OGData.AV$SumAmphi>0),1]))
+paste("V", length(OGData.AV[which(OGData.AV$SumVerteb>0),1]))
+paste("A", length(OGData.AV[which(OGData.AV$SumAmphi>0),1]))
+paste("Shared/V*100", length(OGData.AV[which(OGData.AV$SumVerteb>0 & OGData.AV$SumAmphi>0),1])/length(OGData.AV[which(OGData.AV$SumVerteb>0),1])*100)
+paste("Shared/A*100", length(OGData.AV[which(OGData.AV$SumVerteb>0 & OGData.AV$SumAmphi>0),1])/length(OGData.AV[which(OGData.AV$SumAmphi>0),1])*100)
+
+# Amphioxus specfic OG numbers
+OGData.A <- OGData.AV[which(OGData.AV$SumVerteb==0 & OGData.AV$SumAmphi>0),]
+paste("A specific", length(OGData.A[,1]))
+paste("Shared all A", length(OGData.A[which(OGData.A$Blan>0 & OGData.A$Bflo>0 & OGData.A$Bbel>0),1]))
+paste("Shared all A/A specific*100", length(OGData.A[which(OGData.A$Blan>0 & OGData.A$Bflo>0 & OGData.A$Bbel>0),1])/length(OGData.A[,1])*100)
+paste("blan-bbel specific", length(OGData.A[which(OGData.A$Blan>0 & OGData.A$Bflo==0 & OGData.A$Bbel>0),1]))
+paste("blan-bbel specific/A specific*100", length(OGData.A[which(OGData.A$Blan>0 & OGData.A$Bflo==0 & OGData.A$Bbel>0),1])/length(OGData.A[,1])*100)
+paste("blan-bflo specific", length(OGData.A[which(OGData.A$Blan>0 & OGData.A$Bflo>0 & OGData.A$Bbel==0),1]))
+paste("blan-bflo specific/A specific*100", length(OGData.A[which(OGData.A$Blan>0 & OGData.A$Bflo>0 & OGData.A$Bbel==0),1])/length(OGData.A[,1])*100)
+
+for(sp in c(1:length(Species))){
+	OG2gene.sp <- OG2gene.AV[which(OG2gene.AV$Species==Species[sp]),]
+	toprint <- c(1:7)
+	toprint[1] <- Species[sp]
+	toprint[2] <- sum(OGData.AV[,Species[sp]]>1)
+	toprint[3] <- sum(OGData.AV[,Species[sp]]>1)/sum(OGData.AV[,Species[sp]]>0)*100
+	toprint[4] <- length(unique(OG2gene.sp$Gene[which(OG2gene.sp$OG %in% rownames(OGData.AV[which(OGData.AV[,Species[sp]]>1),]))]))
+	toprint[5] <- length(unique(OG2gene.sp$Gene[which(OG2gene.sp$OG %in% rownames(OGData.AV[which(OGData.AV[,Species[sp]]>1),]))]))/NumGenesSpecies[sp]*100
+	toprint[6] <- NumGenesSpecies[sp]-length(unique(OG2gene.sp$Gene))
+	toprint[7] <- (NumGenesSpecies[sp]-length(unique(OG2gene.sp$Gene)))/NumGenesSpecies[sp]*100
+	toprint[8] <- length(unique(OG2gene.sp$Gene[which(OG2gene.sp$OG %in% rownames(OGData.AV[which(OGData.AV[,Species[sp]]>0 & OGData.AV$Sum==OGData.AV[,Species[sp]]),]))]))
+	toprint[9] <- length(unique(OG2gene.sp$Gene[which(OG2gene.sp$OG %in% rownames(OGData.AV[which(OGData.AV[,Species[sp]]>0 & OGData.AV$Sum==OGData.AV[,Species[sp]]),]))]))/NumGenesSpecies[sp]*100
+	print(paste(toprint, collapse=" "))
+}
+length(OGData.AV$Blan[which(OGData.AV$Sum==OGData.AV$Blan)])
+length(OGData.AV$Blan[which(OGData.AV$Sum==OGData.AV$Blan)])
 
 Amphioxus_Vertebrate_categories(OGData.AV)
 

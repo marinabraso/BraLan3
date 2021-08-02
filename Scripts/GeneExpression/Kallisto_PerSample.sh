@@ -13,10 +13,10 @@ if [[ ${SingleOrPaired} == "Single" ]]; then
 	fastqfile=$(ls ${FASTQFolder}/${sample}*fastq.gz 2> ~/null)
 	if [[ ${fastqfile} != "" ]]; then
 		if [[ ${Strandness} == "R" ]]; then
-			kallisto quant -i ${GenomeIndexFile} -o ${ResultsFolder}/${sample} --single --rf-stranded -l 180 -s 20 $i --bias ${fastqfile}
+			kallisto quant -i ${GenomeIndexFile} -o ${ResultsFolder}/${sample} --single --rf-stranded -l 180 -s 20 --bias ${fastqfile}
 			err=$(echo $?)
 		elif [[ ${Strandness} == "F" ]]; then
-			kallisto quant -i ${GenomeIndexFile} -o ${ResultsFolder}/${sample} --single --fr-stranded -l 180 -s 20 $i --bias ${fastqfile}
+			kallisto quant -i ${GenomeIndexFile} -o ${ResultsFolder}/${sample} --single --fr-stranded -l 180 -s 20 --bias ${fastqfile}
 			err=$(echo $?)
 		else
 			echo "Strandness must be either R or F for Single-end reads"

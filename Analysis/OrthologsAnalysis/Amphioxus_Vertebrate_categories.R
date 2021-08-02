@@ -13,11 +13,22 @@ Amphioxus_Vertebrate_categories <- function(OG.df){
 	print(Shared/VertebTotal*100)
 	print("Shared/AmphiTotal*100")
 	print(Shared/AmphiTotal*100)
+	Shared <- length(OG.df[which(OG.df$SumVerteb >0 & OG.df$SumAmphi >0),1])
+	VertebTotal <- length(OG.df[which(OG.df$SumVerteb >0),1])
+	AmphiTotal <- length(OG.df[which(OG.df$SumAmphi >0),1])
+	Control <- length(OG.df[which(OG.df$SumVerteb ==0 & OG.df$SumAmphi ==0),1])
+	print("Shared VertebTotal AmphiTotal Control")
+	print(paste(Shared, VertebTotal, AmphiTotal, Control))
+	print("Shared/VertebTotal*100")
+	print(Shared/VertebTotal*100)
+	print("Shared/AmphiTotal*100")
+	print(Shared/AmphiTotal*100)
 
-	for(sp in c(Amphi, Verteb)){
+	for(sp in Species){
 		total <- sum(OG.df[,sp]>0)
 		dup <- sum(OG.df[,sp]>1)
-		totalG <- sum(OG.df[which(OG.df[,sp]>0),sp])
+		totalG <- NumGenesSpecies[which(Species==sp)]
+		#totalG <- sum(OG.df[which(OG.df[,sp]>0),sp])
 		dupG <- sum(OG.df[which(OG.df[,sp]>1),sp])
 		print(paste(sp, total, dup, dup/total*100, totalG, dupG, dupG/totalG*100))
 	}
@@ -44,7 +55,6 @@ Amphioxus_Vertebrate_categories <- function(OG.df){
 	HyperTests$HResult[which(HyperTests$HBonfDepleted <= PQvalThreshold)] <- rep("D", length(HyperTests$HResult[which(HyperTests$HBonfDepleted <= PQvalThreshold)]))
 	HyperTests$HResult[which(HyperTests$HBonfEnriched <= PQvalThreshold)] <- rep("E", length(HyperTests$HResult[which(HyperTests$HBonfEnriched <= PQvalThreshold)]))
 	print(HyperTests[,c(1,2,3,8,9,10)])
-	print(log(as.numeric(HyperTests[,3])))
 
 	HyperTests.woM <- data.frame()
 	for(vtype in c("SingleCopy","Ohnolog","Duplicated")){
@@ -62,7 +72,6 @@ Amphioxus_Vertebrate_categories <- function(OG.df){
 	HyperTests.woM$HResult[which(HyperTests.woM$HBonfDepleted <= PQvalThreshold)] <- rep("D", length(HyperTests.woM$HResult[which(HyperTests.woM$HBonfDepleted <= PQvalThreshold)]))
 	HyperTests.woM$HResult[which(HyperTests.woM$HBonfEnriched <= PQvalThreshold)] <- rep("E", length(HyperTests.woM$HResult[which(HyperTests.woM$HBonfEnriched <= PQvalThreshold)]))
 	print(HyperTests.woM[,c(1,2,3,8,9,10)])
-	print(log(as.numeric(HyperTests.woM[,3])))
 
 	# Plotting
 	pdf(paste(ResultsFolder, "/Amphioxus_Vertebrate_categories.pdf", sep=""), width=20, height=10)
@@ -150,7 +159,7 @@ Amphioxus_Vertebrate_categories <- function(OG.df){
 
 	colfunc <- colorRampPalette(c("indianred4", "indianred3", "indianred1", "white", "gold1", "gold3", "gold4"))
 	gradientcolors <- colfunc(50)
-	gradientlims <- c(-2,2)
+	gradientlims <- c(-1,1)
 	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=c(0,7), xlim=c(0,4), col=NA)
 	mtext("B.lanceolatum", side = 2, line = 5, cex=1.5)
 	mtext("Vertebrates", side = 1, line = 5, cex=1.5)
