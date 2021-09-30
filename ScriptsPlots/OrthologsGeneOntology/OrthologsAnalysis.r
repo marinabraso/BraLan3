@@ -7,11 +7,10 @@ Sys.setenv(LANG = "en")
 
 #`%out%` <- Negate(`%in%`)
 script <- sub(".*=", "", commandArgs()[4])
-source(paste(substr(script,1, nchar(script)-2), "_functions.R", sep=""))
-#library(qvalue)
+source(paste(substr(script,1, nchar(script)-2), "_functions.r", sep=""))
 library(ghibli)
-#library(alluvial)
 library(viridis)
+library(car)
 
 ######################################################################
 # Files & folders
@@ -39,7 +38,8 @@ SpeciesProteomes <- c("Branchiostoma_lanceolatum.BraLan3.fa", "Branchiostoma_flo
 
 BaseColor <- ghibli_palettes$MarnieMedium2[5]
 VertTypes <- c("Missing", "SingleCopy", "Ohnolog", "Duplicated")
-VertTypes.col <- ghibli_palettes$MarnieMedium2[c(7,2,4,6)]
+VertTypes.col <- c("royalblue2", ghibli_palettes$MarnieMedium2[c(2,4,7)])
+#VertTypes.col <- ghibli_palettes$MarnieMedium2[c(7,2,4,6)]
 BlanTypes <- c("Missing", "SingleCopy", "Duplicated")
 BlanTypes.pch <- c(14, 16, 18)
 BlanTypes.lty <- c(.5, 1, 2)
@@ -90,8 +90,8 @@ NumGenesSpecies <- unlist(NumGenesSpecies)
 # GO terms
 mGO <- read.table(MainGOlistFile, h=F, sep = '\t')
 colnames(mGO) <- c("GO", "Class", "Name")
-colfunc <- colorRampPalette(c(viridis(3), "firebrick"))
-GOClass <- as.data.frame(cbind(unique(mGO$Class), colfunc(length(unique(mGO$Class)))))
+colfunc <- colorRampPalette(c("forestgreen", "gold2", "darkorange", "firebrick", "darkslateblue", "deepskyblue3"))
+GOClass <- as.data.frame(cbind(unique(mGO$Class), sample(colfunc(length(unique(mGO$Class))))))
 colnames(GOClass) <- c("Class", "Color")
 mGO$ClassColors <- GOClass$Color[match(mGO$Class, GOClass$Class)]
 GO <- read.delim(GOlistFile, h=F, sep = '\t')
@@ -101,6 +101,7 @@ print(head(GO))
 
 GO$Hsap <- unlist(lapply(GO$GO, GetNumberOfGOtermGenes, "Hsap", Counts, OG2Gene, GOlistsFolder, minGOsize))
 GO <- GO[which(GO$Hsap>0),]
+GO <- GO[order(GO$Hsap),]
 GO$HsapD <- unlist(lapply(GO$GO, GetNumberOfGOtermGenes, "Hsap", Counts[which(Counts$VertType=="Duplicated"),], OG2Gene, GOlistsFolder, minGOsize))
 GO$HsapS <- unlist(lapply(GO$GO, GetNumberOfGOtermGenes, "Hsap", Counts[which(Counts$VertType=="SingleCopy"),], OG2Gene, GOlistsFolder, minGOsize))
 GO$HsapO <- unlist(lapply(GO$GO, GetNumberOfGOtermGenes, "Hsap", Counts[which(Counts$VertType=="Ohnolog"),], OG2Gene, GOlistsFolder, minGOsize))
@@ -142,20 +143,31 @@ for(sp in c(1:length(Species))){
 
 
 # Plotting
-pdf(paste(ResultsFolder, "/OrthologsGeneOntology.pdf", sep=""), width=20, height=10)
+pdf(paste(ResultsFolder, "/OrthologsGeneOntology.pdf", sep=""), width=15, height=10)
 par(mar=c(10,10,5,5),oma=c(1,1,1,1), yaxs='i', xaxs='i')
-layout(matrix(c(1,2,3,4,5,6,7,8),nrow=2,ncol=4,byrow=T), widths=c(1), heights=c(1), TRUE)
+layout(matrix(c(1,2,3,4,5,6),nrow=2,ncol=3,byrow=T), widths=c(1), heights=c(1), TRUE)
 
-Amphioxus_Vertebrate_categories(Counts, VertTypes, BlanTypes, VertTypes.col, PQvalThreshold)
-Amphioxus_Vertebrate_categories(Counts[which(Counts$VertType!="Missing" & Counts$BlanType!="Missing"),], VertTypes[which(VertTypes!="Missing")], BlanTypes[which(BlanTypes!="Missing")], VertTypes.col, PQvalThreshold)
+BarPlotVertTypesInBlanGenes(Counts[which(Counts$VertType!="Missing" & Counts$BlanType!="Missing"),], BlanTypes[which(BlanTypes!="Missing")], VertTypes[which(VertTypes!="Missing")], VertTypes.col[which(VertTypes!="Missing")])
+PlotHypergeomTest_VertBlanTypes(Counts[which(Counts$VertType!="Missing" & Counts$BlanType!="Missing"),], VertTypes[which(VertTypes!="Missing")], BlanTypes[which(BlanTypes!="Missing")], VertTypes.col[which(VertTypes!="Missing")], PQvalThreshold)
+plot.new()
+legend("bottomright", c("In vertebrates", VertTypes[which(VertTypes!="Missing")]), pch=c(NA,15,15,15,15), text.col="black", col=c(NA, VertTypes.col[which(VertTypes!="Missing")]), bty = "n", pt.cex=2, cex=1.5, xjust = 0, yjust = 0)
 
-ScatterPercentagePlot(GO$HsapD/GO$Hsap*100, GO$BlanD/GO$Blan*100, GO$ClassColors, "% of small scale duplicated genes\nH. sapiens", "B. lanceolatum\n% of duplicated genes", c(0,100), c(0,100))
+BarPlotVertTypesInBlanGenes(Counts, BlanTypes, VertTypes, VertTypes.col)
+PlotHypergeomTest_VertBlanTypes(Counts, VertTypes, BlanTypes, VertTypes.col, PQvalThreshold)
+plot.new()
+legend("bottomright", c("In vertebrates", "Missing", "Single copy", "Ohnolog", "Duplicated"), pch=c(NA,15,15,15,15), text.col="black", col=c(NA, VertTypes.col), bty = "n", pt.cex=2, cex=1.5, xjust = 0, yjust = 0)
+
+ScatterPercentagePlot(GO$HsapD/GO$Hsap*100, GO$BlanD/GO$Blan*100, GO$ClassColors, "% of small scale duplicated genes\nH. sapiens", "B. lanceolatum\n% of duplicated genes", c(20,100), c(0,100))
+ScatterPercentagePlot(GO$HsapO/GO$Hsap*100, GO$BlanD/GO$Blan*100, GO$ClassColors, "% of ohnolog duplicated genes\nH. sapiens", "B. lanceolatum\n% of duplicated genes", c(0,40), c(0,100))
+plot.new()
+legendvec <- unique(GO[,c("Class", "ClassColors")])
+legend("center", legendvec[,1], pch=15, col=legendvec[,2], bty = "n", pt.cex=2, cex=1.5, xjust = 0, yjust = 0)
 
 
+dev.off()
 
 
-
-
+write.table(GO[order(GO$BlanD/GO$Blan*100),], file = paste(ResultsFolder, "/GOterms_PropData.txt", sep =""), quote = F, sep="\t", col.names = TRUE, row.names = TRUE)
 
 
 
