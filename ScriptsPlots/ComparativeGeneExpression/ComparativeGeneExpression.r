@@ -13,8 +13,6 @@ library(ghibli)
 # Files & folders
 RDataFolder <- "Plots"
 ResultsFolder <- "Plots/ComparativeGeneExpression"
-#OrganOrthBgeeFile <- paste0(pwd, "/Data/AnatomicalOntology/Julien_AnatOrht_Bgee15.tsv")
-#CountsFile <- paste0(pwd, "/Results/FindOrthologs/AmphVerteb_broccoli/dir_step3/table_OGs_protein_counts.txt")
 NamesFile <- paste0("Results/FindOrthologs/AmphVerteb_broccoli/dir_step3/table_OGs_protein_names.txt")
 BlanGeneDataFile <- paste0(ResultsFolder, "/BlanGeneData.txt")
 OhnologsSFile <- paste0("Results/FindOrthologs/OGOnhologs/OG_w_Onhologs.Strict.DR_GG_MM_HS.txt")
@@ -112,24 +110,25 @@ OGProfile$DiffDom <- OGProfile$BlanSum-OGProfile$DrerSum
 # Plotting
 pdf(paste0(ResultsFolder, "/ComparativeGeneExpression.pdf"), width=15, height=10)
 par(mar=c(10,10,5,5),oma=c(1,1,1,1), yaxs='i', xaxs='i')
-layout(matrix(c(1,2,3,4),nrow=1,ncol=4,byrow=T), widths=c(1,1,1,1), heights=c(2), TRUE)
 
+layout(matrix(c(1,2,3,4),nrow=1,ncol=4,byrow=T), widths=c(1,1,1,1), heights=c(2), TRUE)
 BoxPlot_BlanTypes_VertTypes(BlanGeneData, GeneCN, "MeanAdult", "Mean adult TPM", c(0,100), VertTypes.col)
 BoxPlot_BlanTypes_VertTypes(BlanGeneData, GeneCN, "MeanEmbr", "Mean embrionic TPM", c(0,100), VertTypes.col)
 BoxPlot_BlanTypes_VertTypes(BlanGeneData, GeneCN, "TauTissues", "Tau among tissues", c(0,1), VertTypes.col)
 BoxPlot_BlanTypes_VertTypes(BlanGeneData, GeneCN, "TauEmbAge", "Tau among developmental stages", c(0,1), VertTypes.col)
 
 layout(matrix(c(1,2,3,4,5,6),nrow=2,ncol=3,byrow=T), widths=c(1), heights=c(1), TRUE)
-ScatterPlot_ExpressDomanis(GenePairs[which(GenePairs$Type1=="SC" & GenePairs$Type2=="SC"),], OGProfile[which(OGProfile$Type1=="D" & OGProfile$Type2=="SC"),], MatchingTissues, "Number of B. lanceolatum domains", "Numbre of D. rerio domains", c(0,length(MatchingTissues[,1])))
-ScatterPlot_ExpressDomanis(GenePairs[which(GenePairs$Type1=="D" & GenePairs$Type2=="SC"),], OGProfile[which(OGProfile$Type1=="D" & OGProfile$Type2=="SC"),], MatchingTissues, "Number of B. lanceolatum domains", "Numbre of D. rerio domains", c(0,length(MatchingTissues[,1])))
-ScatterPlot_ExpressDomanis(GenePairs[which(GenePairs$Type1=="SC" & GenePairs$Type2=="D"),], OGProfile[which(OGProfile$Type1=="D" & OGProfile$Type2=="SC"),], MatchingTissues, "Number of B. lanceolatum domains", "Numbre of D. rerio domains", c(0,length(MatchingTissues[,1])))
+Hist_ExpressDomanis(GenePairs, OGProfile, "SC", "D", MatchingTissues, "B. lanceolatum donains - D. rerio domains", "Relative number of\npairwise comparisons", "B. lanceolatum specific\ngene duplicates")
+Hist_ExpressDomanis(GenePairs, OGProfile, "SC", "O", MatchingTissues, "B. lanceolatum donains - D. rerio domains", "Relative number of\npairwise comparisons", "D. rerio specific\nohnolog gene duplicates")
+Hist_ExpressDomanis(GenePairs, OGProfile, "D", "SC", MatchingTissues, "B. lanceolatum donains - D. rerio domains", "Relative number of\npairwise comparisons", "D. rerio specific\nsmall scale gene duplicates")
 
-Hist_ExpressDomanis(GenePairs, OGProfile, "SC", "D", MatchingTissues, "B. lanceolatum donains - D. rerio domains", "Relative number of\npairwise comparisons", "one-to-many small scale")
-Hist_ExpressDomanis(GenePairs, OGProfile, "SC", "O", MatchingTissues, "B. lanceolatum donains - D. rerio domains", "Relative number of\npairwise comparisons", "one-to-many ohnologs")
-Hist_ExpressDomanis(GenePairs, OGProfile, "D", "SC", MatchingTissues, "B. lanceolatum donains - D. rerio domains", "Relative number of\npairwise comparisons", "many-to-one small scale")
+layout(matrix(c(1,2,3,4,5,6,7,8,9),nrow=3,ncol=3,byrow=T), widths=c(1), heights=c(1), TRUE)
+Separate_Hist_ExpressDomanis(GenePairs, OGProfile, "SC", "D", MatchingTissues, "B. lanceolatum donains - D. rerio domains", "Relative number of\npairwise comparisons", "B. lanceolatum specific\ngene duplicates")
+Separate_Hist_ExpressDomanis(GenePairs, OGProfile, "SC", "O", MatchingTissues, "B. lanceolatum donains - D. rerio domains", "Relative number of\npairwise comparisons", "D. rerio specific\nohnolog gene duplicates")
+Separate_Hist_ExpressDomanis(GenePairs, OGProfile, "D", "SC", MatchingTissues, "B. lanceolatum donains - D. rerio domains", "Relative number of\npairwise comparisons", "D. rerio specific\nsmall scale gene duplicates")
 
-ExprProfileLines(GenePairs, OGProfile, MatchingTissues, "lab1", "lab2", VertTypes, VertTypes.col)
-
+layout(matrix(c(1,2,3,4,5,6),nrow=2,ncol=3,byrow=T), widths=c(1), heights=c(1), TRUE)
+DifferenceWithSC(GenePairs, OGProfile, MatchingTissues, "Branch specific gene duplicates", "Difference with\nsingle-copy genes distribution")
 dev.off()
 
 

@@ -163,15 +163,42 @@ modif_alpha <- function(col, alpha=.5){
 Hist_ExpressDomanis <- function(gp, og, t1, t2, tissues, lab1, lab2, main){
 	breaks <- seq(-length(tissues[,1])-.5,length(tissues[,1])+.5,1)
 	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=c(0, 1), xlim=c(-length(tissues[,1]),length(tissues[,1])), col=NA)
-	mtext(main, side = 3, line = 4, cex=1.5)
-	mtext(lab1, side = 1, line = 6, cex=1.5)
-	mtext(lab2, side = 2, line = 5, cex=1.5)
+	mtext(main, side = 3, line = 2, cex=1.2)
+	mtext(lab1, side = 1, line = 5, cex=1.2)
+	mtext(lab2, side = 2, line = 5, cex=1.2)
 	add_relative_hist(gp$DiffDom[which(gp$Type1=="SC" & gp$Type2=="SC")], breaks, "cornflowerblue")
 	add_relative_hist(gp$DiffDom[which(gp$Type1==t1 & gp$Type2==t2)], breaks, "tomato3")
 	add_relative_hist(og$DiffDom[which(og$Type1==t1 & og$Type2==t2)], breaks, "tomato3", 20)
 
 	axis(1, at = seq(-length(tissues[,1]),length(tissues[,1]),2), lwd.ticks=1, las=1, cex.axis=1.5)
 	axis(2, at = seq(0,1,.2), lwd.ticks=1, las=1, cex.axis=1.5)
+}
+
+Separate_Hist_ExpressDomanis <- function(gp, og, t1, t2, tissues, lab1, lab2, main){
+	breaks <- seq(-length(tissues[,1])-.5,length(tissues[,1])+.5,1)
+	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=c(0, 1), xlim=c(-length(tissues[,1]),length(tissues[,1])), col=NA)
+	mtext(main, side = 3, line = 2, cex=0.7)
+	mtext(lab1, side = 1, line = 3, cex=0.7)
+	mtext(lab2, side = 2, line = 3, cex=0.7)
+	add_relative_hist(gp$DiffDom[which(gp$Type1=="SC" & gp$Type2=="SC")], breaks, "cornflowerblue")
+	axis(1, at = seq(-length(tissues[,1]),length(tissues[,1]),2), lwd.ticks=1, las=1, cex.axis=0.8)
+	axis(2, at = seq(0,1,.2), lwd.ticks=1, las=1, cex.axis=0.8)
+
+	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=c(0, 1), xlim=c(-length(tissues[,1]),length(tissues[,1])), col=NA)
+	mtext(main, side = 3, line = 2, cex=0.7)
+	mtext(lab1, side = 1, line = 3, cex=0.7)
+	mtext(lab2, side = 2, line = 3, cex=0.7)
+	add_relative_hist(gp$DiffDom[which(gp$Type1==t1 & gp$Type2==t2)], breaks, "tomato3")
+	axis(1, at = seq(-length(tissues[,1]),length(tissues[,1]),2), lwd.ticks=1, las=1, cex.axis=0.8)
+	axis(2, at = seq(0,1,.2), lwd.ticks=1, las=1, cex.axis=0.8)
+
+	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=c(0, 1), xlim=c(-length(tissues[,1]),length(tissues[,1])), col=NA)
+	mtext(main, side = 3, line = 2, cex=0.7)
+	mtext(lab1, side = 1, line = 3, cex=0.7)
+	mtext(lab2, side = 2, line = 3, cex=0.7)
+	add_relative_hist(og$DiffDom[which(og$Type1==t1 & og$Type2==t2)], breaks, "tomato3", 20)
+	axis(1, at = seq(-length(tissues[,1]),length(tissues[,1]),2), lwd.ticks=1, las=1, cex.axis=0.8)
+	axis(2, at = seq(0,1,.2), lwd.ticks=1, las=1, cex.axis=0.8)
 }
 
 add_relative_hist <- function(vec, b, col, dens=NULL){
@@ -183,49 +210,43 @@ add_relative_hist <- function(vec, b, col, dens=NULL){
 	return(h$mids)
 }
 
+DifferenceWithSC <- function(gp, og, tissues, lab1, lab2){
+	breaks <- seq(-length(tissues[,1])-.5,length(tissues[,1])+.5,1)
+	width <- .7
+	color <- "black"
+	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=c(0,1), xlim=c(0-.5, 8+.5), col=NA)
+	mtext(lab1, side = 1, line = 6, cex=1)
+	mtext(lab2, side = 2, line = 5, cex=1)
+	print("D - SC")
+	Plot_Difference(gp$DiffDom[which(gp$Type1=="SC" & gp$Type2=="SC")], gp$DiffDom[which(gp$Type1=="D" & gp$Type2=="SC")], 1, width, breaks, color)
+	Plot_Difference(gp$DiffDom[which(gp$Type1=="SC" & gp$Type2=="SC")], og$DiffDom[which(og$Type1=="D" & og$Type2=="SC")], 2, width, breaks, color, 20)
+	print("SC - D")
+	Plot_Difference(gp$DiffDom[which(gp$Type1=="SC" & gp$Type2=="SC")], gp$DiffDom[which(gp$Type1=="SC" & gp$Type2=="D")], 4, width, breaks, color)
+	Plot_Difference(gp$DiffDom[which(gp$Type1=="SC" & gp$Type2=="SC")], og$DiffDom[which(og$Type1=="SC" & og$Type2=="D")], 5, width, breaks, color, 20)
+	print("SC - O")
+	Plot_Difference(gp$DiffDom[which(gp$Type1=="SC" & gp$Type2=="SC")], gp$DiffDom[which(gp$Type1=="SC" & gp$Type2=="O")], 7, width, breaks, color)
+	Plot_Difference(gp$DiffDom[which(gp$Type1=="SC" & gp$Type2=="SC")], og$DiffDom[which(og$Type1=="SC" & og$Type2=="O")], 8, width, breaks, color, 20)
+	axis(1, at = c(1.5,4.5,7.5), labels= c("Small scale\nB. lanceolatum","Small scale\nD. rerio","Ohnologs\nD. rerio"), line=2, tick=FALSE, las=1, cex.axis=1.2)
+	axis(2, at = seq(0,1,.2), lwd.ticks=1, las=1, cex.axis=1.2)
 
-ScatterPlot_ExpressDomanis <- function(gp, og, tissues, lab1, lab2, lim){
-	maxcex <- 10
-	relatTableGP <- table(gp[,c("BlanSum","DrerSum")])/max(table(gp[,c("BlanSum","DrerSum")]))
-	print(relatTableGP)
-	print(relatTableGP[0,0])
-	relatTableOG <- table(og[,c("BlanSum","DrerSum")])/max(table(og[,c("BlanSum","DrerSum")]))
-	print(relatTableOG)
-	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=c(lim[1]-1, lim[2]+1), xlim=c(lim[1]-.5, lim[2]+.5), col=NA)
-	mtext(lab1, side = 1, line = 6, cex=1.5)
-	mtext(lab2, side = 2, line = 5, cex=1.5)
-	for(t1 in c(0:length(tissues$Name))){
-		for(t2 in c(0:length(tissues$Name))){
-			points(t1, t2, col="darkred", bg=modif_alpha("darkred",.5), pch=21, cex=relatTableGP[t1+1,t2+1]*maxcex)
-			points(t1, t2, col="forestgreen", bg=modif_alpha("forestgreen",.5), pch=21, cex=relatTableOG[t1+1,t2+1]*maxcex)
-		}
-	}
-	axis(1, at = c(lim[1]:lim[2]), lwd.ticks=1, las=1, cex.axis=1.5)
-	axis(2, at = c(lim[1]:lim[2]), lwd.ticks=1, las=1, cex.axis=1.5)
+	polygon(c(4,4.5,4.5,4),c(0.9,0.9,0.95,0.95), col=color, border=color, lwd=2)
+	polygon(c(4,4.5,4.5,4),c(0.8,0.8,0.85,0.85), col=modif_alpha(color,.3), border=color, lwd=2)
+	polygon(c(4,4.5,4.5,4),c(0.8,0.8,0.85,0.85), col=color, border=color, density=20, lwd=2)
+	text(4.5, 0.92,  labels ="Independent genes", pos=4, cex=1.2)
+	text(4.5, 0.82,  labels ="Union of duplicates", pos=4, cex=1.2)
 }
 
 
-ExprProfileLines <- function(gp, og, tissues, lab1, lab2, vtypes, cols){
-	breaks <- seq(-.5, length(tissues$Name)+.5, 1)
-	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=c(0,1), xlim=c(min(breaks), max(breaks)), col=NA)
-	Draw_ExpProfileLine(gp$BlanSum[which(gp$Type1=="SC")], breaks, cols[2], 21)
-	Draw_ExpProfileLine(gp$DrerSum[which(gp$Type2=="SC")], breaks, cols[2], 23)
-	Draw_ExpProfileLine(gp$BlanSum[which(gp$Type1=="D")], breaks, cols[4], 21)
-	Draw_ExpProfileLine(gp$DrerSum[which(gp$Type2=="D")], breaks, cols[4], 23)
-	Draw_ExpProfileLine(gp$DrerSum[which(gp$Type2=="O")], breaks, cols[3], 23)
-	Draw_ExpProfileLine(og$BlanSum[which(og$Type1=="D")], breaks, cols[4], 21, 2)
-	Draw_ExpProfileLine(og$DrerSum[which(og$Type2=="D")], breaks, cols[4], 23, 2)
-	Draw_ExpProfileLine(og$DrerSum[which(og$Type2=="O")], breaks, cols[3], 23, 2)
-	axis(1, at = c(0:length(tissues$Name)), lwd.ticks=1, las=1, cex.axis=1.5)
-	axis(2, at = seq(0,1,.2), lwd.ticks=1, las=1, cex.axis=1.5)
-	legend("topleft", c(vtypes[which(vtypes!="Missing")], "B. lanceolatum", "D. rerio", "Independent genes", "Union of duplicates"), lty=c(NA,NA,NA,NA,NA,1,2), pch=c(22,22,22,21,23,NA,NA), text.col="black", col=c(cols[which(vtypes!="Missing")], "black", "black", "black", "black"), pt.bg=modifColor(c(cols[which(vtypes!="Missing")], "black", "black", "black", "black"),.1), bty = "n", pt.cex=1.5, cex=1, xjust = 0, yjust = 0)
-}
-
-Draw_ExpProfileLine <- function(vec, b, col, pch, lty=1){
+Plot_Difference <- function(vecSC, vec, pos, w, b, col, dens=NA){
+	hSC <- hist(vecSC, breaks=b, plot=FALSE)
 	h <- hist(vec, breaks=b, plot=FALSE)
-	lines(h$mids, h$counts/length(vec), col=col, lwd=1.5, lty=lty)
-	points(h$mids, h$counts/length(vec), col=col, bg=modifColor(col,.1), pch=pch, cex=1.5)
+	difference <- sum(abs(h$counts/length(vec)-hSC$counts/length(vecSC)))
+	print(abs(h$counts/length(vec)-hSC$counts/length(vecSC)))
+	print(difference)
+	polygon(c(pos-w/2, pos+w/2, pos+w/2, pos-w/2),c(0,0,difference, difference), col=modif_alpha(col,.3), border=col, lwd=2)
+	polygon(c(pos-w/2, pos+w/2, pos+w/2, pos-w/2),c(0,0,difference, difference), col=col, border=col, density=dens, lwd=2)
 }
+
 
 
 
