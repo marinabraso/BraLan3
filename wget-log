@@ -1,0 +1,11 @@
+--2021-11-24 17:13:24--  http://ohnologs.curie.fr/cgi-bin/DownloadBrowse.cgi?crit=[0]
+Resolving ohnologs.curie.fr (ohnologs.curie.fr)... 194.57.244.205
+Connecting to ohnologs.curie.fr (ohnologs.curie.fr)|194.57.244.205|:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 0 [application/x-download]
+Saving to: ‘DownloadBrowse.cgi?crit=[0]’
+
+DownloadBrowse.cgi?crit=[0]              [<=>                                                                  ]       0  --.-KB/s               DownloadBrowse.cgi?crit=[0]              [ <=>                                                                 ]       0  --.-KB/s    in 0s      
+
+2021-11-24 17:13:24 (0,00 B/s) - ‘DownloadBrowse.cgi?crit=[0]’ saved [0/0]
+

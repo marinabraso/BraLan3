@@ -47,17 +47,17 @@ ScatterPlotSmooth <- function(vec1, vec2, col, lab1, lab2, xlim, ylim){
 	axis(2, at = seq(ylim[1],ylim[2],(ylim[2]-ylim[1])/4), lwd.ticks=1, las=1, cex.axis=1.5)
 }
 
-ScatterPlotContour <- function(vec1, vec2, col, lab1, lab2, xlim, ylim){
-	#f <- kde2d(vec1, vec2, h=20, n = 35, lims = c(xlim, ylim))
+ScatterPlotContour <- function(vec1, vec2, sizes, col, lab1, lab2, xlim, ylim){
+	sizes <- sizes/max(sizes)*15
 	f <- kde2d(vec1, vec2, h=12, n = 50, lims = c(xlim, ylim))
-	levels <- 11
+	levels <- 14
 	colfunc <- colorRampPalette(c("white", "gold", "darkorange", "firebrick"))
 	colors <- colfunc(levels)
 	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=ylim, xlim=xlim, col=NA)
 	mtext(lab1, side = 1, line = 6, cex=1.2)
 	mtext(lab2, side = 2, line = 5, cex=1.2)
-	fill.contour(f, nlevels = levels, col=colfunc(levels+2), axes=FALSE, frame.plot=FALSE)
-	points(vec1, vec2, col=col, pch=16, cex=.4, xpd = NA)
+	#fill.contour(f, nlevels = levels, col=colfunc(levels+2), axes=FALSE, frame.plot=FALSE)
+	points(vec1, vec2, col=NA, bg=modif_alpha(col,.5), pch=21, cex=sizes, xpd = NA)
 	axis(1, at = seq(xlim[1],xlim[2],(xlim[2]-xlim[1])/4), lwd.ticks=1, las=1, cex.axis=1.5)
 	axis(2, at = seq(ylim[1],ylim[2],(ylim[2]-ylim[1])/4), lwd.ticks=1, las=1, cex.axis=1.5)
 }
@@ -85,6 +85,19 @@ fill.contour <- function (x = seq(0, 1, length.out = nrow(z)), y = seq(0, 1,
         else stop("no 'z' matrix specified")
     }
     .filled.contour(x, y, z, levels, col)
+}
+
+ScatterPlot_GOExp <- function(vec1, vec2, sizes, col, lab1, lab2, lim){
+	sizes <- sizes/max(sizes)*15
+	df <- as.data.frame(cbind(vec1, vec2, sizes))
+	df <- df[which(vec1<lim[2] & vec2<lim[2]),]
+	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=c(lim[1]-3, lim[2]+3), xlim=c(lim[1]-3, lim[2]+3), col=NA)
+	mtext(lab1, side = 1, line = 6, cex=1.2)
+	mtext(lab2, side = 2, line = 5, cex=1.2)
+	points(df$vec1, df$vec2, col=NA, bg=modif_alpha(col,.5), pch=21, cex=df$sizes)
+	abline(0,1, col="darkred")
+	axis(1, at = seq(lim[1],lim[2],(lim[2]-lim[1])/4), lwd.ticks=1, las=1, cex.axis=1.5)
+	axis(2, at = seq(lim[1],lim[2],(lim[2]-lim[1])/4), lwd.ticks=1, las=1, cex.axis=1.5)
 }
 
 ScatterPlot <- function(vec1, vec2, col, lab1, lab2, xlim, ylim){
@@ -194,26 +207,6 @@ ContingencyTable <- function(vec1, vec2, breaks, outfile=NA){
 	write.table(paste("chisq p.value = ", chisq$p.value), file = outfile, quote = F, sep="\t", col.names = TRUE, row.names = TRUE, append=TRUE)
 }
 
-PlotColumnVertebrateType <- function(df, pos, vtypes, col, cextext, alpha=0, den=NULL){
-	len <- length(df[,1])
-	base <- 0
-	w <- .8
-	for(vt in c(1:length(vtypes))){
-		value <- length(df[which(df$VertType==vtypes[vt]),1])/len*100
-		if(value>0){
-			if(!is.null(den)){
-				polygon(c(pos-w/2,pos+w/2,pos+w/2,pos-w/2), c(base,base,base+value,base+value), col=modifColor(col[vt], .1), border=col[vt], lwd=4)		
-			}
-			polygon(c(pos-w/2,pos+w/2,pos+w/2,pos-w/2), c(base,base,base+value,base+value), col=modifColor(col[vt], alpha), border=col[vt], lwd=4, density=den)
-			text(pos, base+value/2, labels=length(df[which(df$VertType==vtypes[vt]),1]), cex=cextext)
-			base <- base+value
-		}
-	}
-	par(xpd=TRUE) 
-	text(pos, 100,  labels =length(df[,1]), pos=3, cex=cextext)
-	par(xpd=FALSE) 
-}
-
 HypergeometricTest <- function(Overlap, group1, group2, Total, lab1, lab2, threshold){
 	# Enrichment
 	ep <- phyper(Overlap-1, group2, Total-group2, group1, lower.tail= FALSE)
@@ -285,6 +278,26 @@ BarPlotVertTypesInBlanGenes <- function(OG.df, ATypes, VTypes, vcols){
 	}
 	axis(1, at = c(1:length(ATypes)), labels=ATypes, tick=FALSE, line=1, las=1, cex.axis=1.2)
 	axis(2, at = seq(0,100,20), lwd.ticks=1, las=1, cex.axis=1.2)
+}
+
+PlotColumnVertebrateType <- function(df, pos, vtypes, col, cextext, alpha=0, den=NULL){
+	len <- length(df[,1])
+	base <- 0
+	w <- .8
+	for(vt in c(1:length(vtypes))){
+		value <- length(df[which(df$VertType==vtypes[vt]),1])/len*100
+		if(value>0){
+			if(!is.null(den)){
+				polygon(c(pos-w/2,pos+w/2,pos+w/2,pos-w/2), c(base,base,base+value,base+value), col=modifColor(col[vt], .1), border=col[vt], lwd=2)		
+			}
+			polygon(c(pos-w/2,pos+w/2,pos+w/2,pos-w/2), c(base,base,base+value,base+value), col=modifColor(col[vt], alpha), border=col[vt], lwd=2, density=den)
+			text(pos, base+value/2, labels=length(df[which(df$VertType==vtypes[vt]),1]), cex=cextext)
+			base <- base+value
+		}
+	}
+	par(xpd=TRUE) 
+	text(pos, 100,  labels =length(df[,1]), pos=3, cex=cextext)
+	par(xpd=FALSE) 
 }
 
 findColorInGRadient <- function(value, lims, colors){
@@ -470,13 +483,14 @@ max.col <- function(exp){
 	return(maxcollist)
 }
 
-BoxPlot_BlanTypes_VertTypes <- function(Genes, GCN, column, ylab, ylim, vtypes, vabr, vcolors){
+BoxPlot_BlanTypes_VertTypes <- function(Genes, Ginf, column, ylab, ylim, vtypes, vcolors){
 	dist <- .15
+
 	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=ylim, xlim=c(0.5, length(vtypes)+.5), col=NA)
 	mtext(ylab, side = 2, line = 5, cex=1.5)
 	for(t in c(1:length(vtypes))){
-		BoxPlot(Genes[which(Genes$Gene %in% GCN$Gene[which(GCN$TypeBlan=="SC" & GCN$TypeVert==vabr[t])]), column], t-dist, vcolors[t], .7, .4)
-		BoxPlot(Genes[which(Genes$Gene %in% GCN$Gene[which(GCN$TypeBlan=="D" & GCN$TypeVert==vabr[t])]), column], t+dist, vcolors[t], .7, .4, 10)
+		BoxPlot(Genes[which(Genes$Gene %in% Ginf$Gene[which(Ginf$BlanType=="Single-copy" & Ginf$VertType==vtypes[t])]), column], t-dist, vcolors[t], .7, .4)
+		BoxPlot(Genes[which(Genes$Gene %in% Ginf$Gene[which(Ginf$BlanType=="Small-scale\nduplicates" & Ginf$VertType==vtypes[t])]), column], t+dist, vcolors[t], .7, .4, 10)
 	}
 	axis(2, at = seq(ylim[1],ylim[2],(ylim[2]-ylim[1])/5), lwd.ticks=1, las=1, cex.axis=2)
 	text(x = c(1:4), y = par("usr")[3] - (ylim[2]-ylim[1])/10, labels = vtypes, xpd = NA, srt = 35, cex = 1.5, adj = .9)
@@ -499,18 +513,15 @@ BoxPlot <- function(values, pos, col, cextext=1, w=.8, den=NULL, text=FALSE){
 }
 
 Hist_ExpressDomanis <- function(gp, og, t1, t2, tissues, lab1, lab2, main){
-	print(length(gp$DiffDom[which(gp$Type1=="D" & gp$Type2=="SC")]))
-	print(length(og$DiffDom[which(og$Type1=="D" & og$Type2=="SC")]))
-	print(length(gp$DiffDom[which(gp$Type1=="SC" & gp$Type2=="SC")]))
-	print(table(gp[,c("Type1","Type2")]))
+	print(table(gp[,c("BlanType","VertType")]))
 	breaks <- seq(-length(tissues[,1])-.5,length(tissues[,1])+.5,1)
 	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=c(0, 1), xlim=c(-length(tissues[,1]),length(tissues[,1])), col=NA)
 	mtext(main, side = 3, line = 1, cex=1.2)
 	mtext(lab1, side = 1, line = 5, cex=1.2)
 	mtext(lab2, side = 2, line = 5, cex=1.2)
-	add_relative_hist(gp$DiffDom[which(gp$Type1=="SC" & gp$Type2=="SC")], breaks, "cornflowerblue")
-	add_relative_hist(gp$DiffDom[which(gp$Type1==t1 & gp$Type2==t2)], breaks, "tomato3")
-	add_relative_hist(og$DiffDom[which(og$Type1==t1 & og$Type2==t2)], breaks, "tomato3", 20)
+	add_relative_hist(gp$DiffDom[which(gp$BlanType=="Single-copy" & gp$VertType=="Single-copy")], breaks, "cornflowerblue")
+	add_relative_hist(gp$DiffDom[which(gp$BlanType==t1 & gp$VertType==t2)], breaks, "tomato3")
+	add_relative_hist(og$DiffDom[which(og$BlanType==t1 & og$VertType==t2)], breaks, "tomato3", 20)
 	axis(1, at = seq(-length(tissues[,1]),length(tissues[,1]),2), lwd.ticks=1, las=1, cex.axis=1.5)
 	axis(2, at = seq(0,1,.2), lwd.ticks=1, las=1, cex.axis=1.5)
 }
@@ -533,14 +544,14 @@ DifferenceWithSC <- function(gp, og, tissues, lab1, lab2){
 	mtext(lab1, side = 1, line = 6, cex=1)
 	mtext(lab2, side = 2, line = 5, cex=1)
 	print("D - SC")
-	Plot_Difference(gp$DiffDom[which(gp$Type1=="SC" & gp$Type2=="SC")], gp$DiffDom[which(gp$Type1=="D" & gp$Type2=="SC")], 1, width, breaks, color)
-	Plot_Difference(gp$DiffDom[which(gp$Type1=="SC" & gp$Type2=="SC")], og$DiffDom[which(og$Type1=="D" & og$Type2=="SC")], 2, width, breaks, color, 20)
+	Plot_Difference(gp$DiffDom[which(gp$BlanType=="Single-copy" & gp$VertType=="Single-copy")], gp$DiffDom[which(gp$BlanType=="Small-scale\nduplicates" & gp$VertType=="Single-copy")], 1, width, breaks, color)
+	Plot_Difference(gp$DiffDom[which(gp$BlanType=="Single-copy" & gp$VertType=="Single-copy")], og$DiffDom[which(og$BlanType=="Small-scale\nduplicates" & og$VertType=="Single-copy")], 2, width, breaks, color, 20)
 	print("SC - D")
-	Plot_Difference(gp$DiffDom[which(gp$Type1=="SC" & gp$Type2=="SC")], gp$DiffDom[which(gp$Type1=="SC" & gp$Type2=="D")], 4, width, breaks, color)
-	Plot_Difference(gp$DiffDom[which(gp$Type1=="SC" & gp$Type2=="SC")], og$DiffDom[which(og$Type1=="SC" & og$Type2=="D")], 5, width, breaks, color, 20)
+	Plot_Difference(gp$DiffDom[which(gp$BlanType=="Single-copy" & gp$VertType=="Single-copy")], gp$DiffDom[which(gp$BlanType=="Single-copy" & gp$VertType=="Small-scale\nduplicates")], 4, width, breaks, color)
+	Plot_Difference(gp$DiffDom[which(gp$BlanType=="Single-copy" & gp$VertType=="Single-copy")], og$DiffDom[which(og$BlanType=="Single-copy" & og$VertType=="Small-scale\nduplicates")], 5, width, breaks, color, 20)
 	print("SC - O")
-	Plot_Difference(gp$DiffDom[which(gp$Type1=="SC" & gp$Type2=="SC")], gp$DiffDom[which(gp$Type1=="SC" & gp$Type2=="O")], 7, width, breaks, color)
-	Plot_Difference(gp$DiffDom[which(gp$Type1=="SC" & gp$Type2=="SC")], og$DiffDom[which(og$Type1=="SC" & og$Type2=="O")], 8, width, breaks, color, 20)
+	Plot_Difference(gp$DiffDom[which(gp$BlanType=="Single-copy" & gp$VertType=="Single-copy")], gp$DiffDom[which(gp$BlanType=="Single-copy" & gp$VertType=="Ohnologs")], 7, width, breaks, color)
+	Plot_Difference(gp$DiffDom[which(gp$BlanType=="Single-copy" & gp$VertType=="Single-copy")], og$DiffDom[which(og$BlanType=="Single-copy" & og$VertType=="Ohnologs")], 8, width, breaks, color, 20)
 	axis(1, at = c(1.5,4.5,7.5), labels= c("Small scale\nB. lanceolatum","Small scale\nD. rerio","Ohnologs\nD. rerio"), line=2, tick=FALSE, las=1, cex.axis=1.2)
 	axis(2, at = seq(0,1,.2), lwd.ticks=1, las=1, cex.axis=1.2)
 
@@ -559,14 +570,14 @@ DifferenceWithSC_TandemIntraInter <- function(gp, og, tissues, lab1, lab2){
 	mtext(lab1, side = 1, line = 6, cex=1)
 	mtext(lab2, side = 2, line = 5, cex=1)
 	print("D - SC Inter")
-	Plot_Difference(gp$DiffDom[which(gp$Type1=="SC" & gp$Type2=="SC")], gp$DiffDom[which(gp$Type1=="D" & gp$Type2=="SC" & gp$NumChrsBlan>1)], 1, width, breaks, color)
-	Plot_Difference(gp$DiffDom[which(gp$Type1=="SC" & gp$Type2=="SC")], og$DiffDom[which(og$Type1=="D" & og$Type2=="SC" & og$NumChrsBlan>1)], 2, width, breaks, color, 20)
+	Plot_Difference(gp$DiffDom[which(gp$BlanType=="Single-copy" & gp$VertType=="Single-copy")], gp$DiffDom[which(gp$BlanType=="Small-scale\nduplicates" & gp$VertType=="Single-copy" & gp$BlanLType=="Inter")], 1, width, breaks, color)
+	Plot_Difference(gp$DiffDom[which(gp$BlanType=="Single-copy" & gp$VertType=="Single-copy")], og$DiffDom[which(og$BlanType=="Small-scale\nduplicates" & og$VertType=="Single-copy" & og$BlanLType=="Inter")], 2, width, breaks, color, 20)
 	print("D - SC Intra")
-	Plot_Difference(gp$DiffDom[which(gp$Type1=="SC" & gp$Type2=="SC")], gp$DiffDom[which(gp$Type1=="D" & gp$Type2=="SC" & gp$NumChrsBlan==1 & gp$ConsecutiveBlan==FALSE)], 4, width, breaks, color)
-	Plot_Difference(gp$DiffDom[which(gp$Type1=="SC" & gp$Type2=="SC")], og$DiffDom[which(og$Type1=="D" & og$Type2=="SC" & og$NumChrsBlan==1 & og$ConsecutiveBlan==FALSE)], 5, width, breaks, color, 20)
+	Plot_Difference(gp$DiffDom[which(gp$BlanType=="Single-copy" & gp$VertType=="Single-copy")], gp$DiffDom[which(gp$BlanType=="Small-scale\nduplicates" & gp$VertType=="Single-copy" & gp$BlanLType=="Intra")], 4, width, breaks, color)
+	Plot_Difference(gp$DiffDom[which(gp$BlanType=="Single-copy" & gp$VertType=="Single-copy")], og$DiffDom[which(og$BlanType=="Small-scale\nduplicates" & og$VertType=="Single-copy" & og$BlanLType=="Intra")], 5, width, breaks, color, 20)
 	print("D - SC Tandem")
-	Plot_Difference(gp$DiffDom[which(gp$Type1=="SC" & gp$Type2=="SC")], gp$DiffDom[which(gp$Type1=="D" & gp$Type2=="SC" & gp$NumChrsBlan==1 & gp$ConsecutiveBlan==TRUE)], 7, width, breaks, color)
-	Plot_Difference(gp$DiffDom[which(gp$Type1=="SC" & gp$Type2=="SC")], og$DiffDom[which(og$Type1=="D" & og$Type2=="SC" & og$NumChrsBlan==1 & og$ConsecutiveBlan==TRUE)], 8, width, breaks, color, 20)
+	Plot_Difference(gp$DiffDom[which(gp$BlanType=="Single-copy" & gp$VertType=="Single-copy")], gp$DiffDom[which(gp$BlanType=="Small-scale\nduplicates" & gp$VertType=="Single-copy" & gp$BlanLType=="Tandem")], 7, width, breaks, color)
+	Plot_Difference(gp$DiffDom[which(gp$BlanType=="Single-copy" & gp$VertType=="Single-copy")], og$DiffDom[which(og$BlanType=="Small-scale\nduplicates" & og$VertType=="Single-copy" & og$BlanLType=="Tandem")], 8, width, breaks, color, 20)
 	axis(1, at = c(1.5,4.5,7.5), labels= c("Multichr.","Distant\nmonochr.","Tandem"), line=2, tick=FALSE, las=1, cex.axis=1.2)
 	axis(2, at = seq(0,1,.2), lwd.ticks=1, las=1, cex.axis=1.2)
 
@@ -587,7 +598,20 @@ Plot_Difference <- function(vecSC, vec, pos, w, b, col, dens=NA){
 	polygon(c(pos-w/2, pos+w/2, pos+w/2, pos-w/2),c(0,0,difference, difference), col=col, border=col, density=dens, lwd=2)
 }
 
-
+CalcVertType <- function(x, vertlist, OG3R){
+	og <- x[which(names(x)=="OG")]
+	x <- as.numeric(x[vertlist])
+	num <- max(x)
+	numwof <- max(x[which(vertlist!="Drer")])
+	if(num>1){
+		if(numwof<=1 & og %in% OG3R){
+			num=1
+		}else{
+			num=2
+		}
+	}
+	return(num)
+}
 
 
 
