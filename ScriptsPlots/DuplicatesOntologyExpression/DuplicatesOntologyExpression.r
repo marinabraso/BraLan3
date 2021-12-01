@@ -24,7 +24,7 @@ Ohnolog2ROG <- "Results/OhnologListing/2R_Strict_OG_pairs.txt"
 Ohnolog3ROG <- "Results/OhnologListing/3R_Strict_OG_pairs.txt"
 
 GOlistsFolder <- "Results/GeneOntology"
-GOlistFile <- "Results/GeneOntology/GOlist_MF.list"
+GOlistFile <- "Results/GeneOntology/GOlist.tbl"
 
 GTFFolder <- "Results/FilteringGeneSets/FilteredGTFs"
 ProteomesFolder <- "Results/FilteringGeneSets/FilteredProteomes"
@@ -74,26 +74,34 @@ MatchingTissues <- MatchingTissues[MatchingTissues$Name!="blastula" & MatchingTi
 ###########################################################################
 # Read data
 
-OGInfoFile <- paste(ResultsFolder, "/OGInfo", sep ="")
+OGInfoFile <- paste(ResultsFolder, "/OGInfo.txt", sep ="")
 GeneInfoFile <- paste(ResultsFolder, "/GeneInfo.txt", sep ="")
 NumGenesSpeciesFile <- paste(ResultsFolder, "/NumGenesSpecies.txt", sep ="")
 GenePairsFile <- paste(ResultsFolder, "/GenePairs.txt", sep ="")
-OGInfoFile <- paste(ResultsFolder, "/OGInfo.txt", sep ="")
+GOInfoFile <- paste(ResultsFolder, "/GOInfo.txt", sep ="")
 
-OGInfo <- read.table(OGInfoFile, h=F, sep = "\t", row.names=1)
-GeneInfo <- read.table(GeneInfoFile, h=F, sep = "\t", row.names=1)
-NumGenesSpecies <- read.table(NumGenesSpeciesFile, h=F, sep = "\t", row.names=1)
-GenePairs <- read.table(GenePairsFile, h=F, sep = "\t", row.names=1)
-OGInfo <- read.table(OGInfoFile, h=F, sep = "\t", row.names=1)
-
-OGInfo.BlanVert <- OGInfo[which(OGInfo$BlanType != "Missing" | OGInfo$VertType != "Missing"),]
-
+OGInfo <- read.table(OGInfoFile, h=TRUE, sep = "\t", row.names=1)
+GeneInfo <- read.table(GeneInfoFile, h=TRUE, sep = "\t", row.names=1)
+NumGenesSpecies <- read.table(NumGenesSpeciesFile, h=TRUE, sep = "\t", row.names=1)[,1]
+GenePairs <- read.table(GenePairsFile, h=TRUE, sep = "\t", row.names=1)
+GOInfo <- read.table(GOInfoFile, h=TRUE, sep = "\t", row.names=1)
 
 DrerGeneData <- prepare_DrerGeneData(DrerGeneDataFile, DrerBgeeDataFile, MatchingTissues, ResultsFolder)
 BlanGeneData <- prepare_BlanGeneData(BlanGeneDataFile, RNASeqMetadataFile, TPMFile)
 
+OGInfo$BlanType <- gsub(" ", "\n", OGInfo$BlanType)
+OGInfo$VertType <- gsub(" ", "\n", OGInfo$VertType)
+OGInfo$AmphType <- gsub(" ", "\n", OGInfo$AmphType)
+GeneInfo$BlanType <- gsub(" ", "\n", GeneInfo$BlanType)
+GeneInfo$VertType <- gsub(" ", "\n", GeneInfo$VertType)
+GeneInfo$AmphType <- gsub(" ", "\n", GeneInfo$AmphType)
+GenePairs$BlanType <- gsub(" ", "\n", GenePairs$BlanType)
+GenePairs$VertType <- gsub(" ", "\n", GenePairs$VertType)
 
-
+# Subsets
+OGInfo.BlanVert <- OGInfo[which(OGInfo$BlanType != "Missing" & OGInfo$VertType != "Missing"),]
+GOInfo.MF <- GOInfo[which(GOInfo$Type=="molecular_function"),]
+GOInfo.BP <- GOInfo[which(GOInfo$Type=="biological_process"),]
 
 ###########################################################################
 ###########################################################################
@@ -117,15 +125,15 @@ paste("blan-bflo specific", sum(OGInfo.A$Blan>0 & OGInfo.A$Bflo>0 & OGInfo.A$Bbe
 paste("blan-bflo specific/A specific*100", sum(OGInfo.A$Blan>0 & OGInfo.A$Bflo>0 & OGInfo.A$Bbel==0)/length(OGInfo.A[,1])*100)
 
 for(sp in c(1:length(Species))){
-	OG2Gene.sp <- OG2Gene[which(OG2Gene$Species==Species[sp]),]
+	GeneInfo.sp <- GeneInfo[which(GeneInfo$Species==Species[sp]),]
 	toprint <- c(1:7)
 	toprint[1] <- Species[sp]
-	toprint[2] <- sum(OGInfo[,Species[sp]]>1)
-	toprint[3] <- sum(OGInfo[,Species[sp]]>1)/sum(OGInfo[,Species[sp]]>0)*100
-	toprint[4] <- length(unique(OG2Gene.sp$Gene[which(OG2Gene.sp$OG %in% rownames(OGInfo[which(OGInfo[,Species[sp]]>1),]))]))
-	toprint[5] <- length(unique(OG2Gene.sp$Gene[which(OG2Gene.sp$OG %in% rownames(OGInfo[which(OGInfo[,Species[sp]]>1),]))]))/NumGenesSpecies[sp]*100
-	toprint[6] <- NumGenesSpecies[sp]-length(unique(OG2Gene.sp$Gene))
-	toprint[7] <- (NumGenesSpecies[sp]-length(unique(OG2Gene.sp$Gene)))/NumGenesSpecies[sp]*100
+	toprint[2] <- sum(GeneInfo.sp[,Species[sp]]>1)
+	toprint[3] <- sum(GeneInfo.sp[,Species[sp]]>1)/sum(GeneInfo.sp[,Species[sp]]>0)*100
+	toprint[4] <- length(unique(GeneInfo.sp$Gene[which(GeneInfo.sp[,Species[sp]]>1)]))
+	toprint[5] <- length(unique(GeneInfo.sp$Gene[which(GeneInfo.sp[,Species[sp]]>1)]))/NumGenesSpecies[sp]*100
+	toprint[6] <- NumGenesSpecies[sp]-length(unique(GeneInfo.sp$Gene))
+	toprint[7] <- (NumGenesSpecies[sp]-length(unique(GeneInfo.sp$Gene)))/NumGenesSpecies[sp]*100
 	print(paste(toprint, collapse=" "))
 }
 
@@ -155,21 +163,43 @@ par(mar=c(10,10,5,5),oma=c(1,1,1,1), yaxs='i', xaxs='i')
 
 # Blan vs. vertebrate gene type 
 layout(matrix(c(1,2,3,4,5,6),nrow=2,ncol=3,byrow=T), widths=c(1), heights=c(1), TRUE)
-BarPlotVertTypesInBlanGenes(OGInfo.BlanVert[which(OGInfo.BlanVert$VertType!="Missing" & OGInfo.BlanVert$BlanType!="Missing"),], BlanTypes[which(BlanTypes!="Missing")], VertTypes[which(VertTypes!="Missing")], VertTypes.col[which(VertTypes!="Missing")])
-PlotHypergeomTest_VertBlanTypes(OGInfo.BlanVert[which(OGInfo.BlanVert$VertType!="Missing" & OGInfo.BlanVert$BlanType!="Missing"),], VertTypes[which(VertTypes!="Missing")], BlanTypes[which(BlanTypes!="Missing")], VertTypes.col[which(VertTypes!="Missing")], PQvalThreshold, ResultsFolder)
+BarPlotVertTypesInBlanGenes(OGInfo.BlanVert, BlanTypes[which(BlanTypes!="Missing")], VertTypes[which(VertTypes!="Missing")], VertTypes.col[which(VertTypes!="Missing")])
+PlotHypergeomTest_VertBlanTypes(OGInfo.BlanVert, VertTypes[which(VertTypes!="Missing")], BlanTypes[which(BlanTypes!="Missing")], VertTypes.col[which(VertTypes!="Missing")], PQvalThreshold, ResultsFolder)
 plot.new()
 legend("bottomright", c("In vertebrates", VertTypes[which(VertTypes!="Missing")]), pch=c(NA,15,15,15,15), text.col="black", col=c(NA, VertTypes.col[which(VertTypes!="Missing")]), bty = "n", pt.cex=2, cex=1.5, xjust = 0, yjust = 0)#
-BarPlotVertTypesInBlanGenes(OGInfo.BlanVert, BlanTypes, VertTypes, VertTypes.col)
-PlotHypergeomTest_VertBlanTypes(OGInfo.BlanVert, VertTypes, BlanTypes, VertTypes.col, PQvalThreshold, ResultsFolder)
+BarPlotVertTypesInBlanGenes(OGInfo, BlanTypes, VertTypes, VertTypes.col)
+PlotHypergeomTest_VertBlanTypes(OGInfo, VertTypes, BlanTypes, VertTypes.col, PQvalThreshold, ResultsFolder)
 plot.new()
-legend("bottomright", c("In vertebrates", "Missing", "Single-copy", "Ohnologs", "Small-scale\nduplicates"), pch=c(NA,15,15,15,15), text.col="black", col=c(NA, VertTypes.col), bty = "n", pt.cex=2, cex=1.5, xjust = 0, yjust = 0)
+legend("bottomright", c("In vertebrates", VertTypes), pch=c(NA,15,15,15,15), text.col="black", col=c(NA, VertTypes.col), bty = "n", pt.cex=2, cex=1.5, xjust = 0, yjust = 0)
 
-# GO term in duplicates Hsap vs. Blan 
+# GO term in duplicates Hsap vs. Blan
+# MF
 layout(matrix(c(1,2,3,4,5,6),nrow=2,ncol=3,byrow=T), widths=c(1), heights=c(1), TRUE)
-ScatterPlotContour(GOInfo$HsapD/GOInfo$Hsap*100, GOInfo$BlanD/GOInfo$Blan*100, GOInfo$Hsap, "black", "% of small-scale duplicates\nH. sapiens", "B. lanceolatum\n% of small-scale duplicates", c(0,100), c(0,100))
-ScatterPlotContour(GOInfo$HsapO/GOInfo$Hsap*100, GOInfo$BlanD/GOInfo$Blan*100, GOInfo$Hsap, "black", "% of ohnologs\nH. sapiens", "B. lanceolatum\n% of small-scale duplicates", c(0,100), c(0,100))
-ScatterPlotContour((GOInfo$HsapO+GOInfo$HsapD)/GOInfo$Hsap*100, GOInfo$BlanD/GOInfo$Blan*100, GOInfo$Hsap, "black", "% of all types of duplicates\nH. sapiens", "B. lanceolatum\n% of small-scale duplicates", c(0,100), c(0,100))
-ScatterPlotContour(GOInfo$HsapS/GOInfo$Hsap*100, GOInfo$BlanS/GOInfo$Blan*100, GOInfo$Hsap, "black", "% of single-copy\nH. sapiens", "B. lanceolatum\n% of single-copy duplicates", c(0,100), c(0,100))
+ScatterPlotContour(GOInfo.MF$HsapD/GOInfo.MF$Hsap*100, GOInfo.MF$BlanD/GOInfo.MF$Blan*100, "black", "% of small-scale duplicates\nH. sapiens", "B. lanceolatum\n% of small-scale duplicates", c(0,100), c(0,100))
+ScatterPlotContour(GOInfo.MF$HsapO/GOInfo.MF$Hsap*100, GOInfo.MF$BlanD/GOInfo.MF$Blan*100, "black", "% of ohnologs\nH. sapiens", "B. lanceolatum\n% of small-scale duplicates", c(0,100), c(0,100))
+ScatterPlotContour(GOInfo.MF$HsapS/GOInfo.MF$Hsap*100, GOInfo.MF$BlanS/GOInfo.MF$Blan*100, "black", "% of single-copy\nH. sapiens", "B. lanceolatum\n% of single-copy duplicates", c(0,100), c(0,100))
+layout(matrix(c(1,2,3,4,5,6),nrow=2,ncol=3,byrow=T), widths=c(1), heights=c(1), TRUE)
+ScatterPlotPointSize(GOInfo.MF$HsapD/GOInfo.MF$Hsap*100, GOInfo.MF$BlanD/GOInfo.MF$Blan*100, GOInfo.MF$Hsap, "black", "% of small-scale duplicates\nH. sapiens", "B. lanceolatum\n% of small-scale duplicates", c(0,100), c(0,100))
+ScatterPlotPointSize(GOInfo.MF$HsapO/GOInfo.MF$Hsap*100, GOInfo.MF$BlanD/GOInfo.MF$Blan*100, GOInfo.MF$Hsap, "black", "% of ohnologs\nH. sapiens", "B. lanceolatum\n% of small-scale duplicates", c(0,100), c(0,100))
+ScatterPlotPointSize(GOInfo.MF$HsapS/GOInfo.MF$Hsap*100, GOInfo.MF$BlanS/GOInfo.MF$Blan*100, GOInfo.MF$Hsap, "black", "% of single-copy\nH. sapiens", "B. lanceolatum\n% of single-copy duplicates", c(0,100), c(0,100))
+layout(matrix(c(1,2,3,4,5,6),nrow=2,ncol=3,byrow=T), widths=c(1), heights=c(1), TRUE)
+ScatterPlotPointAlpha(GOInfo.MF$HsapD/GOInfo.MF$Hsap*100, GOInfo.MF$BlanD/GOInfo.MF$Blan*100, GOInfo.MF$Hsap, "black", "% of small-scale duplicates\nH. sapiens", "B. lanceolatum\n% of small-scale duplicates", c(0,100), c(0,100))
+ScatterPlotPointAlpha(GOInfo.MF$HsapO/GOInfo.MF$Hsap*100, GOInfo.MF$BlanD/GOInfo.MF$Blan*100, GOInfo.MF$Hsap, "black", "% of ohnologs\nH. sapiens", "B. lanceolatum\n% of small-scale duplicates", c(0,100), c(0,100))
+ScatterPlotPointAlpha(GOInfo.MF$HsapS/GOInfo.MF$Hsap*100, GOInfo.MF$BlanS/GOInfo.MF$Blan*100, GOInfo.MF$Hsap, "black", "% of single-copy\nH. sapiens", "B. lanceolatum\n% of single-copy duplicates", c(0,100), c(0,100))
+# BP
+layout(matrix(c(1,2,3,4,5,6),nrow=2,ncol=3,byrow=T), widths=c(1), heights=c(1), TRUE)
+ScatterPlotContour(GOInfo.BP$HsapD/GOInfo.BP$Hsap*100, GOInfo.BP$BlanD/GOInfo.BP$Blan*100, "black", "% of small-scale duplicates\nH. sapiens", "B. lanceolatum\n% of small-scale duplicates", c(0,100), c(0,100))
+ScatterPlotContour(GOInfo.BP$HsapO/GOInfo.BP$Hsap*100, GOInfo.BP$BlanD/GOInfo.BP$Blan*100, "black", "% of ohnologs\nH. sapiens", "B. lanceolatum\n% of small-scale duplicates", c(0,100), c(0,100))
+ScatterPlotContour(GOInfo.BP$HsapS/GOInfo.BP$Hsap*100, GOInfo.BP$BlanS/GOInfo.BP$Blan*100, "black", "% of single-copy\nH. sapiens", "B. lanceolatum\n% of single-copy duplicates", c(0,100), c(0,100))
+layout(matrix(c(1,2,3,4,5,6),nrow=2,ncol=3,byrow=T), widths=c(1), heights=c(1), TRUE)
+ScatterPlotPointSize(GOInfo.BP$HsapD/GOInfo.BP$Hsap*100, GOInfo.BP$BlanD/GOInfo.BP$Blan*100, GOInfo.BP$Hsap, "black", "% of small-scale duplicates\nH. sapiens", "B. lanceolatum\n% of small-scale duplicates", c(0,100), c(0,100))
+ScatterPlotPointSize(GOInfo.BP$HsapO/GOInfo.BP$Hsap*100, GOInfo.BP$BlanD/GOInfo.BP$Blan*100, GOInfo.BP$Hsap, "black", "% of ohnologs\nH. sapiens", "B. lanceolatum\n% of small-scale duplicates", c(0,100), c(0,100))
+ScatterPlotPointSize(GOInfo.BP$HsapS/GOInfo.BP$Hsap*100, GOInfo.BP$BlanS/GOInfo.BP$Blan*100, GOInfo.BP$Hsap, "black", "% of single-copy\nH. sapiens", "B. lanceolatum\n% of single-copy duplicates", c(0,100), c(0,100))
+layout(matrix(c(1,2,3,4,5,6),nrow=2,ncol=3,byrow=T), widths=c(1), heights=c(1), TRUE)
+ScatterPlotPointAlpha(GOInfo.BP$HsapD/GOInfo.BP$Hsap*100, GOInfo.BP$BlanD/GOInfo.BP$Blan*100, GOInfo.BP$Hsap, "black", "% of small-scale duplicates\nH. sapiens", "B. lanceolatum\n% of small-scale duplicates", c(0,100), c(0,100))
+ScatterPlotPointAlpha(GOInfo.BP$HsapO/GOInfo.BP$Hsap*100, GOInfo.BP$BlanD/GOInfo.BP$Blan*100, GOInfo.BP$Hsap, "black", "% of ohnologs\nH. sapiens", "B. lanceolatum\n% of small-scale duplicates", c(0,100), c(0,100))
+ScatterPlotPointAlpha(GOInfo.BP$HsapS/GOInfo.BP$Hsap*100, GOInfo.BP$BlanS/GOInfo.BP$Blan*100, GOInfo.BP$Hsap, "black", "% of single-copy\nH. sapiens", "B. lanceolatum\n% of single-copy duplicates", c(0,100), c(0,100))
+
 
 layout(matrix(c(1,2),nrow=2,ncol=1,byrow=T), widths=c(15), heights=c(5), TRUE)
 TandemIntraInterPerSpecies(OGInfo, Species, SpType, MaxTandemDist, "MaxDistance")
@@ -203,8 +233,11 @@ DifferenceWithSC(GenePairs, OGInfo, MatchingTissues, "Branch specific gene dupli
 DifferenceWithSC_TandemIntraInter(GenePairs, OGInfo, MatchingTissues, "Branch specific gene duplicates", "Difference with\nsingle-copy genes distribution")
 
 layout(matrix(c(1,2,3,4,5,6),nrow=2,ncol=3,byrow=T), widths=c(1), heights=c(1), TRUE)
-ScatterPlot_GOExp(GOInfo$BlanD.AExp, GOInfo$BlanSC.AExp, GOInfo$Blan, "black", "Mean adult expression\nof duplicate genes", "Mean adult expression\nof single-copy genes", c(0,120))
-ScatterPlot_GOExp(GOInfo$BlanD.EExp, GOInfo$BlanSC.EExp, GOInfo$Blan, "black", "Mean embrionic expression\nof duplicate genes", "Mean embrionic expression\nof single-copy genes", c(0,120))
+ScatterPlot_GOExp(GOInfo.MF$BlanD.AExp, GOInfo.MF$BlanSC.AExp, GOInfo.MF$Blan, "black", "Mean adult expression\nof duplicate genes", "Mean adult expression\nof single-copy genes", c(0,120))
+ScatterPlot_GOExp(GOInfo.MF$BlanD.EExp, GOInfo.MF$BlanSC.EExp, GOInfo.MF$Blan, "black", "Mean embrionic expression\nof duplicate genes", "Mean embrionic expression\nof single-copy genes", c(0,120))
+layout(matrix(c(1,2,3,4,5,6),nrow=2,ncol=3,byrow=T), widths=c(1), heights=c(1), TRUE)
+ScatterPlot_GOExp(GOInfo.BP$BlanD.AExp, GOInfo.BP$BlanSC.AExp, GOInfo.BP$Blan, "black", "Mean adult expression\nof duplicate genes", "Mean adult expression\nof single-copy genes", c(0,120))
+ScatterPlot_GOExp(GOInfo.BP$BlanD.EExp, GOInfo.BP$BlanSC.EExp, GOInfo.BP$Blan, "black", "Mean embrionic expression\nof duplicate genes", "Mean embrionic expression\nof single-copy genes", c(0,120))
 
 
 dev.off()

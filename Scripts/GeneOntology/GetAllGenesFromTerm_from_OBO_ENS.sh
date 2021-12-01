@@ -3,15 +3,14 @@
 # Scripts
 
 # Files & parameters
-term=$1
+GO=$1
 genesoutfile=$2
 OBO=$3
 ENSAnnot=$4
 
 ################################################
 ### 
-it=1
-ChildTermList=${term}
+ChildTermList=${GO}
 newNumChildTerm=$(echo ${ChildTermList} | awk -F ' ' '{for(i=1;i<=NF;i++){print $i}}' | sort -u | wc -l)
 oldNumChildTerm=0
 while [  ${newNumChildTerm} -gt ${oldNumChildTerm} ]; do
@@ -20,5 +19,9 @@ while [  ${newNumChildTerm} -gt ${oldNumChildTerm} ]; do
 	ChildTermList=$(echo ${ChildTermList}" "${newChildTermList} | awk -F ' ' '{for(i=1;i<=NF;i++){print $i}}' | sort -u)
 	newNumChildTerm=$(echo ${ChildTermList} | awk -F ' ' '{for(i=1;i<=NF;i++){print $i}}' | sort -u | wc -l)
 done
-awk '{if(NR==FNR){a[$1]=1;next} if(a[$2]){print $1}}' <(echo ${ChildTermList} | awk -F ' ' '{for(i=1;i<=NF;i++){print $i}}') ${ENSAnnot} | sort | uniq > ${genesoutfile}
-echo ${ChildTermList} | awk -F ' ' '{for(i=1;i<=NF;i++){print $i}}'
+echo ${ChildTermList}
+Genes=$(awk '{if(NR==FNR){a[$1]=1;next} if(a[$2]){print $1}}' <(echo ${ChildTermList} | awk -F ' ' '{for(i=1;i<=NF;i++){print $i}}') ${ENSAnnot} | sort | uniq)
+numGenes=$(echo ${Genes} | awk -F ' ' '{for(i=1;i<=NF;i++){print $i}}' | sort -u | wc -l)
+if [[ numGenes -gt 0 ]]; then
+	echo ${Genes} | awk -F ' ' '{for(i=1;i<=NF;i++){print $i}}' | sort -u > ${genesoutfile}
+fi

@@ -12,7 +12,7 @@ modifColor <- function(col, change){
 	return(rgb(max(0,min(x[1]+change,1)), max(0,min(x[2]+change,1)), max(0,min(x[3]+change,1)))))
 }
 
-GetNumberOfGOtermGenes <- function(go, species, supcounts, og2gene, folder){
+GetNumberOfGOtermGenes <- function(go, species, supcounts, geneinf, folder){
 	fileinfo = file.info(paste(folder, "/", go, ".txt", sep=""))
 	empty = rownames(fileinfo[fileinfo$size == 0, ])
 	if(length(empty)==0){
@@ -20,8 +20,8 @@ GetNumberOfGOtermGenes <- function(go, species, supcounts, og2gene, folder){
 	}else{
 		HGenelist <- c()
 	}
-	OGList <- unique(og2gene$OG[which(og2gene$OG %in% rownames(supcounts) & og2gene$Gene %in% HGenelist)])
-	return(length(unique(og2gene$Gene[which(og2gene$OG %in% OGList & og2gene$Species==species)])))
+	OGList <- unique(geneinf$OG[which(geneinf$OG %in% supcounts$OG & geneinf$Gene %in% HGenelist)])
+	return(length(unique(geneinf$Gene[which(geneinf$OG %in% OGList & geneinf$Species==species)])))
 }
 
 CalMeanExpGO <- function(go, ExpData, expcol, OGlist, og2gene, gofolder){
@@ -47,17 +47,36 @@ ScatterPlotSmooth <- function(vec1, vec2, col, lab1, lab2, xlim, ylim){
 	axis(2, at = seq(ylim[1],ylim[2],(ylim[2]-ylim[1])/4), lwd.ticks=1, las=1, cex.axis=1.5)
 }
 
-ScatterPlotContour <- function(vec1, vec2, sizes, col, lab1, lab2, xlim, ylim){
-	sizes <- sizes/max(sizes)*15
+ScatterPlotPointAlpha <- function(vec1, vec2, alpha, col, lab1, lab2, xlim, ylim){
+	alpha <- alpha/max(alpha)*0.7
+	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=ylim, xlim=xlim, col=NA)
+	mtext(lab1, side = 1, line = 6, cex=1.2)
+	mtext(lab2, side = 2, line = 5, cex=1.2)
+	points(vec1, vec2, col=NA, bg=modif_alpha(col,alpha), pch=21, cex=2, xpd = NA)
+	axis(1, at = seq(xlim[1],xlim[2],(xlim[2]-xlim[1])/4), lwd.ticks=1, las=1, cex.axis=1.5)
+	axis(2, at = seq(ylim[1],ylim[2],(ylim[2]-ylim[1])/4), lwd.ticks=1, las=1, cex.axis=1.5)
+}
+
+ScatterPlotPointSize <- function(vec1, vec2, sizes, col, lab1, lab2, xlim, ylim){
+	sizes <- sizes/max(sizes)*5
+	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=ylim, xlim=xlim, col=NA)
+	mtext(lab1, side = 1, line = 6, cex=1.2)
+	mtext(lab2, side = 2, line = 5, cex=1.2)
+	points(vec1, vec2, col=NA, bg=modif_alpha(col,.4), pch=21, cex=sizes, xpd = NA)
+	axis(1, at = seq(xlim[1],xlim[2],(xlim[2]-xlim[1])/4), lwd.ticks=1, las=1, cex.axis=1.5)
+	axis(2, at = seq(ylim[1],ylim[2],(ylim[2]-ylim[1])/4), lwd.ticks=1, las=1, cex.axis=1.5)
+}
+
+ScatterPlotContour <- function(vec1, vec2, col, lab1, lab2, xlim, ylim){
 	f <- kde2d(vec1, vec2, h=12, n = 50, lims = c(xlim, ylim))
-	levels <- 14
+	levels <- 16
 	colfunc <- colorRampPalette(c("white", "gold", "darkorange", "firebrick"))
 	colors <- colfunc(levels)
 	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=ylim, xlim=xlim, col=NA)
 	mtext(lab1, side = 1, line = 6, cex=1.2)
 	mtext(lab2, side = 2, line = 5, cex=1.2)
-	#fill.contour(f, nlevels = levels, col=colfunc(levels+2), axes=FALSE, frame.plot=FALSE)
-	points(vec1, vec2, col=NA, bg=modif_alpha(col,.5), pch=21, cex=sizes, xpd = NA)
+	fill.contour(f, nlevels = levels, col=colfunc(levels+2), axes=FALSE, frame.plot=FALSE)
+	points(vec1, vec2, col=NA, bg=modif_alpha(col,.5), pch=21, cex=.5, xpd = NA)
 	axis(1, at = seq(xlim[1],xlim[2],(xlim[2]-xlim[1])/4), lwd.ticks=1, las=1, cex.axis=1.5)
 	axis(2, at = seq(ylim[1],ylim[2],(ylim[2]-ylim[1])/4), lwd.ticks=1, las=1, cex.axis=1.5)
 }
@@ -88,7 +107,7 @@ fill.contour <- function (x = seq(0, 1, length.out = nrow(z)), y = seq(0, 1,
 }
 
 ScatterPlot_GOExp <- function(vec1, vec2, sizes, col, lab1, lab2, lim){
-	sizes <- sizes/max(sizes)*15
+	sizes <- sizes/max(sizes)*5
 	df <- as.data.frame(cbind(vec1, vec2, sizes))
 	df <- df[which(vec1<lim[2] & vec2<lim[2]),]
 	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=c(lim[1]-3, lim[2]+3), xlim=c(lim[1]-3, lim[2]+3), col=NA)
@@ -270,6 +289,7 @@ PlotHypergeomTest_VertBlanTypes <- function(OG.df, VTypes, ATypes, vcols, thresh
 BarPlotVertTypesInBlanGenes <- function(OG.df, ATypes, VTypes, vcols){
 	barDensities <- c(NA, 10, NA)
 	barAlphas <- c(0, 0, .2)
+	print(head(OG.df))
 	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=c(-0.5,100.5), xlim=c(0.5, length(ATypes)+.5), col=NA)
 	mtext("% in each category", side = 2, line = 4, cex=1.2)
 	mtext("B. lanceolatum", side = 1, line = 4, cex=1.2)
