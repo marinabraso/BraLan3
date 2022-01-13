@@ -1,4 +1,4 @@
-# BraLan3
+# Gene duplication analysis in B. lanceolatum new reference genome (BraLan3) 
 # #
 
 
