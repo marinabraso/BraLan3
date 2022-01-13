@@ -23,8 +23,8 @@ Ohnolog3ROG <- "Results/OhnologListing/3R_Strict_OG_pairs.txt"
 GOlistsFolder <- "Results/GeneOntology"
 GOlistFile <- "Results/GeneOntology/GOlist.tbl"
 
-GTFFolder <- "Results/FilteringGeneSets/FilteredGTFs"
-ProteomesFolder <- "Results/FilteringGeneSets/FilteredProteomes"
+GTFFolder <- "Results/FilteringGeneSets/GTFs"
+ProteomesFolder <- "Results/FilteringGeneSets/Proteomes"
 
 BlanGeneDataFile <- paste0(ResultsFolder, "/BlanGeneData.txt")
 DrerGeneDataFile <- paste0(ResultsFolder, "/DrerGeneData.txt")
@@ -98,7 +98,7 @@ OG2Gene$Species <- Species[match(OG2Gene$Species, paste0(SpeciesLongNames, ".fa"
 # Gene coordinates
 Coord <- setNames(data.frame(matrix(ncol = 4, nrow = 0)), c("Gene","Chr","Start", "End"))
 for(s in c(1:length(Species))){
-	system_out <- system(paste0("cat ",GTFFolder, "/", SpeciesLongNames[s], ".gtf | sed 's/[^\t]\\+\\?gene_id \"\\(\\S\\+\\)\";.*/\\1/g' | awk -F '\\t' '{print $9\"\t\"$1\"\t\"$4\"\t\"$5}' | sort -k1,1 -k2,2V -k3,3V | awk -F '\\t' '{if($1==gene){end=$4}else{print gene\"\t\"chr\"\t\"start\"\t\"end\"\t\"pos; if($2==chr){pos=pos+1}else{pos=1}; gene=$1; chr=$2; start=$3; end=$4}}END{print gene\"\t\"chr\"\t\"start\"\t\"end\"\t\"pos;}' | tail -n +2"), intern=T)
+	system_out <- system(paste0("zcat ",GTFFolder, "/", SpeciesLongNames[s], ".gtf.gz | sed 's/[^\t]\\+\\?gene_id \"\\(\\S\\+\\)\";.*/\\1/g' | awk -F '\\t' '{print $9\"\t\"$1\"\t\"$4\"\t\"$5}' | sort -k1,1 -k2,2V -k3,3V | awk -F '\\t' '{if($1==gene){end=$4}else{print gene\"\t\"chr\"\t\"start\"\t\"end\"\t\"pos; if($2==chr){pos=pos+1}else{pos=1}; gene=$1; chr=$2; start=$3; end=$4}}END{print gene\"\t\"chr\"\t\"start\"\t\"end\"\t\"pos;}' | tail -n +2"), intern=T)
 	tmp <- read.table(text=system_out, h=F, sep = "\t")
 	print(head(tmp))
 	Coord <- rbind(Coord, tmp)
@@ -168,22 +168,23 @@ GenePairs <- merge(GenePairs, OGInfo[,c("OG","BlanLType")], by = "OG")
 
 
 # GO terms
+OGInfoBlanHsap <- OGInfo[which(OGInfo$Blan>0 & OGInfo$Hsap>0),]
 GOInfo <- read.delim(GOlistFile, h=F, sep = '\t')
 colnames(GOInfo) <- c("GO", "Type", "Name")
 GOInfo <- unique(GOInfo)
-GOInfo$Hsap <- unlist(lapply(GOInfo$GO, GetNumberOfGOtermGenes, "Hsap", OGInfo, GeneInfo, GOlistsFolder))
-GOInfo$Blan <- unlist(lapply(GOInfo$GO, GetNumberOfGOtermGenes, "Blan", OGInfo, GeneInfo, GOlistsFolder))
+GOInfo$Hsap <- unlist(lapply(GOInfo$GO, GetNumberOfGOtermGenes, "Hsap", OGInfoBlanHsap, GeneInfo, GOlistsFolder))
+GOInfo$Blan <- unlist(lapply(GOInfo$GO, GetNumberOfGOtermGenes, "Blan", OGInfoBlanHsap, GeneInfo, GOlistsFolder))
 GOInfo <- GOInfo[which(GOInfo$Hsap>=minGOsize & GOInfo$Blan>=minGOsize & GOInfo$Hsap<NumGenesSpecies[which(Species=="Hsap")]*maxpropGO & GOInfo$Blan<NumGenesSpecies[which(Species=="Blan")]*maxpropGO),]
 GOInfo <- GOInfo[order(GOInfo$Hsap),]
-GOInfo$HsapD <- unlist(lapply(GOInfo$GO, GetNumberOfGOtermGenes, "Hsap", OGInfo[which(OGInfo$VertType=="Small-scale duplicates"),], GeneInfo, GOlistsFolder))
-GOInfo$HsapS <- unlist(lapply(GOInfo$GO, GetNumberOfGOtermGenes, "Hsap", OGInfo[which(OGInfo$VertType=="Single-copy"),], GeneInfo, GOlistsFolder))
-GOInfo$HsapO <- unlist(lapply(GOInfo$GO, GetNumberOfGOtermGenes, "Hsap", OGInfo[which(OGInfo$VertType=="Ohnologs"),], GeneInfo, GOlistsFolder))
-GOInfo$BlanD <- unlist(lapply(GOInfo$GO, GetNumberOfGOtermGenes, "Blan", OGInfo[which(OGInfo$BlanType=="Small-scale duplicates"),], GeneInfo, GOlistsFolder))
-GOInfo$BlanS <- unlist(lapply(GOInfo$GO, GetNumberOfGOtermGenes, "Blan", OGInfo[which(OGInfo$BlanType=="Single-copy"),], GeneInfo, GOlistsFolder))
-GOInfo$BlanD.AExp <- unlist(lapply(GOInfo$GO, CalMeanExpGO, BlanGeneData, "MeanAdult", OGInfo$OG[which(OGInfo$BlanType=="Small-scale duplicates")], GeneInfo, GOlistsFolder))
-GOInfo$BlanD.EExp <- unlist(lapply(GOInfo$GO, CalMeanExpGO, BlanGeneData, "MeanEmbr", OGInfo$OG[which(OGInfo$BlanType=="Small-scale duplicates")], GeneInfo, GOlistsFolder))
-GOInfo$BlanSC.AExp <- unlist(lapply(GOInfo$GO, CalMeanExpGO, BlanGeneData, "MeanAdult", OGInfo$OG[which(OGInfo$BlanType=="Single-copy")], GeneInfo, GOlistsFolder))
-GOInfo$BlanSC.EExp <- unlist(lapply(GOInfo$GO, CalMeanExpGO, BlanGeneData, "MeanEmbr", OGInfo$OG[which(OGInfo$BlanType=="Single-copy")], GeneInfo, GOlistsFolder))
+GOInfo$HsapD <- unlist(lapply(GOInfo$GO, GetNumberOfGOtermGenes, "Hsap", OGInfoBlanHsap[which(OGInfoBlanHsap$VertType=="Small-scale duplicates"),], GeneInfo, GOlistsFolder))
+GOInfo$HsapS <- unlist(lapply(GOInfo$GO, GetNumberOfGOtermGenes, "Hsap", OGInfoBlanHsap[which(OGInfoBlanHsap$VertType=="Single-copy"),], GeneInfo, GOlistsFolder))
+GOInfo$HsapO <- unlist(lapply(GOInfo$GO, GetNumberOfGOtermGenes, "Hsap", OGInfoBlanHsap[which(OGInfoBlanHsap$VertType=="Ohnologs"),], GeneInfo, GOlistsFolder))
+GOInfo$BlanD <- unlist(lapply(GOInfo$GO, GetNumberOfGOtermGenes, "Blan", OGInfoBlanHsap[which(OGInfoBlanHsap$BlanType=="Small-scale duplicates"),], GeneInfo, GOlistsFolder))
+GOInfo$BlanS <- unlist(lapply(GOInfo$GO, GetNumberOfGOtermGenes, "Blan", OGInfoBlanHsap[which(OGInfoBlanHsap$BlanType=="Single-copy"),], GeneInfo, GOlistsFolder))
+GOInfo$BlanD.AExp <- unlist(lapply(GOInfo$GO, CalMeanExpGO, BlanGeneData, "MeanAdult", OGInfoBlanHsap$OG[which(OGInfoBlanHsap$BlanType=="Small-scale duplicates")], GeneInfo, GOlistsFolder))
+GOInfo$BlanD.EExp <- unlist(lapply(GOInfo$GO, CalMeanExpGO, BlanGeneData, "MeanEmbr", OGInfoBlanHsap$OG[which(OGInfoBlanHsap$BlanType=="Small-scale duplicates")], GeneInfo, GOlistsFolder))
+GOInfo$BlanSC.AExp <- unlist(lapply(GOInfo$GO, CalMeanExpGO, BlanGeneData, "MeanAdult", OGInfoBlanHsap$OG[which(OGInfoBlanHsap$BlanType=="Single-copy")], GeneInfo, GOlistsFolder))
+GOInfo$BlanSC.EExp <- unlist(lapply(GOInfo$GO, CalMeanExpGO, BlanGeneData, "MeanEmbr", OGInfoBlanHsap$OG[which(OGInfoBlanHsap$BlanType=="Single-copy")], GeneInfo, GOlistsFolder))
 GOInfo$PercentHsapD <- GOInfo$HsapD/GOInfo$Hsap*100
 GOInfo$PercentHsapO <- GOInfo$HsapO/GOInfo$Hsap*100
 GOInfo$PercentBlanD <- GOInfo$BlanD/GOInfo$Blan*100
@@ -198,7 +199,7 @@ write.table(GeneInfo, file = paste(ResultsFolder, "/GeneInfo.txt", sep =""), quo
 write.table(NumGenesSpecies, file = paste(ResultsFolder, "/NumGenesSpecies.txt", sep =""), quote = T, sep="\t", col.names = TRUE, row.names = TRUE)
 write.table(GenePairs, file = paste(ResultsFolder, "/GenePairs.txt", sep =""), quote = T, sep="\t", col.names = TRUE, row.names = TRUE)
 write.table(GOInfo, file = paste(ResultsFolder, "/GOInfo.txt", sep =""), quote = T, sep="\t", col.names = TRUE, row.names = TRUE)
-write.table(GOInfo[order(GOInfo$PercentBlanD),], file = paste(ResultsFolder, "/GOterms_PropData.txt", sep =""), quote = T, sep="\t", col.names = TRUE, row.names = FALSE)
+write.table(GOInfo[order(GOInfo$PercentBlanD),], file = paste(ResultsFolder, "/GOterms_PropData.txt", sep =""), quote = F, sep="\t", col.names = TRUE, row.names = FALSE)
 
 
 

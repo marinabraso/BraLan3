@@ -7,6 +7,7 @@ Sys.setenv(LANG = "en")
 
 script <- sub(".*=", "", commandArgs()[4])
 source(paste(substr(script,1, nchar(script)-2), "_functions.r", sep=""))
+# source("ScriptsPlots/Synteny/TwoSpecies_Synteny_functions.r")
 
 ######################################################################
 # Files & folders
@@ -19,13 +20,13 @@ ChrLenFolder <- "Results/AssemblyStatistics"
 ######################################################################
 # General parameters
 Margin <- 100000000
-Species1 <- "Blan"
-Species2 <- "Bflo"
+Species1 <- "Bflo"
+Species2 <- "Bbel"
 HoxGenesList <- c("BLAG12000123", "BLAG12000124", "BLAG12000125", "BLAG12000129", "BLAG12000130", "BLAG12000132", "BLAG12000134", "BLAG12000135", "BLAG12000136", "BLAG12000137", "BLAG12000138", "BLAG12000139", "BLAG12000140", "BLAG12000141", "BLAG12000142")
 
-ShortSpeciesNames <- c("Drer", "Ggal", "Hsap", "Mmus", "Blan", "Bflo")
-SpeciesNames <- c("D. rerio", "G. gallus", "H. sapiens", "M. musculus", "B.lanceolatum", "B. floridae")
-SpeciesGRefs <- c("Danio_rerio.GRCz11", "Gallus_gallus.GRCg6a", "Homo_sapiens.GRCh38", "Mus_musculus.GRCm39", "Branchiostoma_lanceolatum.BraLan3", "Branchiostoma_floridae.Bfl_VNyyK")
+ShortSpeciesNames <- c("Drer", "Ggal", "Hsap", "Mmus", "Blan", "Bflo", "Bbel")
+SpeciesNames <- c("D. rerio", "G. gallus", "H. sapiens", "M. musculus", "B.lanceolatum", "B. floridae", "B. belcheri")
+SpeciesGRefs <- c("Danio_rerio.GRCz11", "Gallus_gallus.GRCg6a", "Homo_sapiens.GRCh38", "Mus_musculus.GRCm39", "Branchiostoma_lanceolatum.BraLan3", "Branchiostoma_floridae.Bfl_VNyyK", "Branchiostoma_belcheri.Haploidv18h27")
 
 print(paste0("Species1: ", Species1, " ", SpeciesNames[which(ShortSpeciesNames==Species1)], " ", SpeciesGRefs[which(ShortSpeciesNames==Species1)]))
 print(paste0("Species2: ", Species2, " ", SpeciesNames[which(ShortSpeciesNames==Species2)], " ", SpeciesGRefs[which(ShortSpeciesNames==Species2)]))
@@ -69,12 +70,17 @@ ChrLen1$CummLength <- cumsum(as.numeric(ChrLen1$Length))
 ChrLen1$CummLengthMargin <- cumsum(as.numeric(ChrLen1$Length)+Margin)
 
 # Chromosome length species 2
-system_out <- system(paste0("cat ", ChrLenFolder, "/", SpeciesGRefs[which(ShortSpeciesNames==Species2)], "/", SpeciesGRefs[which(ShortSpeciesNames==Species2)], "_lengths.txt | sed 's/>//g' | sed 's/chr//g' | grep -P '^[0-9XY]+'"), intern=T)
+system_out <- system(paste0("cat ", ChrLenFolder, "/", SpeciesGRefs[which(ShortSpeciesNames==Species2)], "/", SpeciesGRefs[which(ShortSpeciesNames==Species2)], "_lengths.txt | sed 's/>//g' | sed 's/\\.\\S\\+\\t/\\t/g' | awk -F '\\t' '{if($2 >= 1000000){print $0}}'"), intern=T)
+if(Species2 !="Bbel"){
+	system_out <- system(paste0("cat ", ChrLenFolder, "/", SpeciesGRefs[which(ShortSpeciesNames==Species2)], "/", SpeciesGRefs[which(ShortSpeciesNames==Species2)], "_lengths.txt | sed 's/>//g' | sed 's/chr//g' | grep -P '^[0-9XY]+'"), intern=T)
+}
 ChrLen2 <- read.table(text=system_out, h=F, sep = "\t")
 colnames(ChrLen2) <- c("Chr","Length","Num","CummLength")
-numericchr <- as.numeric(ChrLen2$Chr[grep("[0-9]", ChrLen2$Chr)])
-XYchr <- ChrLen2$Chr[grep("[0-9]", ChrLen2$Chr, invert=TRUE)]
-ChrLen2 <- ChrLen2[match(c(numericchr[order(numericchr)],XYchr), ChrLen2$Chr),]
+if(Species2 !="Bbel"){
+	numericchr <- as.numeric(ChrLen2$Chr[grep("[0-9]", ChrLen2$Chr)])
+	XYchr <- ChrLen2$Chr[grep("[0-9]", ChrLen2$Chr, invert=TRUE)]
+	ChrLen2 <- ChrLen2[match(c(numericchr[order(numericchr)],XYchr), ChrLen2$Chr),]
+}
 ChrLen2$CummLength <- cumsum(as.numeric(ChrLen2$Length))
 ChrLen2$CummLengthMargin <- cumsum(as.numeric(ChrLen2$Length)+Margin)
 

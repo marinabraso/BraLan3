@@ -211,7 +211,6 @@ ContingencyTableCN <- function(vec1, vec2, outfile){
 	ContingencyTable(vec1, vec2, breaks, outfile)
 	breaks <- c(seq(1.5, 5.5, 1), Inf)
 	ContingencyTable(vec1, vec2, breaks, outfile)
-	#print(cor.test(vec1, vec2, method="spearman"))
 }
 
 ContingencyTable <- function(vec1, vec2, breaks, outfile=NA){
@@ -289,7 +288,6 @@ PlotHypergeomTest_VertBlanTypes <- function(OG.df, VTypes, ATypes, vcols, thresh
 BarPlotVertTypesInBlanGenes <- function(OG.df, ATypes, VTypes, vcols){
 	barDensities <- c(NA, 10, NA)
 	barAlphas <- c(0, 0, .2)
-	print(head(OG.df))
 	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=c(-0.5,100.5), xlim=c(0.5, length(ATypes)+.5), col=NA)
 	mtext("% in each category", side = 2, line = 4, cex=1.2)
 	mtext("B. lanceolatum", side = 1, line = 4, cex=1.2)
@@ -374,24 +372,17 @@ CalcIfConsecutive <- function(x, df){
 	return(consec)
 }
 
-TandemIntraInterPerSpecies <- function(df, spec, stype, thresh, tandemtype){
+TandemIntraInterPerSpecies <- function(df, spec, stype){
 	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=c(-0.5,100.5), xlim=c(0.5, length(spec)+8), col=NA)
 	mtext("% in each category", side = 2, line = 4, cex=1.2)
 	w <- .6
 	col <- c("gold", "forestgreen","darkgreen")
 	for(sp in c(1:length(spec))){
-		print(spec[sp])
-		supdf <- df[which(df[,spec[sp]]>1 & df[,SpType[sp]]=="Small-scale\nduplicates"),]
+		supdf <- df[which(df[,spec[sp]]>1 & df[,stype[sp]]=="Small-scale\nduplicates"),]
 		total <- length(supdf[,1])
 		inter <- length(supdf$OG[which(supdf[,paste0("NumChrs",spec[sp])]>1)])/total*100
-		if(tandemtype=="MaxDistance"){
-			intra <- length(supdf$OG[which(supdf[,paste0("NumChrs",spec[sp])]==1 & supdf[,paste0("MaxDist",spec[sp])]>thresh)])/total*100
-			tandem <- length(supdf$OG[which(supdf[,paste0("NumChrs",spec[sp])]==1 & supdf[,paste0("MaxDist",spec[sp])]<=thresh)])/total*100
-		}else if(tandemtype=="Consecutive"){
-			intra <- length(supdf$OG[which(supdf[,paste0("NumChrs",spec[sp])]==1 & supdf[,paste0("Consecutive",spec[sp])]==FALSE)])/total*100
-			tandem <- length(supdf$OG[which(supdf[,paste0("NumChrs",spec[sp])]==1 & supdf[,paste0("Consecutive",spec[sp])]==TRUE)])/total*100
-		}
-		print(paste(total, inter, intra, tandem))
+		intra <- length(supdf$OG[which(supdf[,paste0("NumChrs",spec[sp])]==1 & supdf[,paste0("Consecutive",spec[sp])]==FALSE)])/total*100
+		tandem <- length(supdf$OG[which(supdf[,paste0("NumChrs",spec[sp])]==1 & supdf[,paste0("Consecutive",spec[sp])]==TRUE)])/total*100
 		polygon(c(sp-w/2,sp+w/2,sp+w/2,sp-w/2), c(0,0,inter,inter), col=col[1], border=NA, lwd=4)
 		polygon(c(sp-w/2,sp+w/2,sp+w/2,sp-w/2), c(inter,inter,inter+intra,inter+intra), col=col[2], border=NA, lwd=4)
 		polygon(c(sp-w/2,sp+w/2,sp+w/2,sp-w/2), c(inter+intra,inter+intra,inter+intra+tandem,inter+intra+tandem), col=col[3], border=NA, lwd=4)
@@ -414,7 +405,6 @@ prepare_DrerGeneData <- function(file, bgeefile, tissues, rfolder){
 		Data <- as.data.frame(cbind(unique(DrerBgeeData$Gene.ID)))
 		colnames(Data) <- c("Gene")
 		for(i in c(1:length(tissues[,1]))){
-			print(tissues$Name[i])
 			system_out <- system(paste0("cat ", bgeefile, " | sed 's/\"//g' | awk -F'\\t' -v tissue=\"", tissues$Drer[i], "\" '{if($7==tissue){print $5\"\\t\"$13\"\\t\"$16}}' | sort -k1,1 | awk '{if(g!=$1){if(NR!=1){mTPM=mTPM/num;} print g\"\\t\"mTPM\"\\t\"pres; g=$1; num=1;mTPM=$2;pres=$3}else{num=num+1;mTPM=mTPM+$2;if($3==\"present\"){pres=$3}}}END{mTPM=mTPM/num; print g\"\\t\"mTPM\"\\t\"pres;}' | tail -n +2"), intern=T)
 			tData <- read.table(text=system_out, h=F, sep = "\t")
 			Data[,paste0(tissues$Name[i],"TPM")] <- tData[match(Data$Gene, tData[,1]),2]
@@ -441,10 +431,10 @@ prepare_BlanGeneData <- function(file, MetaInfoFile, tpmfile){
 		TPM <- TPM[,MetaRNA$Sample[which(MetaRNA$Tissue!="egg" & MetaRNA$Sample%in%colnames(TPM))]]
 		MetaRNA <- MetaRNA[which(MetaRNA$Sample %in% colnames(TPM)),]
 
-	Tissues <- unique(MetaRNA$Tissue[which(MetaRNA$Age=="adult")])
-	Tissues <- c("cirri", "gills", "epidermis", "gut", "hepatic.diverticulum", "muscle", "neural.tube", "female.gonads", "male.gonads")
-	EmbAges <- unique(MetaRNA$Age[which(MetaRNA$Age!="adult")])
-	EmbAges <- c("egg", "32cells", "Blastula", "7h", "8h", "10h", "11h", "15h", "18h", "21h", "24h", "27h", "36h", "50h", "60h", "Pre.metamorphic.larvae")
+		Tissues <- unique(MetaRNA$Tissue[which(MetaRNA$Age=="adult")])
+		Tissues <- c("cirri", "gills", "epidermis", "gut", "hepatic.diverticulum", "muscle", "neural.tube", "female.gonads", "male.gonads")
+		EmbAges <- unique(MetaRNA$Age[which(MetaRNA$Age!="adult")])
+		EmbAges <- c("egg", "32cells", "Blastula", "7h", "8h", "10h", "11h", "15h", "18h", "21h", "24h", "27h", "36h", "50h", "60h", "Pre.metamorphic.larvae")
 
 		# TAU calculation per adult tissue
 		GeneData <- data.frame("Gene" = rownames(TPM))
@@ -507,13 +497,13 @@ BoxPlot_BlanTypes_VertTypes <- function(Genes, Ginf, column, ylab, ylim, vtypes,
 	dist <- .15
 
 	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=ylim, xlim=c(0.5, length(vtypes)+.5), col=NA)
-	mtext(ylab, side = 2, line = 5, cex=1.5)
+	mtext(ylab, side = 2, line = 5, cex=1.2)
 	for(t in c(1:length(vtypes))){
 		BoxPlot(Genes[which(Genes$Gene %in% Ginf$Gene[which(Ginf$BlanType=="Single-copy" & Ginf$VertType==vtypes[t])]), column], t-dist, vcolors[t], .7, .4)
 		BoxPlot(Genes[which(Genes$Gene %in% Ginf$Gene[which(Ginf$BlanType=="Small-scale\nduplicates" & Ginf$VertType==vtypes[t])]), column], t+dist, vcolors[t], .7, .4, 10)
 	}
-	axis(2, at = seq(ylim[1],ylim[2],(ylim[2]-ylim[1])/5), lwd.ticks=1, las=1, cex.axis=2)
-	text(x = c(1:4), y = par("usr")[3] - (ylim[2]-ylim[1])/10, labels = vtypes, xpd = NA, srt = 35, cex = 1.5, adj = .9)
+	axis(2, at = seq(ylim[1],ylim[2],(ylim[2]-ylim[1])/5), lwd.ticks=1, las=1, cex.axis=1.5)
+	text(x = c(1:4), y = par("usr")[3] - (ylim[2]-ylim[1])/10, labels = vtypes, xpd = NA, srt = 40, cex = 1.3, adj = .9)
 }
 
 BoxPlot <- function(values, pos, col, cextext=1, w=.8, den=NULL, text=FALSE){
@@ -533,23 +523,21 @@ BoxPlot <- function(values, pos, col, cextext=1, w=.8, den=NULL, text=FALSE){
 }
 
 Hist_ExpressDomanis <- function(gp, og, t1, t2, tissues, lab1, lab2, main){
-	print(table(gp[,c("BlanType","VertType")]))
 	breaks <- seq(-length(tissues[,1])-.5,length(tissues[,1])+.5,1)
 	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=c(0, 1), xlim=c(-length(tissues[,1]),length(tissues[,1])), col=NA)
 	mtext(main, side = 3, line = 1, cex=1.2)
-	mtext(lab1, side = 1, line = 5, cex=1.2)
+	mtext(lab1, side = 1, line = 4, cex=1.2)
 	mtext(lab2, side = 2, line = 5, cex=1.2)
 	add_relative_hist(gp$DiffDom[which(gp$BlanType=="Single-copy" & gp$VertType=="Single-copy")], breaks, "cornflowerblue")
 	add_relative_hist(gp$DiffDom[which(gp$BlanType==t1 & gp$VertType==t2)], breaks, "tomato3")
 	add_relative_hist(og$DiffDom[which(og$BlanType==t1 & og$VertType==t2)], breaks, "tomato3", 20)
-	axis(1, at = seq(-length(tissues[,1]),length(tissues[,1]),2), lwd.ticks=1, las=1, cex.axis=1.5)
+	axis(1, at = seq(-length(tissues[,1])+1,length(tissues[,1]),2), lwd.ticks=1, las=1, cex.axis=1.5)
 	axis(2, at = seq(0,1,.2), lwd.ticks=1, las=1, cex.axis=1.5)
 }
 
 add_relative_hist <- function(vec, b, col, dens=NULL){
 	h <- hist(vec, breaks=b, plot=FALSE)
 	h$counts <- h$counts/length(vec)
-	print(format(round(h$counts, 3), nsmall = 3))
 	for(i in c(1:length(h$counts))){
 		polygon(c(h$breaks[i],h$breaks[i+1],h$breaks[i+1],h$breaks[i]),c(0,0,h$counts[i],h$counts[i]), col=modif_alpha(col,.3), border=col, density=dens, lwd=2)
 	}
@@ -563,16 +551,16 @@ DifferenceWithSC <- function(gp, og, tissues, lab1, lab2){
 	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=c(0,1), xlim=c(0-.5, 8+.5), col=NA)
 	mtext(lab1, side = 1, line = 6, cex=1)
 	mtext(lab2, side = 2, line = 5, cex=1)
-	print("D - SC")
+	# D - SC
 	Plot_Difference(gp$DiffDom[which(gp$BlanType=="Single-copy" & gp$VertType=="Single-copy")], gp$DiffDom[which(gp$BlanType=="Small-scale\nduplicates" & gp$VertType=="Single-copy")], 1, width, breaks, color)
 	Plot_Difference(gp$DiffDom[which(gp$BlanType=="Single-copy" & gp$VertType=="Single-copy")], og$DiffDom[which(og$BlanType=="Small-scale\nduplicates" & og$VertType=="Single-copy")], 2, width, breaks, color, 20)
-	print("SC - D")
+	# SC - D
 	Plot_Difference(gp$DiffDom[which(gp$BlanType=="Single-copy" & gp$VertType=="Single-copy")], gp$DiffDom[which(gp$BlanType=="Single-copy" & gp$VertType=="Small-scale\nduplicates")], 4, width, breaks, color)
 	Plot_Difference(gp$DiffDom[which(gp$BlanType=="Single-copy" & gp$VertType=="Single-copy")], og$DiffDom[which(og$BlanType=="Single-copy" & og$VertType=="Small-scale\nduplicates")], 5, width, breaks, color, 20)
-	print("SC - O")
+	# SC - O
 	Plot_Difference(gp$DiffDom[which(gp$BlanType=="Single-copy" & gp$VertType=="Single-copy")], gp$DiffDom[which(gp$BlanType=="Single-copy" & gp$VertType=="Ohnologs")], 7, width, breaks, color)
 	Plot_Difference(gp$DiffDom[which(gp$BlanType=="Single-copy" & gp$VertType=="Single-copy")], og$DiffDom[which(og$BlanType=="Single-copy" & og$VertType=="Ohnologs")], 8, width, breaks, color, 20)
-	axis(1, at = c(1.5,4.5,7.5), labels= c("Small scale\nB. lanceolatum","Small scale\nD. rerio","Ohnologs\nD. rerio"), line=2, tick=FALSE, las=1, cex.axis=1.2)
+	axis(1, at = c(1.5,4.5,7.5), labels= c("Small-scale\nB. lanceolatum","Small-scale\nD. rerio","Ohnologs\nD. rerio"), line=2, tick=FALSE, las=1, cex.axis=1.2)
 	axis(2, at = seq(0,1,.2), lwd.ticks=1, las=1, cex.axis=1.2)
 
 	polygon(c(4,4.5,4.5,4),c(0.9,0.9,0.95,0.95), col=color, border=color, lwd=2)
@@ -589,13 +577,13 @@ DifferenceWithSC_TandemIntraInter <- function(gp, og, tissues, lab1, lab2){
 	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=c(0,1), xlim=c(0-.5, 8+.5), col=NA)
 	mtext(lab1, side = 1, line = 6, cex=1)
 	mtext(lab2, side = 2, line = 5, cex=1)
-	print("D - SC Inter")
+	# D - SC Inter
 	Plot_Difference(gp$DiffDom[which(gp$BlanType=="Single-copy" & gp$VertType=="Single-copy")], gp$DiffDom[which(gp$BlanType=="Small-scale\nduplicates" & gp$VertType=="Single-copy" & gp$BlanLType=="Inter")], 1, width, breaks, color)
 	Plot_Difference(gp$DiffDom[which(gp$BlanType=="Single-copy" & gp$VertType=="Single-copy")], og$DiffDom[which(og$BlanType=="Small-scale\nduplicates" & og$VertType=="Single-copy" & og$BlanLType=="Inter")], 2, width, breaks, color, 20)
-	print("D - SC Intra")
+	# D - SC Intra
 	Plot_Difference(gp$DiffDom[which(gp$BlanType=="Single-copy" & gp$VertType=="Single-copy")], gp$DiffDom[which(gp$BlanType=="Small-scale\nduplicates" & gp$VertType=="Single-copy" & gp$BlanLType=="Intra")], 4, width, breaks, color)
 	Plot_Difference(gp$DiffDom[which(gp$BlanType=="Single-copy" & gp$VertType=="Single-copy")], og$DiffDom[which(og$BlanType=="Small-scale\nduplicates" & og$VertType=="Single-copy" & og$BlanLType=="Intra")], 5, width, breaks, color, 20)
-	print("D - SC Tandem")
+	# D - SC Tandem
 	Plot_Difference(gp$DiffDom[which(gp$BlanType=="Single-copy" & gp$VertType=="Single-copy")], gp$DiffDom[which(gp$BlanType=="Small-scale\nduplicates" & gp$VertType=="Single-copy" & gp$BlanLType=="Tandem")], 7, width, breaks, color)
 	Plot_Difference(gp$DiffDom[which(gp$BlanType=="Single-copy" & gp$VertType=="Single-copy")], og$DiffDom[which(og$BlanType=="Small-scale\nduplicates" & og$VertType=="Single-copy" & og$BlanLType=="Tandem")], 8, width, breaks, color, 20)
 	axis(1, at = c(1.5,4.5,7.5), labels= c("Multichr.","Distant\nmonochr.","Tandem"), line=2, tick=FALSE, las=1, cex.axis=1.2)
@@ -612,8 +600,6 @@ Plot_Difference <- function(vecSC, vec, pos, w, b, col, dens=NA){
 	hSC <- hist(vecSC, breaks=b, plot=FALSE)
 	h <- hist(vec, breaks=b, plot=FALSE)
 	difference <- sum(abs(h$counts/length(vec)-hSC$counts/length(vecSC)))
-	print(abs(h$counts/length(vec)-hSC$counts/length(vecSC)))
-	print(difference)
 	polygon(c(pos-w/2, pos+w/2, pos+w/2, pos-w/2),c(0,0,difference, difference), col=modif_alpha(col,.3), border=col, lwd=2)
 	polygon(c(pos-w/2, pos+w/2, pos+w/2, pos-w/2),c(0,0,difference, difference), col=col, border=col, density=dens, lwd=2)
 }
