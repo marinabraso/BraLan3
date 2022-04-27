@@ -260,12 +260,15 @@ PlotHypergeomTest_VertBlanTypes <- function(OG.df, VTypes, ATypes, vcols, thresh
 	colfunc <- colorRampPalette(c("indianred4", "indianred3", "indianred1", "white", "gold1", "gold3", "gold4"))
 	gradientcolors <- colfunc(50)
 	gradientlims <- c(-2.5,2.5)
+	colmatrix <- matrix(rep(NA, length(ATypes)*length(VTypes)),nrow=length(VTypes),ncol=length(ATypes),byrow=T)
+
 	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=c(0,10), xlim=c(0,6), col=NA)
 	mtext("B.lanceolatum", side = 2, line = 5, cex=1)
 	mtext("Vertebrates", side = 1, line = 5, cex=1)
 	for(v in c(1:length(VTypes))){
 		for(a in c(1:length(ATypes))){
 			color <- findColorInGRadient(log2(as.numeric(HyperTests$FoldChange[which(HyperTests$BlanType==ATypes[a] & HyperTests$VertType==VTypes[v])])), gradientlims, gradientcolors)
+			colmatrix[v,a] <- color
 			if(color=="grey30"){dens <- 10}else{dens <- NULL}
 			polygon(c(v-1,v,v,v-1), c(a-1,a-1,a,a), col=color, border="white", density=dens)
 			if(color!="grey30" & HyperTests$HResult[which(HyperTests$BlanType==ATypes[a] & HyperTests$VertType==VTypes[v])]!="NA"){
@@ -283,6 +286,7 @@ PlotHypergeomTest_VertBlanTypes <- function(OG.df, VTypes, ATypes, vcols, thresh
 		cex = 1,
 		adj = 1)
 	printgradientlegend(c(5.1,1), .03, .2, "log(FC)", gradientlims, gradientcolors)
+	return(colmatrix)
 }
 
 BarPlotVertTypesInBlanGenes <- function(OG.df, ATypes, VTypes, vcols){
@@ -292,24 +296,157 @@ BarPlotVertTypesInBlanGenes <- function(OG.df, ATypes, VTypes, vcols){
 	mtext("% in each category", side = 2, line = 4, cex=1.2)
 	mtext("B. lanceolatum", side = 1, line = 4, cex=1.2)
 	for(atype in c(1:length(ATypes))){
-		PlotColumnVertebrateType(OG.df[which(OG.df$BlanType==ATypes[atype]),], atype, VTypes, vcols, 1.5, den=barDensities[atype], alpha=barAlphas[atype])
+		PlotColumnOtherBranchType_percent(OG.df[which(OG.df$BlanType==ATypes[atype]),], atype, "VertType", VTypes, vcols, 1.5, den=barDensities[atype], alpha=barAlphas[atype])
 	}
 	axis(1, at = c(1:length(ATypes)), labels=ATypes, tick=FALSE, line=1, las=1, cex.axis=1.2)
 	axis(2, at = seq(0,100,20), lwd.ticks=1, las=1, cex.axis=1.2)
 }
 
-PlotColumnVertebrateType <- function(df, pos, vtypes, col, cextext, alpha=0, den=NULL){
+BarPlotVertTypesBlanTypes <- function(df, ATypes, VTypes, vcols, acols){
+	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=c(-0.5,100.5), xlim=c(0.5, 6.5), col=NA)
+	mtext("% in each category", side = 2, line = 4, cex=1.2)
+	mtext("B. lanceolatum", side = 1, line = 4, cex=1.2)
+	PlotColumnOtherBranchType(df[which(df$BlanType==ATypes[1]),], length(df[,1]), 1, "VertType", VTypes, vcols, 1)
+	PlotColumnOtherBranchType(df[which(df$BlanType==ATypes[2]),], length(df[,1]), 2, "VertType", VTypes, vcols, 1)
+	PlotColumnOtherBranchType(df[which(df$VertType==VTypes[1]),], length(df[,1]), 4, "BlanType", ATypes, acols, 1)
+	PlotColumnOtherBranchType(df[which(df$VertType==VTypes[2]),], length(df[,1]), 5, "BlanType", ATypes, acols, 1)
+	PlotColumnOtherBranchType(df[which(df$VertType==VTypes[3]),], length(df[,1]), 6, "BlanType", ATypes, acols, 1)
+	axis(1, at = c(1,2,4,5,6), labels=c(ATypes, VTypes), tick=FALSE, line=1, las=1, cex.axis=1.2)
+	axis(2, at = seq(0,100,20), lwd.ticks=1, las=1, cex.axis=1.2)
+}
+
+BarPlotSpeciesNumGenesOG <- function(df, vspecies){
+	w <- .8
+	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=c(-0.5,100.5), xlim=c(0.5, length(vspecies)+1+.5), col=NA)
+	mtext("% of duplicated genes in each species", side = 2, line = 4, cex=1.2)
+	pos <- 1
+	value <- df$dupGenes[which(df$Species=="Blan")]/df$totalGenes[which(df$Species=="Blan")]*100
+	polygon(c(pos-w/2,pos+w/2,pos+w/2,pos-w/2), c(0,0,value,value), col="grey60", border=NA)
+	text(pos, value/2, labels=paste(format(round(value, 1), nsmall = 1),"%"), cex=1)
+	for(v in c(1:length(vspecies))){ 
+		pos <- v+1
+		value <- df$dupGenes[which(df$Species==vspecies[v])]/df$totalGenes[which(df$Species==vspecies[v])]*100
+		polygon(c(pos-w/2,pos+w/2,pos+w/2,pos-w/2), c(0,0,value,value), col="grey60", border=NA)
+		text(pos, value/2, labels=paste(format(round(value, 1), nsmall = 1),"%"), cex=1)
+	}
+	axis(1, at = c(1:(length(vspecies)+1)), labels=c("Blan", vspecies), tick=FALSE, line=1, las=1, cex.axis=1.2)
+	axis(2, at = seq(0,100,20), lwd.ticks=1, las=1, cex.axis=1.2)
+
+	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=c(-0.5,100.5), xlim=c(0.5, length(vspecies)+1+.5), col=NA)
+	mtext("% of duplicated orthogroups in each species", side = 2, line = 4, cex=1.2)
+	pos <- 1
+	value <- df$dupOG[which(df$Species=="Blan")]/df$totalOG[which(df$Species=="Blan")]*100
+	polygon(c(pos-w/2,pos+w/2,pos+w/2,pos-w/2), c(0,0,value,value), col="grey60", border=NA)
+	text(pos, value/2, labels=paste(format(round(value, 1), nsmall = 1),"%"), cex=1)
+	for(v in c(1:length(vspecies))){ 
+		pos <- v+1
+		value <- df$dupOG[which(df$Species==vspecies[v])]/df$totalOG[which(df$Species==vspecies[v])]*100
+		polygon(c(pos-w/2,pos+w/2,pos+w/2,pos-w/2), c(0,0,value,value), col="grey60", border=NA)
+		text(pos, value/2, labels=paste(format(round(value, 1), nsmall = 1),"%"), cex=1)
+	}
+	axis(1, at = c(1:(length(vspecies)+1)), labels=c("Blan", vspecies), tick=FALSE, line=1, las=1, cex.axis=1.2)
+	axis(2, at = seq(0,100,20), lwd.ticks=1, las=1, cex.axis=1.2)
+
+}
+
+
+BarPlotVertTypesInBlanGenes_wexpected <- function(OG.df, ATypes, VTypes, vcols, colmatrix){
+	tBlanType <- table(OG.df$BlanType)
+	tBlanType <- tBlanType[match(ATypes, names(tBlanType))]
+	tVertType <- table(OG.df$VertType)
+	tVertType <- tVertType[match(VTypes, names(tVertType))]
+	obsBlanVertTypes <- t(table(OG.df[,c("BlanType", "VertType")]))
+	obsBlanVertTypes <- obsBlanVertTypes[match(VTypes, rownames(obsBlanVertTypes)),match(ATypes, colnames(obsBlanVertTypes))]
+	print(colmatrix)
+
+	expBlanVertTypes <- matrix(rep(NA, length(tBlanType)*length(tVertType)),nrow=length(tVertType),ncol=length(tBlanType),byrow=T)
+	for(i in c(1:length(tBlanType))){
+		for(j in c(1:length(tVertType))){
+			expBlanVertTypes[j,i] <- tBlanType[i]*tVertType[j]/sum(tBlanType)
+		}
+	}
+	tBlanType <- tBlanType/sum(tBlanType)*100
+	tVertType <- tVertType/sum(tVertType)*100
+	obsBlanVertTypes <- c(obsBlanVertTypes)/sum(obsBlanVertTypes)*100
+	expBlanVertTypes <- c(expBlanVertTypes)/sum(expBlanVertTypes)*100
+
+	den <- 25
+	alpha <- 0.1
+	width <- .8
+	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=c(-0.5,100.5), xlim=c(0.5, 4), col=NA)
+	mtext("% in each category", side = 2, line = 4, cex=1.2)
+	mtext("B. lanceolatum", side = 1, line = 4, cex=1.2)
+	PlotColumnFromArray(tBlanType, 1, rep("white",length(tBlanType)), rep("white",length(tBlanType)), c(NULL,den), alpha, width)
+	PlotBetweenColumnFrom2Arrays(expBlanVertTypes, obsBlanVertTypes, 2, 3.5, c(colmatrix), width)
+
+	PlotColumnFromArray(expBlanVertTypes, 2, c(vcols, vcols), rep("white", length(vcols)*2), rep(den, length(tVertType)*2), alpha, width)
+	PlotColumnFromArray(obsBlanVertTypes, 3.5, c(vcols, vcols), c(vcols, vcols), rep(NULL, length(tVertType)*2), alpha, width)
+
+	abline(h=tBlanType[1]/sum(tBlanType)*100, lty=2, lwd=2, col="black")
+	axis(1, at = c(1,2,3.5), labels=c("", "Expected", "Observed"), tick=FALSE, line=1, las=1, cex.axis=1.2)
+	axis(2, at = seq(0,100,20), lwd.ticks=1, las=1, cex.axis=1.2)
+}
+
+PlotBetweenColumnFrom2Arrays <- function(vec1, vec2, pos1, pos2, cols, w){
+	base1 <- 0
+	base2 <- 0
+	for(v in c(1:length(vec1))){
+		if(vec1[v]>0 | vec2[v]){
+			polygon(c(pos1+w/2,pos2-w/2,pos2-w/2,pos1+w/2), c(base1,base2,base2+vec2[v],base1+vec1[v]), col=cols[v], border=NA, lwd=2)
+			base1 <- base1+vec1[v]
+			base2 <- base2+vec2[v]
+		}
+	}
+}
+
+PlotColumnFromArray <- function(vec, pos, cols, bgcols, den=c(rep(NULL,length(vec))), alpha=0.1, w){
+	base <- 0
+	for(v in c(1:length(vec))){
+		if(vec[v]>0){
+			if(!is.null(den[v])){
+				polygon(c(pos-w/2,pos+w/2,pos+w/2,pos-w/2), c(base,base,base+vec[v],base+vec[v]), col=bgcols[v], border=NA, lwd=1.5)	
+			}
+			polygon(c(pos-w/2,pos+w/2,pos+w/2,pos-w/2), c(base,base,base+vec[v],base+vec[v]), col=cols[v], border=NA, lwd=1.5, density=den[v])
+			text(pos, base+vec[v]/2, labels=paste(format(round(vec[v], 1), nsmall = 1),"%"), cex=1)
+			base <- base+vec[v]
+		}
+	}
+	par(xpd=TRUE) 
+	#text(pos, 100, labels=sum(vec), pos=3, cex=1.5)
+	par(xpd=FALSE) 
+}
+
+PlotColumnOtherBranchType <- function(df, total, pos, ColName, types, col, cextext, alpha=0, den=NULL){
+	base <- 0
+	w <- .8
+	for(t in c(1:length(types))){
+		value <- length(df[which(df[,ColName]==types[t]),1])/total*100
+		if(value>0){
+			if(!is.null(den)){
+				polygon(c(pos-w/2,pos+w/2,pos+w/2,pos-w/2), c(base,base,base+value,base+value), col=modifColor(col[t], .1), border=col[t], lwd=2)		
+			}
+			polygon(c(pos-w/2,pos+w/2,pos+w/2,pos-w/2), c(base,base,base+value,base+value), col=modifColor(col[t], alpha), border=col[t], lwd=2, density=den)
+			text(pos, base+value/2, labels=paste(format(round(value, 1), nsmall = 1),"%"), cex=cextext)
+			base <- base+value
+		}
+	}
+	par(xpd=TRUE) 
+	text(pos, 100,  labels =length(df[,1]), pos=3, cex=cextext)
+	par(xpd=FALSE) 
+}
+
+PlotColumnOtherBranchType_percent <- function(df, pos, ColName, types, col, cextext, alpha=0, den=NULL){
 	len <- length(df[,1])
 	base <- 0
 	w <- .8
-	for(vt in c(1:length(vtypes))){
-		value <- length(df[which(df$VertType==vtypes[vt]),1])/len*100
+	for(t in c(1:length(types))){
+		value <- length(df[which(df[,ColName]==types[t]),1])/len*100
 		if(value>0){
 			if(!is.null(den)){
-				polygon(c(pos-w/2,pos+w/2,pos+w/2,pos-w/2), c(base,base,base+value,base+value), col=modifColor(col[vt], .1), border=col[vt], lwd=2)		
+				polygon(c(pos-w/2,pos+w/2,pos+w/2,pos-w/2), c(base,base,base+value,base+value), col=modifColor(col[t], .1), border=col[t], lwd=2)		
 			}
-			polygon(c(pos-w/2,pos+w/2,pos+w/2,pos-w/2), c(base,base,base+value,base+value), col=modifColor(col[vt], alpha), border=col[vt], lwd=2, density=den)
-			text(pos, base+value/2, labels=length(df[which(df$VertType==vtypes[vt]),1]), cex=cextext)
+			polygon(c(pos-w/2,pos+w/2,pos+w/2,pos-w/2), c(base,base,base+value,base+value), col=modifColor(col[t], alpha), border=col[t], lwd=2, density=den)
+			text(pos, base+value/2, labels=paste(format(round(value, 1), nsmall = 1),"%"), cex=cextext)
 			base <- base+value
 		}
 	}
@@ -529,8 +666,10 @@ Hist_ExpressDomanis <- function(gp, og, t1, t2, tissues, lab1, lab2, main){
 	mtext(lab1, side = 1, line = 4, cex=1.2)
 	mtext(lab2, side = 2, line = 5, cex=1.2)
 	add_relative_hist(gp$DiffDom[which(gp$BlanType=="Single-copy" & gp$VertType=="Single-copy")], breaks, "cornflowerblue")
-	add_relative_hist(gp$DiffDom[which(gp$BlanType==t1 & gp$VertType==t2)], breaks, "tomato3")
-	add_relative_hist(og$DiffDom[which(og$BlanType==t1 & og$VertType==t2)], breaks, "tomato3", 20)
+	if(!is.na(t1)){
+		add_relative_hist(gp$DiffDom[which(gp$BlanType==t1 & gp$VertType==t2)], breaks, "tomato3")
+		add_relative_hist(og$DiffDom[which(og$BlanType==t1 & og$VertType==t2)], breaks, "tomato3", 20)
+	}
 	axis(1, at = seq(-length(tissues[,1])+1,length(tissues[,1]),2), lwd.ticks=1, las=1, cex.axis=1.5)
 	axis(2, at = seq(0,1,.2), lwd.ticks=1, las=1, cex.axis=1.5)
 }
@@ -542,6 +681,15 @@ add_relative_hist <- function(vec, b, col, dens=NULL){
 		polygon(c(h$breaks[i],h$breaks[i+1],h$breaks[i+1],h$breaks[i]),c(0,0,h$counts[i],h$counts[i]), col=modif_alpha(col,.3), border=col, density=dens, lwd=2)
 	}
 	return(h$counts)
+}
+
+Dist_ExpressDomanis <- function(vec, col, tissues, lab1, lab2, main, adj){
+	breaks <- seq(-length(tissues[,1])-.5,length(tissues[,1])+.5,1)
+	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=c(0, 1), xlim=c(-length(tissues[,1]),length(tissues[,1])), col=NA)
+	mtext(main, side = 3, line = 1, cex=1.2)
+	d  <- density(vec, adjust = adj)
+	lines(d$x, d$y, col=col, lwd=3)
+	axis(1, at = seq(-length(tissues[,1])+1,length(tissues[,1]),2), lwd.ticks=1, las=1, cex.axis=1.5)
 }
 
 DifferenceWithSC <- function(gp, og, tissues, lab1, lab2){

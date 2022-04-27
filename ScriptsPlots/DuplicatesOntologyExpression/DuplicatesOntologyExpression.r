@@ -10,9 +10,8 @@ Sys.setenv(LANG = "en")
 source("ScriptsPlots/DuplicatesOntologyExpression/DuplicatesOntologyExpression_functions.r")
 # source("ScriptsPlots/DuplicatesOntologyExpression/DuplicatesOntologyExpression.r")
 library(ghibli)
-#library(viridis)
-#library(car)
 library(MASS)
+library(moments)
 
 ######################################################################
 # Files & folders
@@ -100,6 +99,7 @@ OGInfo.BlanVert <- OGInfo[which(OGInfo$BlanType != "Missing" & OGInfo$VertType !
 GOInfo.MF <- GOInfo[which(GOInfo$Type=="molecular_function"),]
 GOInfo.BP <- GOInfo[which(GOInfo$Type=="biological_process"),]
 
+
 ###########################################################################
 ###########################################################################
 #### Printing statistics
@@ -122,23 +122,33 @@ print(paste("blan-bflo specific", sum(OGInfo.A$Blan>0 & OGInfo.A$Bflo>0 & OGInfo
 print(paste("blan-bflo specific/A specific*100", sum(OGInfo.A$Blan>0 & OGInfo.A$Bflo>0 & OGInfo.A$Bbel==0)/length(OGInfo.A[,1])*100))
 print(paste("bflo-bbel specific", sum(OGInfo.A$Blan==0 & OGInfo.A$Bflo>0 & OGInfo.A$Bbel>0)))
 print(paste("bflo-bbel specific/A specific*100", sum(OGInfo.A$Blan==0 & OGInfo.A$Bflo>0 & OGInfo.A$Bbel>0)/length(OGInfo.A[,1])*100))
+BlanExist <- c("Blan0", "Blan1")[(OGInfo.A$Blan > 0)+1]
+BfloExist <- c("Bflo0", "Bflo1")[(OGInfo.A$Bflo > 0)+1]
+BbelExist <- c("Bbel0", "Bbel1")[(OGInfo.A$Bbel > 0)+1]
+table(c(BlanExist, BfloExist, BbelExist))
 
+SpeciesNumGenesOG <- matrix(rep(NA, 10*length(Species)),nrow=length(Species),ncol=10,byrow=T)
 for(sp in c(1:length(Species))){
 	GeneInfo.sp <- GeneInfo[which(GeneInfo$Species==Species[sp]),]
-	toprint <- c(1:10)
-	toprint[1] <- Species[sp]
-	toprint[2] <- sum(OGInfo[,Species[sp]]>0)
-	toprint[3] <- sum(OGInfo[,Species[sp]]>1)
-	toprint[4] <- NumGenesSpecies[sp]
-	toprint[5] <- length(unique(GeneInfo.sp$Gene[which(GeneInfo.sp[,Species[sp]]>0)]))
-	toprint[6] <- length(unique(GeneInfo.sp$Gene[which(GeneInfo.sp[,Species[sp]]>1)]))
+	SpeciesNumGenesOG[sp,1] <- Species[sp]
+	SpeciesNumGenesOG[sp,2] <- sum(OGInfo[,Species[sp]]>0)
+	SpeciesNumGenesOG[sp,3] <- sum(OGInfo[,Species[sp]]>1)
+	SpeciesNumGenesOG[sp,4] <- NumGenesSpecies[sp]
+	SpeciesNumGenesOG[sp,5] <- length(unique(GeneInfo.sp$Gene[which(GeneInfo.sp[,Species[sp]]>0)]))
+	SpeciesNumGenesOG[sp,6] <- length(unique(GeneInfo.sp$Gene[which(GeneInfo.sp[,Species[sp]]>1)]))
 	summary <- summary(OGInfo[which(OGInfo[,Species[sp]]>1),Species[sp]])
-	toprint[7] <- summary[4]
-	toprint[8] <- summary[2]
-	toprint[9] <- summary[3]
-	toprint[10] <- summary[5]
-	print(paste(toprint, collapse=" "))
+	SpeciesNumGenesOG[sp,7] <- summary[4] # mean num genes per duplicated OG
+	SpeciesNumGenesOG[sp,8] <- summary[2] # 1st quartile
+	SpeciesNumGenesOG[sp,9] <- summary[3] # median
+	SpeciesNumGenesOG[sp,10] <- summary[5] # 3rd quartile
 }
+SpeciesNumGenesOG <- as.data.frame(SpeciesNumGenesOG)
+colnames(SpeciesNumGenesOG) <- c("Species", "totalOG", "dupOG", "totalGenes", "wothologGenes", "dupGenes", "meanSizeDupOG", "1quartSizeDupOG", "medianSizeDupOG", "3quartSizeDupOG")
+for(col in c(2:length(SpeciesNumGenesOG[1,]))){
+	SpeciesNumGenesOG[,colnames(SpeciesNumGenesOG)[col]] <- as.numeric(SpeciesNumGenesOG[,colnames(SpeciesNumGenesOG)[col]])
+}
+colnames(SpeciesNumGenesOG) <- c("Species", "totalOG", "dupOG", "totalGenes", "wothologGenes", "dupGenes", "meanSizeDupOG", "1quartSizeDupOG", "medianSizeDupOG", "3quartSizeDupOG")
+print(SpeciesNumGenesOG)
 
 ContingencyTableCN(
 	OGInfo$Blan[which(OGInfo$BlanType=="Small-scale\nduplicates" & OGInfo$VertType=="Small-scale\nduplicates")], 
@@ -167,13 +177,23 @@ par(mar=c(10,10,5,5),oma=c(1,1,1,1), yaxs='i', xaxs='i')
 # Blan vs. vertebrate gene type 
 layout(matrix(c(1,2,3,4,5,6),nrow=2,ncol=3,byrow=T), widths=c(1), heights=c(1), TRUE)
 BarPlotVertTypesInBlanGenes(OGInfo.BlanVert, BlanTypes[which(BlanTypes!="Missing")], VertTypes[which(VertTypes!="Missing")], VertTypes.col[which(VertTypes!="Missing")])
-PlotHypergeomTest_VertBlanTypes(OGInfo.BlanVert, VertTypes[which(VertTypes!="Missing")], BlanTypes[which(BlanTypes!="Missing")], VertTypes.col[which(VertTypes!="Missing")], PQvalThreshold, ResultsFolder)
+HypergeomColmatrix <- PlotHypergeomTest_VertBlanTypes(OGInfo.BlanVert, VertTypes[which(VertTypes!="Missing")], BlanTypes[which(BlanTypes!="Missing")], VertTypes.col[which(VertTypes!="Missing")], PQvalThreshold, ResultsFolder)
 plot.new()
 legend("bottomright", c("In vertebrates", VertTypes[which(VertTypes!="Missing")]), pch=c(NA,15,15,15,15), text.col="black", col=c(NA, VertTypes.col[which(VertTypes!="Missing")]), bty = "n", pt.cex=2, cex=1.5, xjust = 0, yjust = 0)#
 BarPlotVertTypesInBlanGenes(OGInfo, BlanTypes, VertTypes, VertTypes.col)
-PlotHypergeomTest_VertBlanTypes(OGInfo, VertTypes, BlanTypes, VertTypes.col, PQvalThreshold, ResultsFolder)
+HypergeomColmatrixMissing <- PlotHypergeomTest_VertBlanTypes(OGInfo, VertTypes, BlanTypes, VertTypes.col, PQvalThreshold, ResultsFolder)
 plot.new()
 legend("bottomright", c("In vertebrates", VertTypes), pch=c(NA,15,15,15,15), text.col="black", col=c(NA, VertTypes.col), bty = "n", pt.cex=2, cex=1.5, xjust = 0, yjust = 0)
+
+
+layout(matrix(c(1,2),nrow=1,ncol=2,byrow=T), widths=c(1), heights=c(1), TRUE)
+BarPlotSpeciesNumGenesOG(SpeciesNumGenesOG, Vertebrates)
+BarPlotVertTypesInBlanGenes_wexpected(OGInfo.BlanVert, BlanTypes[which(BlanTypes!="Missing")], VertTypes[which(VertTypes!="Missing")], VertTypes.col[which(VertTypes!="Missing")], HypergeomColmatrix)
+
+head(GenePairs)
+head(GeneInfo)
+
+quit()
 
 # GO term in duplicates Hsap vs. Blan
 # MF
@@ -200,6 +220,7 @@ layout(matrix(c(1,2,3,4,5,6),nrow=2,ncol=3,byrow=T), widths=c(1), heights=c(1), 
 Hist_ExpressDomanis(GenePairs, OGInfo, "Small-scale\nduplicates", "Single-copy", MatchingTissues, "Blan conditions - Drer conditions", "Relative number of\npairwise comparisons", "B. lanceolatum specific\nsmall-scale gene duplicates")
 Hist_ExpressDomanis(GenePairs, OGInfo, "Single-copy", "Small-scale\nduplicates", MatchingTissues, "Blan conditions - Drer conditions", "Relative number of\npairwise comparisons", "D. rerio specific\nsmall-scale gene duplicates")
 Hist_ExpressDomanis(GenePairs, OGInfo, "Single-copy", "Ohnologs", MatchingTissues, "Blan conditions - Drer conditions", "Relative number of\npairwise comparisons", "D. rerio specific\nohnolog gene duplicates")
+Hist_ExpressDomanis(GenePairs, OGInfo, NA, NA, MatchingTissues, "Blan conditions - Drer conditions", "Relative frequency", "Single-copy vs. single-copy")
 
 layout(matrix(c(1,2,3,4,5,6),nrow=2,ncol=3,byrow=T), widths=c(1), heights=c(1), TRUE)
 Hist_ExpressDomanis(
@@ -211,6 +232,16 @@ Hist_ExpressDomanis(
 Hist_ExpressDomanis(
 	GenePairs[which(GenePairs$BlanLType=="Tandem" | GenePairs$BlanType=="Single-copy"),], 
 	OGInfo[which(OGInfo$BlanLType=="Tandem"),], "Small-scale\nduplicates", "Single-copy", MatchingTissues, "Blan conditions - Drer conditions", "Relative number of\npairwise comparisons", "B. lanceolatum specific\ntandem\ngene duplicates")
+
+layout(matrix(c(1,2,3,4,5,6,7,8,9),nrow=3,ncol=3,byrow=T), widths=c(1.5), heights=c(1), TRUE)
+Dist_ExpressDomanis(GenePairs$DiffDom[which(GenePairs$BlanType=="Single-copy" & GenePairs$VertType=="Single-copy")], "forestgreen", MatchingTissues, "Blan conditions - Drer conditions", "", "SC - SC", 2)
+Dist_ExpressDomanis(GenePairs$DiffDom[which(GenePairs$BlanType=="Small-scale\nduplicates" & GenePairs$VertType=="Single-copy")], "red", MatchingTissues, "Blan conditions - Drer conditions", "", "SSD - SC", 2)
+Dist_ExpressDomanis(OGInfo$DiffDom[which(OGInfo$BlanType=="Small-scale\nduplicates" & OGInfo$VertType=="Single-copy")], "darkred", MatchingTissues, "Blan conditions - Drer conditions", "", "uSSD - SC", 2)
+Dist_ExpressDomanis(GenePairs$DiffDom[which(GenePairs$VertType=="Small-scale\nduplicates" & GenePairs$BlanType=="Single-copy")], "red", MatchingTissues, "Blan conditions - Drer conditions", "", "SC - SSD", 2)
+Dist_ExpressDomanis(OGInfo$DiffDom[which(OGInfo$VertType=="Small-scale\nduplicates" & OGInfo$BlanType=="Single-copy")], "darkred", MatchingTissues, "Blan conditions - Drer conditions", "", "SC - uSSD", 2)
+Dist_ExpressDomanis(GenePairs$DiffDom[which(GenePairs$VertType=="Ohnologs" & GenePairs$BlanType=="Single-copy")], "red", MatchingTissues, "Blan conditions - Drer conditions", "", "SC - O", 3)
+Dist_ExpressDomanis(OGInfo$DiffDom[which(OGInfo$VertType=="Ohnologs" & OGInfo$BlanType=="Single-copy")], "darkred", MatchingTissues, "Blan conditions - Drer conditions", "", "SC - uO", 3)
+
 
 layout(matrix(c(1,2,3,4,5,6),nrow=2,ncol=3,byrow=T), widths=c(1), heights=c(1), TRUE)
 DifferenceWithSC(GenePairs, OGInfo, MatchingTissues, "Branch specific gene duplicates", "Difference with\nsingle-copy genes distribution")
