@@ -346,9 +346,7 @@ BarPlotSpeciesNumGenesOG <- function(df, vspecies){
 	}
 	axis(1, at = c(1:(length(vspecies)+1)), labels=c("Blan", vspecies), tick=FALSE, line=1, las=1, cex.axis=1.2)
 	axis(2, at = seq(0,100,20), lwd.ticks=1, las=1, cex.axis=1.2)
-
 }
-
 
 BarPlotVertTypesInBlanGenes_wexpected <- function(OG.df, ATypes, VTypes, vcols, colmatrix){
 	tBlanType <- table(OG.df$BlanType)
@@ -370,7 +368,7 @@ BarPlotVertTypesInBlanGenes_wexpected <- function(OG.df, ATypes, VTypes, vcols, 
 	obsBlanVertTypes <- c(obsBlanVertTypes)/sum(obsBlanVertTypes)*100
 	expBlanVertTypes <- c(expBlanVertTypes)/sum(expBlanVertTypes)*100
 
-	den <- 25
+	den <- 45
 	alpha <- 0.1
 	width <- .8
 	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=c(-0.5,100.5), xlim=c(0.5, 4), col=NA)
@@ -404,9 +402,9 @@ PlotColumnFromArray <- function(vec, pos, cols, bgcols, den=c(rep(NULL,length(ve
 	for(v in c(1:length(vec))){
 		if(vec[v]>0){
 			if(!is.null(den[v])){
-				polygon(c(pos-w/2,pos+w/2,pos+w/2,pos-w/2), c(base,base,base+vec[v],base+vec[v]), col=bgcols[v], border=NA, lwd=1.5)	
+				polygon(c(pos-w/2,pos+w/2,pos+w/2,pos-w/2), c(base,base,base+vec[v],base+vec[v]), col=bgcols[v], border=NA, lwd=0.5)	
 			}
-			polygon(c(pos-w/2,pos+w/2,pos+w/2,pos-w/2), c(base,base,base+vec[v],base+vec[v]), col=cols[v], border=NA, lwd=1.5, density=den[v])
+			polygon(c(pos-w/2,pos+w/2,pos+w/2,pos-w/2), c(base,base,base+vec[v],base+vec[v]), col=cols[v], border=NA, lwd=0.5, density=den[v])
 			text(pos, base+vec[v]/2, labels=paste(format(round(vec[v], 1), nsmall = 1),"%"), cex=1)
 			base <- base+vec[v]
 		}
