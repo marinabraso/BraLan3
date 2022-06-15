@@ -261,6 +261,7 @@ PlotHypergeomTest_VertBlanTypes <- function(OG.df, VTypes, ATypes, vcols, thresh
 	gradientcolors <- colfunc(50)
 	gradientlims <- c(-2.5,2.5)
 	colmatrix <- matrix(rep(NA, length(ATypes)*length(VTypes)),nrow=length(VTypes),ncol=length(ATypes),byrow=T)
+	FCmatrix <- matrix(rep(NA, length(ATypes)*length(VTypes)),nrow=length(VTypes),ncol=length(ATypes),byrow=T)
 
 	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=c(0,10), xlim=c(0,6), col=NA)
 	mtext("B.lanceolatum", side = 2, line = 5, cex=1)
@@ -268,6 +269,7 @@ PlotHypergeomTest_VertBlanTypes <- function(OG.df, VTypes, ATypes, vcols, thresh
 	for(v in c(1:length(VTypes))){
 		for(a in c(1:length(ATypes))){
 			color <- findColorInGRadient(log2(as.numeric(HyperTests$FoldChange[which(HyperTests$BlanType==ATypes[a] & HyperTests$VertType==VTypes[v])])), gradientlims, gradientcolors)
+			FCmatrix[v,a] <- as.numeric(HyperTests$FoldChange[which(HyperTests$BlanType==ATypes[a] & HyperTests$VertType==VTypes[v])])
 			colmatrix[v,a] <- color
 			if(color=="grey30"){dens <- 10}else{dens <- NULL}
 			polygon(c(v-1,v,v,v-1), c(a-1,a-1,a,a), col=color, border="white", density=dens)
@@ -286,7 +288,7 @@ PlotHypergeomTest_VertBlanTypes <- function(OG.df, VTypes, ATypes, vcols, thresh
 		cex = 1,
 		adj = 1)
 	printgradientlegend(c(5.1,1), .03, .2, "log(FC)", gradientlims, gradientcolors)
-	return(colmatrix)
+	return(list(colmatrix=colmatrix, FCmatrix=FCmatrix))
 }
 
 BarPlotVertTypesInBlanGenes <- function(OG.df, ATypes, VTypes, vcols){
@@ -385,12 +387,70 @@ BarPlotVertTypesInBlanGenes_wexpected <- function(OG.df, ATypes, VTypes, vcols, 
 	axis(2, at = seq(0,100,20), lwd.ticks=1, las=1, cex.axis=1.2)
 }
 
+BarPlotVertTypesInBlanGenes_wexpected2 <- function(OG.df, ATypes, VTypes, vcols, FCmatrix){
+	tBlanType <- table(OG.df$BlanType)
+	tBlanType <- tBlanType[match(ATypes, names(tBlanType))]
+	tVertType <- table(OG.df$VertType)
+	tVertType <- tVertType[match(VTypes, names(tVertType))]
+	obsBlanVertTypes <- t(table(OG.df[,c("BlanType", "VertType")]))
+	obsBlanVertTypes <- obsBlanVertTypes[match(VTypes, rownames(obsBlanVertTypes)),match(ATypes, colnames(obsBlanVertTypes))]
+	print(FCmatrix)
+
+	expBlanVertTypes <- matrix(rep(NA, length(tBlanType)*length(tVertType)),nrow=length(tVertType),ncol=length(tBlanType),byrow=T)
+	for(i in c(1:length(tBlanType))){
+		for(j in c(1:length(tVertType))){
+			expBlanVertTypes[j,i] <- tBlanType[i]*tVertType[j]/sum(tBlanType)
+		}
+	}
+	tBlanType <- tBlanType/sum(tBlanType)*100
+	tVertType <- tVertType/sum(tVertType)*100
+	obsBlanVertTypes <- c(obsBlanVertTypes)/sum(obsBlanVertTypes)*100
+	expBlanVertTypes <- c(expBlanVertTypes)/sum(expBlanVertTypes)*100
+
+	den <- 45
+	alpha <- 0.1
+	width <- .8
+	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=c(-0.5,100.5), xlim=c(0.5, 3), col=NA)
+	mtext("% of B. lanceolatum orthogroups", side = 2, line = 4, cex=1.2)
+	PlotColumnFromArray(tBlanType, 1, vcols[which(VTypes %in% ATypes)], vcols[which(VTypes %in% ATypes)], NULL, alpha, width)
+	PlotColumnFromArray(tVertType, 2, vcols, vcols, NULL, alpha, width)
+	axis(1, at = c(1,2), labels=c("In B. lanceolatum", "In vertebrates"), tick=FALSE, line=1, las=1, cex.axis=1.2)
+	axis(2, at = seq(0,100,20), lwd.ticks=1, las=1, cex.axis=1.2)
+	
+	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=c(-0.5,100.5), xlim=c(0.5, 3.5), col=NA)
+	mtext("% of B. lanceolatum orthogroups", side = 2, line = 4, cex=1.2)
+	PlotBetweenColumnFrom2Arrays2(expBlanVertTypes, obsBlanVertTypes, 1, 2.5, c(FCmatrix), width)
+	#PlotColumnFromArray(expBlanVertTypes, 1, c(vcols, vcols), rep("white", length(vcols)*2), rep(den, length(tVertType)*2), alpha, width)
+	PlotColumnFromArray(expBlanVertTypes, 1, c(vcols, vcols), c(vcols, vcols), rep(NULL, length(tVertType)*2), alpha, width)
+	PlotColumnFromArray(obsBlanVertTypes, 2.5, c(vcols, vcols), c(vcols, vcols), rep(NULL, length(tVertType)*2), alpha, width)
+
+	abline(h=tBlanType[1]/sum(tBlanType)*100, lty=2, lwd=2, col="black")
+	axis(1, at = c(1,2.5), labels=c("Expected", "Observed"), tick=FALSE, line=1, las=1, cex.axis=1.2)
+	axis(2, at = seq(0,100,20), lwd.ticks=1, las=1, cex.axis=1.2)
+}
+
 PlotBetweenColumnFrom2Arrays <- function(vec1, vec2, pos1, pos2, cols, w){
 	base1 <- 0
 	base2 <- 0
 	for(v in c(1:length(vec1))){
 		if(vec1[v]>0 | vec2[v]){
 			polygon(c(pos1+w/2,pos2-w/2,pos2-w/2,pos1+w/2), c(base1,base2,base2+vec2[v],base1+vec1[v]), col=cols[v], border=NA, lwd=2)
+			base1 <- base1+vec1[v]
+			base2 <- base2+vec2[v]
+		}
+	}
+}
+
+PlotBetweenColumnFrom2Arrays2 <- function(vec1, vec2, pos1, pos2, fc, w){
+	w <- w*1.2
+	base1 <- 0
+	base2 <- 0
+	for(v in c(1:length(vec1))){
+		if(vec1[v]>0 | vec2[v]){
+			if(vec2[v]>vec1[v]){
+				arrows(pos1+w/2, base1+vec1[v]/2, pos2-w/2, base2+vec2[v]/2, length = 0.1, angle = 20, code = 2, col="black", lwd=3)
+				text((pos1+pos2)/2, (base1+vec1[v]/2+base2+vec2[v]/2)/2, labels=format(round(fc[v], 1), nsmall = 1), cex=1)
+			}
 			base1 <- base1+vec1[v]
 			base2 <- base2+vec2[v]
 		}

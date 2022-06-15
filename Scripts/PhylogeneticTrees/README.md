@@ -12,5 +12,6 @@
 sbatch -t 05:00:00 --mem=8000 -J ExtrAmpVert -o tmp/ExtractSeq_AmphVerteb.out -e tmp/ExtractSeq_AmphVerteb.err Scripts/dNdS/ExtractOrthologousGroupSequences.sh AmphVerteb
 
 ./Scripts/PhylogeneticTrees/Run_MSA_TreeReconstruction.sh AmphVerteb
+./Scripts/PhylogeneticTrees/Read_trees.sh 
 
 ```

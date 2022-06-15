@@ -48,7 +48,7 @@ SpType <- c("AmphType", "AmphType", "AmphType", "VertType", "VertType", "VertTyp
 
 VertTypes <- c("Single-copy", "Ohnologs", "Small-scale\nduplicates", "Missing")
 VertTypes.abr <- c("SC", "O", "D", "M")
-VertTypes.col <- c(ghibli_palettes$MarnieMedium2[c(2,4,7)], "royalblue2")
+VertTypes.col <- c(ghibli_palettes$MarnieMedium2[c(3,6,7)], "royalblue2")
 BlanTypes <- c("Single-copy", "Small-scale\nduplicates", "Missing")
 BlanTypes.pch <- c(14, 16, 18)
 BlanTypes.lty <- c(.5, 1, 2)
@@ -177,35 +177,41 @@ par(mar=c(10,10,5,5),oma=c(1,1,1,1), yaxs='i', xaxs='i')
 # Blan vs. vertebrate gene type 
 layout(matrix(c(1,2,3,4,5,6),nrow=2,ncol=3,byrow=T), widths=c(1), heights=c(1), TRUE)
 BarPlotVertTypesInBlanGenes(OGInfo.BlanVert, BlanTypes[which(BlanTypes!="Missing")], VertTypes[which(VertTypes!="Missing")], VertTypes.col[which(VertTypes!="Missing")])
-HypergeomColmatrix <- PlotHypergeomTest_VertBlanTypes(OGInfo.BlanVert, VertTypes[which(VertTypes!="Missing")], BlanTypes[which(BlanTypes!="Missing")], VertTypes.col[which(VertTypes!="Missing")], PQvalThreshold, ResultsFolder)
+Hypergeom <- PlotHypergeomTest_VertBlanTypes(OGInfo.BlanVert, VertTypes[which(VertTypes!="Missing")], BlanTypes[which(BlanTypes!="Missing")], VertTypes.col[which(VertTypes!="Missing")], PQvalThreshold, ResultsFolder)
 plot.new()
 legend("bottomright", c("In vertebrates", VertTypes[which(VertTypes!="Missing")]), pch=c(NA,15,15,15,15), text.col="black", col=c(NA, VertTypes.col[which(VertTypes!="Missing")]), bty = "n", pt.cex=2, cex=1.5, xjust = 0, yjust = 0)#
 BarPlotVertTypesInBlanGenes(OGInfo, BlanTypes, VertTypes, VertTypes.col)
-HypergeomColmatrixMissing <- PlotHypergeomTest_VertBlanTypes(OGInfo, VertTypes, BlanTypes, VertTypes.col, PQvalThreshold, ResultsFolder)
+HypergeomMissing <- PlotHypergeomTest_VertBlanTypes(OGInfo, VertTypes, BlanTypes, VertTypes.col, PQvalThreshold, ResultsFolder)
 plot.new()
 legend("bottomright", c("In vertebrates", VertTypes), pch=c(NA,15,15,15,15), text.col="black", col=c(NA, VertTypes.col), bty = "n", pt.cex=2, cex=1.5, xjust = 0, yjust = 0)
 
 
 layout(matrix(c(1,2),nrow=1,ncol=2,byrow=T), widths=c(1), heights=c(1), TRUE)
 BarPlotSpeciesNumGenesOG(SpeciesNumGenesOG, Vertebrates)
-BarPlotVertTypesInBlanGenes_wexpected(OGInfo.BlanVert, BlanTypes[which(BlanTypes!="Missing")], VertTypes[which(VertTypes!="Missing")], VertTypes.col[which(VertTypes!="Missing")], HypergeomColmatrix)
+BarPlotVertTypesInBlanGenes_wexpected(OGInfo.BlanVert, BlanTypes[which(BlanTypes!="Missing")], VertTypes[which(VertTypes!="Missing")], VertTypes.col[which(VertTypes!="Missing")], Hypergeom$colmatrix)
+layout(matrix(c(1,2),nrow=1,ncol=2,byrow=T), widths=c(1), heights=c(1), TRUE)
+BarPlotVertTypesInBlanGenes_wexpected2(OGInfo.BlanVert, BlanTypes[which(BlanTypes!="Missing")], VertTypes[which(VertTypes!="Missing")], VertTypes.col[which(VertTypes!="Missing")], Hypergeom$FCmatrix)
 
 head(GenePairs)
 head(GeneInfo)
 
-quit()
 
 # GO term in duplicates Hsap vs. Blan
 # MF
 layout(matrix(c(1,2,3,4,5,6),nrow=2,ncol=3,byrow=T), widths=c(1), heights=c(1), TRUE)
 ScatterPlotPointSize(GOInfo.MF$HsapS/GOInfo.MF$Hsap*100, GOInfo.MF$BlanS/GOInfo.MF$Blan*100, GOInfo.MF$Hsap, "black", "% of single-copy\nH. sapiens", "B. lanceolatum\n% of single-copy", c(0,100), c(0,100))
+ScatterPlotPointSize((GOInfo.MF$HsapD+GOInfo.MF$HsapO)/GOInfo.MF$Hsap*100, GOInfo.MF$BlanD/GOInfo.MF$Blan*100, GOInfo.MF$Hsap, "black", "% of small-scale duplicates + ohnologs\nH. sapiens", "B. lanceolatum\n% of single-copy", c(0,100), c(0,100))
 ScatterPlotPointSize(GOInfo.MF$HsapD/GOInfo.MF$Hsap*100, GOInfo.MF$BlanD/GOInfo.MF$Blan*100, GOInfo.MF$Hsap, "black", "% of small-scale duplicates\nH. sapiens", "B. lanceolatum\n% of small-scale duplicates", c(0,100), c(0,100))
 ScatterPlotPointSize(GOInfo.MF$HsapO/GOInfo.MF$Hsap*100, GOInfo.MF$BlanD/GOInfo.MF$Blan*100, GOInfo.MF$Hsap, "black", "% of ohnologs\nH. sapiens", "B. lanceolatum\n% of small-scale duplicates", c(0,100), c(0,100))
 # BP
 layout(matrix(c(1,2,3,4,5,6),nrow=2,ncol=3,byrow=T), widths=c(1), heights=c(1), TRUE)
 ScatterPlotPointSize(GOInfo.BP$HsapS/GOInfo.BP$Hsap*100, GOInfo.BP$BlanS/GOInfo.BP$Blan*100, GOInfo.BP$Hsap, "black", "% of single-copy\nH. sapiens", "B. lanceolatum\n% of single-copy", c(0,100), c(0,100))
+ScatterPlotPointSize((GOInfo.BP$HsapD+GOInfo.BP$HsapO)/GOInfo.BP$Hsap*100, GOInfo.BP$BlanD/GOInfo.BP$Blan*100, GOInfo.BP$Hsap, "black", "% of small-scale duplicates + ohnologs\nH. sapiens", "B. lanceolatum\n% of single-copy", c(0,100), c(0,100))
 ScatterPlotPointSize(GOInfo.BP$HsapD/GOInfo.BP$Hsap*100, GOInfo.BP$BlanD/GOInfo.BP$Blan*100, GOInfo.BP$Hsap, "black", "% of small-scale duplicates\nH. sapiens", "B. lanceolatum\n% of small-scale duplicates", c(0,100), c(0,100))
 ScatterPlotPointSize(GOInfo.BP$HsapO/GOInfo.BP$Hsap*100, GOInfo.BP$BlanD/GOInfo.BP$Blan*100, GOInfo.BP$Hsap, "black", "% of ohnologs\nH. sapiens", "B. lanceolatum\n% of small-scale duplicates", c(0,100), c(0,100))
+
+
+quit()
 
 layout(matrix(c(1,2),nrow=2,ncol=1,byrow=T), widths=c(15), heights=c(5), TRUE)
 TandemIntraInterPerSpecies(OGInfo, Species[which(Species!="Bflo" & Species!="Bbel" & Species!="Drer")], SpType[which(Species!="Bflo" & Species!="Bbel" & Species!="Drer")])
