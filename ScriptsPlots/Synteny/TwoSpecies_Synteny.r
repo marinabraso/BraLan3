@@ -20,8 +20,8 @@ ChrLenFolder <- "Results/AssemblyStatistics"
 ######################################################################
 # General parameters
 Margin <- 100000000
-Species1 <- "Bflo"
-Species2 <- "Bbel"
+Species1 <- "Blan"
+Species2 <- "Blan"
 HoxGenesList <- c("BLAG12000123", "BLAG12000124", "BLAG12000125", "BLAG12000129", "BLAG12000130", "BLAG12000132", "BLAG12000134", "BLAG12000135", "BLAG12000136", "BLAG12000137", "BLAG12000138", "BLAG12000139", "BLAG12000140", "BLAG12000141", "BLAG12000142")
 
 ShortSpeciesNames <- c("Drer", "Ggal", "Hsap", "Mmus", "Blan", "Bflo", "Bbel")

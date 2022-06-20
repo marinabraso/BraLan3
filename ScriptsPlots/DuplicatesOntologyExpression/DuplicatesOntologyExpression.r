@@ -5,9 +5,9 @@ Sys.setenv(LANG = "en")
 ######################################################################
 # Libraries & functions
 
-#script <- sub(".*=", "", commandArgs()[4])
-#source(paste(substr(script,1, nchar(script)-2), "_functions.r", sep=""))
-source("ScriptsPlots/DuplicatesOntologyExpression/DuplicatesOntologyExpression_functions.r")
+script <- sub(".*=", "", commandArgs()[4])
+source(paste(substr(script,1, nchar(script)-2), "_functions.r", sep=""))
+#source("ScriptsPlots/DuplicatesOntologyExpression/DuplicatesOntologyExpression_functions.r")
 # source("ScriptsPlots/DuplicatesOntologyExpression/DuplicatesOntologyExpression.r")
 library(ghibli)
 library(MASS)
@@ -188,9 +188,7 @@ legend("bottomright", c("In vertebrates", VertTypes), pch=c(NA,15,15,15,15), tex
 
 layout(matrix(c(1,2),nrow=1,ncol=2,byrow=T), widths=c(1), heights=c(1), TRUE)
 BarPlotSpeciesNumGenesOG(SpeciesNumGenesOG, Vertebrates)
-BarPlotVertTypesInBlanGenes_wexpected(OGInfo.BlanVert, BlanTypes[which(BlanTypes!="Missing")], VertTypes[which(VertTypes!="Missing")], VertTypes.col[which(VertTypes!="Missing")], Hypergeom$colmatrix)
-layout(matrix(c(1,2),nrow=1,ncol=2,byrow=T), widths=c(1), heights=c(1), TRUE)
-BarPlotVertTypesInBlanGenes_wexpected2(OGInfo.BlanVert, BlanTypes[which(BlanTypes!="Missing")], VertTypes[which(VertTypes!="Missing")], VertTypes.col[which(VertTypes!="Missing")], Hypergeom$FCmatrix)
+BarPlotVertTypesInBlanGenes_wexpected(OGInfo.BlanVert, BlanTypes[which(BlanTypes!="Missing")], VertTypes[which(VertTypes!="Missing")], VertTypes.col[which(VertTypes!="Missing")], Hypergeom$FCmatrix)
 
 head(GenePairs)
 head(GeneInfo)
@@ -211,10 +209,14 @@ ScatterPlotPointSize(GOInfo.BP$HsapD/GOInfo.BP$Hsap*100, GOInfo.BP$BlanD/GOInfo.
 ScatterPlotPointSize(GOInfo.BP$HsapO/GOInfo.BP$Hsap*100, GOInfo.BP$BlanD/GOInfo.BP$Blan*100, GOInfo.BP$Hsap, "black", "% of ohnologs\nH. sapiens", "B. lanceolatum\n% of small-scale duplicates", c(0,100), c(0,100))
 
 
-quit()
-
 layout(matrix(c(1,2),nrow=2,ncol=1,byrow=T), widths=c(15), heights=c(5), TRUE)
 TandemIntraInterPerSpecies(OGInfo, Species[which(Species!="Bflo" & Species!="Bbel" & Species!="Drer")], SpType[which(Species!="Bflo" & Species!="Bbel" & Species!="Drer")])
+
+layout(matrix(c(1,2,5,3,4,6),nrow=2,ncol=3,byrow=T), widths=c(1.2,1.2), heights=c(1.5, 1.5), TRUE)
+BoxPlot_BlanTypes(BlanGeneData, GeneInfo, "MeanAdult", "Mean adult tissues expression", c(0,100), VertTypes, VertTypes.col)
+BoxPlot_BlanTypes(BlanGeneData, GeneInfo, "MeanEmbr", "Mean embrionic stages expression", c(0,100), VertTypes, VertTypes.col)
+BoxPlot_BlanTypes(BlanGeneData, GeneInfo, "TauTissues", "Tau among adult tissues", c(0,1), VertTypes, VertTypes.col)
+BoxPlot_BlanTypes(BlanGeneData, GeneInfo, "TauEmbAge", "Tau among embrionic stages", c(0,1), VertTypes, VertTypes.col)
 
 layout(matrix(c(1,2,5,3,4,6),nrow=2,ncol=3,byrow=T), widths=c(1.2,1.2), heights=c(1.5, 1.5), TRUE)
 BoxPlot_BlanTypes_VertTypes(BlanGeneData, GeneInfo, "MeanAdult", "Mean adult tissues expression", c(0,100), VertTypes, VertTypes.col)

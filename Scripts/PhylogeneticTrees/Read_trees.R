@@ -8,9 +8,9 @@ ResultsFolder <- args[2]
 strlist <- args[3]
 type <- args[4]
 list <- unlist(strsplit(strlist, ";"))
+print(length(list))
 
-
-pdf(paste(ResultsFolder, "/VertebratesMonophyletic", , ".pdf", sep=""), width=15, height=10)
+pdf(paste(ResultsFolder, "/VertebratesMonophyletic", type, ".pdf", sep=""), width=15, height=10)
 
 VertMonophyletic <- c()
 for(og in list){

@@ -350,44 +350,8 @@ BarPlotSpeciesNumGenesOG <- function(df, vspecies){
 	axis(2, at = seq(0,100,20), lwd.ticks=1, las=1, cex.axis=1.2)
 }
 
-BarPlotVertTypesInBlanGenes_wexpected <- function(OG.df, ATypes, VTypes, vcols, colmatrix){
-	tBlanType <- table(OG.df$BlanType)
-	tBlanType <- tBlanType[match(ATypes, names(tBlanType))]
-	tVertType <- table(OG.df$VertType)
-	tVertType <- tVertType[match(VTypes, names(tVertType))]
-	obsBlanVertTypes <- t(table(OG.df[,c("BlanType", "VertType")]))
-	obsBlanVertTypes <- obsBlanVertTypes[match(VTypes, rownames(obsBlanVertTypes)),match(ATypes, colnames(obsBlanVertTypes))]
-	print(colmatrix)
 
-	expBlanVertTypes <- matrix(rep(NA, length(tBlanType)*length(tVertType)),nrow=length(tVertType),ncol=length(tBlanType),byrow=T)
-	for(i in c(1:length(tBlanType))){
-		for(j in c(1:length(tVertType))){
-			expBlanVertTypes[j,i] <- tBlanType[i]*tVertType[j]/sum(tBlanType)
-		}
-	}
-	tBlanType <- tBlanType/sum(tBlanType)*100
-	tVertType <- tVertType/sum(tVertType)*100
-	obsBlanVertTypes <- c(obsBlanVertTypes)/sum(obsBlanVertTypes)*100
-	expBlanVertTypes <- c(expBlanVertTypes)/sum(expBlanVertTypes)*100
-
-	den <- 45
-	alpha <- 0.1
-	width <- .8
-	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=c(-0.5,100.5), xlim=c(0.5, 4), col=NA)
-	mtext("% in each category", side = 2, line = 4, cex=1.2)
-	mtext("B. lanceolatum", side = 1, line = 4, cex=1.2)
-	PlotColumnFromArray(tBlanType, 1, rep("white",length(tBlanType)), rep("white",length(tBlanType)), c(NULL,den), alpha, width)
-	PlotBetweenColumnFrom2Arrays(expBlanVertTypes, obsBlanVertTypes, 2, 3.5, c(colmatrix), width)
-
-	PlotColumnFromArray(expBlanVertTypes, 2, c(vcols, vcols), rep("white", length(vcols)*2), rep(den, length(tVertType)*2), alpha, width)
-	PlotColumnFromArray(obsBlanVertTypes, 3.5, c(vcols, vcols), c(vcols, vcols), rep(NULL, length(tVertType)*2), alpha, width)
-
-	abline(h=tBlanType[1]/sum(tBlanType)*100, lty=2, lwd=2, col="black")
-	axis(1, at = c(1,2,3.5), labels=c("", "Expected", "Observed"), tick=FALSE, line=1, las=1, cex.axis=1.2)
-	axis(2, at = seq(0,100,20), lwd.ticks=1, las=1, cex.axis=1.2)
-}
-
-BarPlotVertTypesInBlanGenes_wexpected2 <- function(OG.df, ATypes, VTypes, vcols, FCmatrix){
+BarPlotVertTypesInBlanGenes_wexpected <- function(OG.df, ATypes, VTypes, vcols, FCmatrix){
 	tBlanType <- table(OG.df$BlanType)
 	tBlanType <- tBlanType[match(ATypes, names(tBlanType))]
 	tVertType <- table(OG.df$VertType)
@@ -420,7 +384,6 @@ BarPlotVertTypesInBlanGenes_wexpected2 <- function(OG.df, ATypes, VTypes, vcols,
 	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=c(-0.5,100.5), xlim=c(0.5, 3.5), col=NA)
 	mtext("% of B. lanceolatum orthogroups", side = 2, line = 4, cex=1.2)
 	PlotBetweenColumnFrom2Arrays2(expBlanVertTypes, obsBlanVertTypes, 1, 2.5, c(FCmatrix), width)
-	#PlotColumnFromArray(expBlanVertTypes, 1, c(vcols, vcols), rep("white", length(vcols)*2), rep(den, length(tVertType)*2), alpha, width)
 	PlotColumnFromArray(expBlanVertTypes, 1, c(vcols, vcols), c(vcols, vcols), rep(NULL, length(tVertType)*2), alpha, width)
 	PlotColumnFromArray(obsBlanVertTypes, 2.5, c(vcols, vcols), c(vcols, vcols), rep(NULL, length(tVertType)*2), alpha, width)
 
@@ -688,7 +651,29 @@ max.col <- function(exp){
 	return(maxcollist)
 }
 
+BoxPlot_BlanTypes <- function(Genes, Ginf, column, ylab, ylim, vtypes, vcolors){
+	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=ylim, xlim=c(0.5, length(vtypes)+.5), col=NA)
+	mtext(ylab, side = 2, line = 5, cex=1.2)
+	BoxPlot(Genes[which(Genes$Gene %in% Ginf$Gene[which(Ginf$BlanType=="Single-copy")]), column], 2, vcolors[which(vtypes=="Single-copy")], .7, .6)
+	BoxPlot(Genes[which(Genes$Gene %in% Ginf$Gene[which(Ginf$BlanType=="Small-scale\nduplicates")]), column], 3, vcolors[which(vtypes=="Small-scale\nduplicates")], .7, .6)
+	axis(2, at = seq(ylim[1],ylim[2],(ylim[2]-ylim[1])/5), lwd.ticks=1, las=1, cex.axis=1.5)
+	text(x = c(2,3), y = par("usr")[3] - (ylim[2]-ylim[1])/10, labels = c("Single-copy", "Small-scale\nduplicates"), xpd = NA, srt = 40, cex = 1.3, adj = .9)
+}
+
 BoxPlot_BlanTypes_VertTypes <- function(Genes, Ginf, column, ylab, ylim, vtypes, vcolors){
+	dist <- .15
+
+	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=ylim, xlim=c(0.5, length(vtypes)+.5), col=NA)
+	mtext(ylab, side = 2, line = 5, cex=1.2)
+	for(t in c(1:length(vtypes))){
+		BoxPlot(Genes[which(Genes$Gene %in% Ginf$Gene[which(Ginf$BlanType=="Single-copy" & Ginf$VertType==vtypes[t])]), column], t-dist, vcolors[which(vtypes=="Single-copy")], .7, .4)
+		BoxPlot(Genes[which(Genes$Gene %in% Ginf$Gene[which(Ginf$BlanType=="Small-scale\nduplicates" & Ginf$VertType==vtypes[t])]), column], t+dist, vcolors[which(vtypes=="Small-scale\nduplicates")], .7, .4)
+	}
+	axis(2, at = seq(ylim[1],ylim[2],(ylim[2]-ylim[1])/5), lwd.ticks=1, las=1, cex.axis=1.5)
+	text(x = c(1:4), y = par("usr")[3] - (ylim[2]-ylim[1])/10, labels = vtypes, xpd = NA, srt = 40, cex = 1.3, adj = .9)
+}
+
+BoxPlot_BlanTypes_VertTypes_old <- function(Genes, Ginf, column, ylab, ylim, vtypes, vcolors){
 	dist <- .15
 
 	plot(c(1:10), c(1:10), axes=F, xlab="", ylab="", ylim=ylim, xlim=c(0.5, length(vtypes)+.5), col=NA)
