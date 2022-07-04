@@ -733,6 +733,7 @@ Dist_ExpressDomanis <- function(vec, col, tissues, lab1, lab2, main, adj){
 	d  <- density(vec, adjust = adj)
 	lines(d$x, d$y, col=col, lwd=3)
 	axis(1, at = seq(-length(tissues[,1])+1,length(tissues[,1]),2), lwd.ticks=1, las=1, cex.axis=1.5)
+	axis(2, at = c(0, 0.2, 0.4), lwd.ticks=1, las=1, cex.axis=1.5)
 }
 
 DifferenceWithSC <- function(gp, og, tissues, lab1, lab2){

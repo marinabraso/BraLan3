@@ -127,7 +127,7 @@ BfloExist <- c("Bflo0", "Bflo1")[(OGInfo.A$Bflo > 0)+1]
 BbelExist <- c("Bbel0", "Bbel1")[(OGInfo.A$Bbel > 0)+1]
 table(c(BlanExist, BfloExist, BbelExist))
 
-SpeciesNumGenesOG <- matrix(rep(NA, 10*length(Species)),nrow=length(Species),ncol=10,byrow=T)
+SpeciesNumGenesOG <- matrix(rep(NA, 12*length(Species)),nrow=length(Species),ncol=12,byrow=T)
 for(sp in c(1:length(Species))){
 	GeneInfo.sp <- GeneInfo[which(GeneInfo$Species==Species[sp]),]
 	SpeciesNumGenesOG[sp,1] <- Species[sp]
@@ -141,14 +141,17 @@ for(sp in c(1:length(Species))){
 	SpeciesNumGenesOG[sp,8] <- summary[2] # 1st quartile
 	SpeciesNumGenesOG[sp,9] <- summary[3] # median
 	SpeciesNumGenesOG[sp,10] <- summary[5] # 3rd quartile
+	SpeciesNumGenesOG[sp,11] <- length(unique(GeneInfo.sp$Gene[which(GeneInfo.sp[,Species[sp]]>0 & GeneInfo.sp$AmphType != "Missing" & GeneInfo.sp$VertType != "Missing")]))
+	SpeciesNumGenesOG[sp,12] <- length(unique(GeneInfo.sp$Gene[which(GeneInfo.sp[,Species[sp]]>1 & GeneInfo.sp$AmphType != "Missing" & GeneInfo.sp$VertType != "Missing")]))
 }
 SpeciesNumGenesOG <- as.data.frame(SpeciesNumGenesOG)
-colnames(SpeciesNumGenesOG) <- c("Species", "totalOG", "dupOG", "totalGenes", "wothologGenes", "dupGenes", "meanSizeDupOG", "1quartSizeDupOG", "medianSizeDupOG", "3quartSizeDupOG")
+colnames(SpeciesNumGenesOG) <- c("Species", "totalOG", "dupOG", "totalGenes", "wothologGenes", "dupGenes", "meanSizeDupOG", "1quartSizeDupOG", "medianSizeDupOG", "3quartSizeDupOG", "TotalAmphVertOrthGenes", "DupAmphVertOrthGenes")
 for(col in c(2:length(SpeciesNumGenesOG[1,]))){
 	SpeciesNumGenesOG[,colnames(SpeciesNumGenesOG)[col]] <- as.numeric(SpeciesNumGenesOG[,colnames(SpeciesNumGenesOG)[col]])
 }
-colnames(SpeciesNumGenesOG) <- c("Species", "totalOG", "dupOG", "totalGenes", "wothologGenes", "dupGenes", "meanSizeDupOG", "1quartSizeDupOG", "medianSizeDupOG", "3quartSizeDupOG")
+colnames(SpeciesNumGenesOG) <- c("Species", "totalOG", "dupOG", "totalGenes", "wothologGenes", "dupGenes", "meanSizeDupOG", "1quartSizeDupOG", "medianSizeDupOG", "3quartSizeDupOG", "TotalAmphVertOrthGenes", "DupAmphVertOrthGenes")
 print(SpeciesNumGenesOG)
+quit()
 
 ContingencyTableCN(
 	OGInfo$Blan[which(OGInfo$BlanType=="Small-scale\nduplicates" & OGInfo$VertType=="Small-scale\nduplicates")], 
@@ -241,7 +244,8 @@ Hist_ExpressDomanis(
 	GenePairs[which(GenePairs$BlanLType=="Tandem" | GenePairs$BlanType=="Single-copy"),], 
 	OGInfo[which(OGInfo$BlanLType=="Tandem"),], "Small-scale\nduplicates", "Single-copy", MatchingTissues, "Blan conditions - Drer conditions", "Relative number of\npairwise comparisons", "B. lanceolatum specific\ntandem\ngene duplicates")
 
-layout(matrix(c(1,2,3,4,5,6,7,8,9),nrow=3,ncol=3,byrow=T), widths=c(1.5), heights=c(1), TRUE)
+par(mar=c(5,5,2,2),oma=c(1,1,1,1), yaxs='i', xaxs='i')
+layout(matrix(c(1,2,3,4,5,6,7,8,9),nrow=3,ncol=3,byrow=T), widths=c(1), heights=c(1), TRUE)
 Dist_ExpressDomanis(GenePairs$DiffDom[which(GenePairs$BlanType=="Single-copy" & GenePairs$VertType=="Single-copy")], "forestgreen", MatchingTissues, "Blan conditions - Drer conditions", "", "SC - SC", 2)
 Dist_ExpressDomanis(GenePairs$DiffDom[which(GenePairs$BlanType=="Small-scale\nduplicates" & GenePairs$VertType=="Single-copy")], "red", MatchingTissues, "Blan conditions - Drer conditions", "", "SSD - SC", 2)
 Dist_ExpressDomanis(OGInfo$DiffDom[which(OGInfo$BlanType=="Small-scale\nduplicates" & OGInfo$VertType=="Single-copy")], "darkred", MatchingTissues, "Blan conditions - Drer conditions", "", "uSSD - SC", 2)
@@ -249,6 +253,15 @@ Dist_ExpressDomanis(GenePairs$DiffDom[which(GenePairs$VertType=="Small-scale\ndu
 Dist_ExpressDomanis(OGInfo$DiffDom[which(OGInfo$VertType=="Small-scale\nduplicates" & OGInfo$BlanType=="Single-copy")], "darkred", MatchingTissues, "Blan conditions - Drer conditions", "", "SC - uSSD", 2)
 Dist_ExpressDomanis(GenePairs$DiffDom[which(GenePairs$VertType=="Ohnologs" & GenePairs$BlanType=="Single-copy")], "red", MatchingTissues, "Blan conditions - Drer conditions", "", "SC - O", 3)
 Dist_ExpressDomanis(OGInfo$DiffDom[which(OGInfo$VertType=="Ohnologs" & OGInfo$BlanType=="Single-copy")], "darkred", MatchingTissues, "Blan conditions - Drer conditions", "", "SC - uO", 3)
+
+layout(matrix(c(1,2,3,4,5,6,7,8,9),nrow=3,ncol=3,byrow=T), widths=c(1), heights=c(1), TRUE)
+Dist_ExpressDomanis(GenePairs$DiffDom[which(GenePairs$BlanType=="Single-copy" & GenePairs$VertType=="Single-copy")], "forestgreen", MatchingTissues, "Blan conditions - Drer conditions", "", "SC - SC", 2)
+Dist_ExpressDomanis(GenePairs$DiffDom[which(GenePairs$BlanLType=="Inter" & GenePairs$VertType=="Single-copy")], "red", MatchingTissues, "Blan conditions - Drer conditions", "", "SSD - SC inter", 2)
+Dist_ExpressDomanis(OGInfo$DiffDom[which(OGInfo$BlanLType=="Inter" & OGInfo$VertType=="Single-copy")], "darkred", MatchingTissues, "Blan conditions - Drer conditions", "", "uSSD - SC inter", 2)
+Dist_ExpressDomanis(GenePairs$DiffDom[which(GenePairs$BlanLType=="Intra" & GenePairs$VertType=="Single-copy")], "red", MatchingTissues, "Blan conditions - Drer conditions", "", "SSD - SC intra", 2)
+Dist_ExpressDomanis(OGInfo$DiffDom[which(OGInfo$BlanLType=="Intra" & OGInfo$VertType=="Single-copy")], "darkred", MatchingTissues, "Blan conditions - Drer conditions", "", "uSSD - SC intra", 2)
+Dist_ExpressDomanis(GenePairs$DiffDom[which(GenePairs$BlanLType=="Tandem" & GenePairs$VertType=="Single-copy")], "red", MatchingTissues, "Blan conditions - Drer conditions", "", "SSD - SC Tandem", 2)
+Dist_ExpressDomanis(OGInfo$DiffDom[which(OGInfo$BlanLType=="Tandem" & OGInfo$VertType=="Single-copy")], "darkred", MatchingTissues, "Blan conditions - Drer conditions", "", "uSSD - SC Tandem", 2)
 
 
 layout(matrix(c(1,2,3,4,5,6),nrow=2,ncol=3,byrow=T), widths=c(1), heights=c(1), TRUE)
