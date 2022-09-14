@@ -11,7 +11,7 @@ source(paste(substr(script,1, nchar(script)-2), "_functions.r", sep=""))
 # source("ScriptsPlots/DuplicatesOntologyExpression/DuplicatesOntologyExpression.r")
 library(ghibli)
 library(MASS)
-library(moments)
+#library(moments)
 
 ######################################################################
 # Files & folders
@@ -151,7 +151,6 @@ for(col in c(2:length(SpeciesNumGenesOG[1,]))){
 }
 colnames(SpeciesNumGenesOG) <- c("Species", "totalOG", "dupOG", "totalGenes", "wothologGenes", "dupGenes", "meanSizeDupOG", "1quartSizeDupOG", "medianSizeDupOG", "3quartSizeDupOG", "TotalAmphVertOrthGenes", "DupAmphVertOrthGenes")
 print(SpeciesNumGenesOG)
-quit()
 
 ContingencyTableCN(
 	OGInfo$Blan[which(OGInfo$BlanType=="Small-scale\nduplicates" & OGInfo$VertType=="Small-scale\nduplicates")], 
@@ -176,6 +175,7 @@ ContingencyTableCN(
 ### Plotting
 pdf(paste(ResultsFolder, "/DuplicatesOntologyExpression.pdf", sep=""), width=15, height=10)
 par(mar=c(10,10,5,5),oma=c(1,1,1,1), yaxs='i', xaxs='i')
+print("BUUUUUUUU")
 
 # Blan vs. vertebrate gene type 
 layout(matrix(c(1,2,3,4,5,6),nrow=2,ncol=3,byrow=T), widths=c(1), heights=c(1), TRUE)
@@ -215,17 +215,17 @@ ScatterPlotPointSize(GOInfo.BP$HsapO/GOInfo.BP$Hsap*100, GOInfo.BP$BlanD/GOInfo.
 layout(matrix(c(1,2),nrow=2,ncol=1,byrow=T), widths=c(15), heights=c(5), TRUE)
 TandemIntraInterPerSpecies(OGInfo, Species[which(Species!="Bflo" & Species!="Bbel" & Species!="Drer")], SpType[which(Species!="Bflo" & Species!="Bbel" & Species!="Drer")])
 
-layout(matrix(c(1,2,5,3,4,6),nrow=2,ncol=3,byrow=T), widths=c(1.2,1.2), heights=c(1.5, 1.5), TRUE)
-BoxPlot_BlanTypes(BlanGeneData, GeneInfo, "MeanAdult", "Mean adult tissues expression", c(0,100), VertTypes, VertTypes.col)
-BoxPlot_BlanTypes(BlanGeneData, GeneInfo, "MeanEmbr", "Mean embrionic stages expression", c(0,100), VertTypes, VertTypes.col)
-BoxPlot_BlanTypes(BlanGeneData, GeneInfo, "TauTissues", "Tau among adult tissues", c(0,1), VertTypes, VertTypes.col)
-BoxPlot_BlanTypes(BlanGeneData, GeneInfo, "TauEmbAge", "Tau among embrionic stages", c(0,1), VertTypes, VertTypes.col)
+layout(matrix(c(1,2,5,3,4,6),nrow=2,ncol=3,byrow=T), widths=c(1.4,1.4,1.4), heights=c(1.5, 1.5), TRUE)
+BoxPlot_BlanTypes(BlanGeneData, GeneInfo, "MeanAdult", "Mean B. lanceolatum\ngene expression", c(0,100), VertTypes, VertTypes.col)
+BoxPlot_BlanTypes_VertTypes(BlanGeneData, GeneInfo, "MeanAdult", "", c(0,100), VertTypes, VertTypes.col)
+BoxPlot_BlanTypes(BlanGeneData, GeneInfo, "TauTissues", "Tissue specificity\nin B. lanceolatum", c(0,1), VertTypes, VertTypes.col)
+BoxPlot_BlanTypes_VertTypes(BlanGeneData, GeneInfo, "TauTissues", "", c(0,1), VertTypes, VertTypes.col)
 
-layout(matrix(c(1,2,5,3,4,6),nrow=2,ncol=3,byrow=T), widths=c(1.2,1.2), heights=c(1.5, 1.5), TRUE)
-BoxPlot_BlanTypes_VertTypes(BlanGeneData, GeneInfo, "MeanAdult", "Mean adult tissues expression", c(0,100), VertTypes, VertTypes.col)
-BoxPlot_BlanTypes_VertTypes(BlanGeneData, GeneInfo, "MeanEmbr", "Mean embrionic stages expression", c(0,100), VertTypes, VertTypes.col)
-BoxPlot_BlanTypes_VertTypes(BlanGeneData, GeneInfo, "TauTissues", "Tau among adult tissues", c(0,1), VertTypes, VertTypes.col)
-BoxPlot_BlanTypes_VertTypes(BlanGeneData, GeneInfo, "TauEmbAge", "Tau among embrionic stages", c(0,1), VertTypes, VertTypes.col)
+layout(matrix(c(1,2,5,3,4,6),nrow=2,ncol=3,byrow=T), widths=c(1.4,1.4,1.4), heights=c(1.5, 1.5), TRUE)
+BoxPlot_BlanTypes(BlanGeneData, GeneInfo, "MeanEmbr", "Mean B. lanceolatum\nembrionic gene expression", c(0,100), VertTypes, VertTypes.col)
+BoxPlot_BlanTypes_VertTypes(BlanGeneData, GeneInfo, "MeanEmbr", "", c(0,200), VertTypes, VertTypes.col)
+BoxPlot_BlanTypes(BlanGeneData, GeneInfo, "TauEmbAge", "Developmental stage specificity in\nB. lanceolatum", c(0,1), VertTypes, VertTypes.col)
+BoxPlot_BlanTypes_VertTypes(BlanGeneData, GeneInfo, "TauEmbAge", "", c(0,1), VertTypes, VertTypes.col)
 
 layout(matrix(c(1,2,3,4,5,6),nrow=2,ncol=3,byrow=T), widths=c(1), heights=c(1), TRUE)
 Hist_ExpressDomanis(GenePairs, OGInfo, "Small-scale\nduplicates", "Single-copy", MatchingTissues, "Blan conditions - Drer conditions", "Relative number of\npairwise comparisons", "B. lanceolatum specific\nsmall-scale gene duplicates")

@@ -688,7 +688,9 @@ BoxPlot_BlanTypes_VertTypes_old <- function(Genes, Ginf, column, ylab, ylim, vty
 
 BoxPlot <- function(values, pos, col, cextext=1, w=.8, den=NULL, text=FALSE){
 	s <- boxplot(values, plot=FALSE)
-	lines(c(pos, pos),c(s$stats[1], s$stats[5]), lwd=2)
+	#points(rep(pos,length(s$out)), s$out, col=modif_alpha("black", 0.3), pch=16, cex=1.5, xpd = NA)
+	arrows(x0=pos, y0=s$stats[1], x1=pos, y1=s$stats[5], angle=90, code=3, length=w/10, lwd=2, xpd = NA)
+	#lines(c(pos, pos),c(s$stats[1], s$stats[5]), lwd=2)
 	if(!is.null(den)){
 		polygon(c(pos-w/2, pos+w/2, pos+w/2, pos-w/2), c(s$stats[2],s$stats[2],s$stats[4],s$stats[4]), col=modifColor(col, .3), border=col, lwd=3)		
 	}
